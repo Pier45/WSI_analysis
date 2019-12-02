@@ -8,9 +8,7 @@ import threading
 from random import shuffle
 import glob
 import numpy as np
-import random
 from scipy import misc
-
 
 
 class Classification:
@@ -23,27 +21,32 @@ class Classification:
         return list_files, n_elements
 
     def select_folder(self):
-        test = {}
-        opla = {}
+        dictionary, sub_dic = {}, {}
         folders = os.listdir(self.path)
         print(folders)
-        complete_list = []
         for i in folders:
             sel_folder = self.path + str(i) + '/' + '*.png'
             list_files, n_elements = self.analysis_folder(sel_folder)
-            complete_list.append(list_files)
             for j in list_files:
                 complete_name = j[list(j).index('\\') + 1:-4]
                 partial = complete_name[list(complete_name).index('_') + 1:]
                 n_tile = partial[:partial.index('_')]
-                print(n_tile)
                 image = misc.imread(j)
                 np_image = np.asarray(image/255, dtype=float)
-                opla['image'] = np_image
-                test[n_tile] = opla
+                sub_dic['image'] = np_image
+                dictionary[n_tile] = sub_dic
             print('Selected Folder:   {:<40} Number of elements: {}'.format(sel_folder, n_elements))
-        print(len(test))
+        print(dictionary['77'])
+
+    def classify(self):
+        """Load the model and analyze the tile, the dictionary is updated with the predicted label"""
+        pass
 
 
+t = time.perf_counter()
 sasa = Classification('C:/Users/piero/Test/')
 sasa.select_folder()
+t1 = time.perf_counter()
+
+s = t1-t
+print(s)
