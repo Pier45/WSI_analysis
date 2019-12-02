@@ -16,12 +16,25 @@ class StartAnalysis:
         self.generator = ''
         self.ntiles_y = 0
         self.path_folder = 'C:/Users/piero/Test/'
+        # script finale
+        # self.path_folder = str(os.getcwd()) + '/'
         try:
             self.slide = openslide.OpenSlide(file_path)
         except openslide.OpenSlideError:
             print("Cannot find file '" + file_path + "'")
 
-    def tile_gen(self, tile_size=256, overlap=0, limit_bounds=True, lev_sec=1):
+    def get_prop(self):
+        pro = self.slide.properties
+        tile_w = pro['openslide.level[0].tile-width']
+        lev_count = self.slide.level_count
+        lev_down = self.slide.level_downsamples
+        mag = int(pro[openslide.PROPERTY_NAME_OBJECTIVE_POWER])
+        available_mag = tuple(mag / x for x in lev_down)
+        acq_date = pro.get('aperio.date')
+        self.rr = self.slide.level_dimensions
+
+
+    def tile_gen(self, tile_size=512, overlap=0, limit_bounds=True, lev_sec=1):
         """Call this function to divide the slice in tiles, it manage the dimension and the edge cuts.
         This function call the method 'manage_process' that create same vectors for the next step, run the theads"""
 
@@ -64,8 +77,7 @@ class StartAnalysis:
         """Divide the wsi in tiles, thanks to get_tile, if the test with fold managere is false."""
 
         f_manager = self.folder_manage(name_process)
-
-        if f_manager == 0:
+        if not f_manager:
             create_fold = str(self.path_folder) + str(name_process)
             os.mkdir(create_fold)
             for x in range(n_start, n_stop):
@@ -85,36 +97,36 @@ class StartAnalysis:
 
         num_train_images = numtotx*numtoty
         n_core = multiprocessing.cpu_count()
-        step_x = ceil(numtotx / n_core)
 
         if n_core >= numtotx:
             n_core = 1
-            images_per_process = num_train_images
+            step_x = ceil(numtotx / n_core)
+            images_per_process = numtoty*step_x
         else:
-            images_per_process = ceil(num_train_images/n_core)
+            step_x = ceil(numtotx / n_core)
+            images_per_process = numtoty*step_x
 
         print('Number cores:                          {:>5}'.format(n_core))
         print('Total number of training images:       {:>5}'.format(num_train_images))
         print('Number of training images for process: {:>5}'.format(images_per_process))
         print('Step on x for 1 process:               {:>5}'.format(step_x))
 
-        start_index = np.zeros(n_core, dtype=int)
-        end_index = np.zeros(n_core, dtype=int)
-        numx_start = np.zeros(n_core, dtype=int)
-        numx_stop = np.zeros(n_core, dtype=int)
-        list_proc = []
+        start_index, end_index, numx_start, numx_stop, list_proc = [], [], [], [], []
 
         for num_pro in range(1, n_core + 1):
-            start_index[num_pro-1] = int((num_pro - 1) * images_per_process + 1)
-            end_index[num_pro-1] = int(num_pro * images_per_process)
-
-            numx_start[num_pro-1] = int((num_pro - 1) * step_x)
-            numx_stop[num_pro-1] = int(numx_start[num_pro - 1] + step_x)
-            name_process = 'p_' + str(numx_start[num_pro-1]) + '_' + str(numx_stop[num_pro-1]) + '_' + str(numtoty)
-            list_proc.append(name_process)
-
-        if numx_stop[-1] > numtotx:
-            numx_stop[-1] = numtotx
+            print('.......................{}'.format(int(num_pro - 1)*step_x))
+            if int(num_pro - 1)*step_x < numtotx:
+                start_index.append(int((num_pro - 1) * images_per_process + 1))
+                end_index.append(int(num_pro * images_per_process))
+                numx_start.append(int((num_pro - 1) * step_x))
+                numx_stop.append(int(numx_start[num_pro - 1] + step_x))
+                if numx_stop[-1] > numtotx:
+                    numx_stop[-1] = numtotx
+                name_process = 'p_' + str(numx_start[num_pro-1]) + '_' + str(numx_stop[num_pro-1]) + '_' + str(numtoty)
+                list_proc.append(name_process)
+            else:
+                end_index[-1] = num_train_images
+                break
 
         print(numx_start, numx_stop, list_proc, start_index, end_index)
         return numx_start, numx_stop, list_proc, start_index
@@ -128,11 +140,29 @@ class StartAnalysis:
             th.append(p)
             p.start()
 
+        for t, y in enumerate(th):
+            # if t is main_thread:
+            #     continue
+            # logging.debug('joining %s', t.getName())
+            y.join()
+
+        return 'Finisched'
+
+    def status_thread(self):
+
+        for t in threading.enumerate():
+            # if t is main_thread:
+            #     continue
+            # logging.debug('joining %s', t.getName())
+            t.join()
+
+        return 'Finisched'
+
 
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    test1 = StartAnalysis('C:/Users/piero/31400.svs')
+    test1 = StartAnalysis('D:/Download/2_AC_1.svs')
     test1.tile_gen()
 
     t1 = time.perf_counter()
