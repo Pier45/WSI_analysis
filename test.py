@@ -1,29 +1,15 @@
 import numpy as np
-np.set_printoptions(precision=2)
-aa = np.random.random((5,2))
-print(aa)
+shape_i = (5, 5, 3)
 
-print(aa[0:3,:])
-print(aa[3:5,:])
+image = np.zeros((5, 5, 3))
+shape = image.shape
 
-import os
-cwd = os.getcwd()
-print(cwd)
+print(shape_i, shape)
+np_image = np.pad(image, ((0, shape_i[0] - shape[0]), (0, shape_i[1] - shape[1]), (0, 0)), 'constant', constant_values=1)
+print(np_image.shape)
+print(np_image)
 
-from scipy import misc
-import glob
-
-
-image = misc.imread('C:/Users/piero/Test/p_9_12_14\\tile_118_9_0.png')
-print(image.shape)
-print(image.dtype)
-
-
-a = 'C:/Users/piero/Test/p_9_12_14\\tile_118_9_0.png'
-complete_name = a[list(a).index('\\')+1:-4]
-print(complete_name)
-partial = complete_name[list(complete_name).index('_') + 1:]
-print(partial)
-n_tile = partial[:partial.index('_')]
-print(n_tile)
-
+if shape_i != shape:
+    print('sdada')
+else:
+    print('ok')
