@@ -33,8 +33,7 @@ class StartAnalysis:
         acq_date = pro.get('aperio.date')
         self.rr = self.slide.level_dimensions
 
-
-    def tile_gen(self, tile_size=512, overlap=0, limit_bounds=True, lev_sec=1):
+    def tile_gen(self, tile_size=128, overlap=0, limit_bounds=True, lev_sec=2):
         """Call this function to divide the slice in tiles, it manage the dimension and the edge cuts.
         This function call the method 'manage_process' that create same vectors for the next step, run the theads"""
 
