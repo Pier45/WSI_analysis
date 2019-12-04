@@ -66,11 +66,10 @@ class Classification:
         return np_image
 
     def classify(self):
-        """Load the model and analyze the tile, the dictionary is updated with the predicted label
-        - come passo le immagini a predict
+        """
+        Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
 
-        list_predict = []
         path_model = 'D:/Download/Model_1_512.h5'
         model = tf.keras.models.load_model(path_model)
         predict = model.predict(self.np_list_image)

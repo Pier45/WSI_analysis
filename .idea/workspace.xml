@@ -43,7 +43,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Classification">
+  <component name="RunManager" selected="Python.test">
     <configuration name="Classification" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Multiprocessing_analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -109,9 +109,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.test" />
         <item itemvalue="Python.Classification" />
         <item itemvalue="Python.multi_processing_analysis" />
-        <item itemvalue="Python.test" />
       </list>
     </recent_temporary>
   </component>
