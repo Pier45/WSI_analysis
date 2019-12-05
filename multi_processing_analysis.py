@@ -28,12 +28,13 @@ class StartAnalysis:
         tile_w = pro['openslide.level[0].tile-width']
         lev_count = self.slide.level_count
         lev_down = self.slide.level_downsamples
+        print(lev_down)
         mag = int(pro[openslide.PROPERTY_NAME_OBJECTIVE_POWER])
         available_mag = tuple(mag / x for x in lev_down)
         acq_date = pro.get('aperio.date')
         self.rr = self.slide.level_dimensions
 
-    def tile_gen(self, tile_size=128, overlap=0, limit_bounds=True, lev_sec=2):
+    def tile_gen(self, tile_size=128, overlap=0, limit_bounds=True, lev_sec=1):
         """Call this function to divide the slice in tiles, it manage the dimension and the edge cuts.
         This function call the method 'manage_process' that create same vectors for the next step, run the theads"""
 
@@ -45,6 +46,7 @@ class StartAnalysis:
             if rr[lev_sec][1] == a[1] or rr[lev_sec][1] == (a[1]-1) or rr[lev_sec][1] == (a[1]+1):
                 self.levi = i
                 print(f'found the right level {i} -- rr = {rr[lev_sec][1]} --- a = {a[1]}')
+                print(rr)
             else:
                 pass
 
@@ -161,9 +163,9 @@ class StartAnalysis:
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    test1 = StartAnalysis('D:/Download/2_AC_1.svs')
+    test1 = StartAnalysis('D:/Download/map_1.svs')
     test1.tile_gen()
-
+    test1.get_prop()
     t1 = time.perf_counter()
     s = t1-t
     print(s)
