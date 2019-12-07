@@ -16,6 +16,7 @@ class Classification:
         self.dictionary = {}
         self.np_list_image = []
         self.shape = (128, 128, 3)
+        self.select_folder()
 
     def analysis_folder(self, sel_folder):
         """ Analyze the selected folder, finding all the png files"""
@@ -32,7 +33,8 @@ class Classification:
         """
         self.dictionary = {}
         list_image = []
-        folders = os.listdir(self.path)
+        folders_tot = os.listdir(self.path)
+        folders = [y for y in folders_tot if y[0] == 'p']
         print(folders)
         for i in folders:
             sel_folder = self.path + str(i) + '/' + '*.png'
@@ -75,7 +77,9 @@ class Classification:
 
         path_model = 'D:/Download/Model_1_512.h5'
         model = tf.keras.models.load_model(path_model)
-        predict = model.predict(self.np_list_image)
+        np_image = np.asarray(self.np_list_image)
+        print(np_image.shape)
+        predict = model.predict(np_image, batch_size=50)
         probs = np.asarray(predict)
         clas = np.argmax(probs, axis=1)
         print(clas.shape)
@@ -99,11 +103,12 @@ class Classification:
         plt.show()
 
     def overlay(self):
-        sel_res = (2722, 1692)
-        image_base = np.zeros((sel_res[1], sel_res[0], 4), dtype=float)
+        a = plt.imread(self.path + '/thumbnail/th.png')
+        sel_res = a.shape
+        image_base = np.zeros((sel_res[0], sel_res[1], 4), dtype=float)
         print(f'IMAGE SHAPE BASE {image_base.shape}')
-        step = 128
-        a = plt.imread('D:/Download/sasa1.png')
+        step = 32
+
         n1, n2, n3, n4, n5 = 0, 0, 0, 0, 0
 
         for i, name_t in enumerate(self.dictionary):
@@ -150,8 +155,7 @@ class Classification:
 
 
 t = time.perf_counter()
-sasa = Classification('C:/Users/piero/Test/')
-sasa.select_folder()
+sasa = Classification('C:/Users/piero/Test/map_1_1/')
 #sasa.show_image()
 sasa.classify()
 sasa.overlay()

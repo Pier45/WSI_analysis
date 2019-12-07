@@ -11,17 +11,48 @@ import threading
 
 
 class StartAnalysis:
-    def __init__(self, file_path):
+    def __init__(self, file_path, tile_size=128, overlap=0, limit_bounds=True, lev_sec=2):
+        self.lev_sec = lev_sec
+        self.limit_bounds = limit_bounds
+        self.overlap = overlap
+        self.tile_size = tile_size
         self.levi = 1000
+        self.file_path = file_path
         self.generator = ''
         self.ntiles_y = 0
-        self.path_folder = 'C:/Users/piero/Test/'
+        self.path_folder = ''
+        self.path_th = ''
+        self.start_folder = 'C:/Users/piero/Test/'
         # script finale
-        # self.path_folder = str(os.getcwd()) + '/'
+        # self.start_folder = str(os.getcwd()) + '/'
         try:
             self.slide = openslide.OpenSlide(file_path)
+            self.base_folder_manager()
+            self.get_prop()
+            self.get_thumb()
         except openslide.OpenSlideError:
             print("Cannot find file '" + file_path + "'")
+
+    def base_folder_manager(self):
+        """"Create the folders where put the thumbnail and the tiles of the image. """
+
+        form = list(self.file_path).index('.')
+        last = len(self.file_path) - 1 - self.file_path[::-1].index('/')
+        file_name = self.file_path[last + 1:form]
+        folder_name = file_name + '_' + str(self.lev_sec)
+        newpath = self.start_folder + folder_name
+        if not os.path.exists(newpath):
+            os.makedirs(newpath)
+            os.mkdir(newpath+'/thumbnail')
+
+        self.path_th = newpath+'/thumbnail'
+        self.path_folder = newpath + '/'
+
+    def get_thumb(self):
+        """"Create the thumbnail of the image, ready for the classification phase."""
+
+        image = self.slide.get_thumbnail(self.list_levels[self.lev_sec])
+        image.save(self.path_th + '/th.png')
 
     def get_prop(self):
         pro = self.slide.properties
@@ -32,21 +63,21 @@ class StartAnalysis:
         mag = int(pro[openslide.PROPERTY_NAME_OBJECTIVE_POWER])
         available_mag = tuple(mag / x for x in lev_down)
         acq_date = pro.get('aperio.date')
-        self.rr = self.slide.level_dimensions
+        self.list_levels = self.slide.level_dimensions
 
-    def tile_gen(self, tile_size=128, overlap=0, limit_bounds=True, lev_sec=1):
+    def tile_gen(self):
         """Call this function to divide the slice in tiles, it manage the dimension and the edge cuts.
         This function call the method 'manage_process' that create same vectors for the next step, run the theads"""
 
-        self.generator = DeepZoomGenerator(self.slide, tile_size=tile_size, overlap=overlap, limit_bounds=limit_bounds)
+        self.generator = DeepZoomGenerator(self.slide, tile_size=self.tile_size, overlap=self.overlap, limit_bounds=self.limit_bounds)
         dim = self.generator.level_dimensions
         ntile = self.generator._t_dimensions
-        rr = self.slide.level_dimensions
+
         for i, a in enumerate(dim):
-            if rr[lev_sec][1] == a[1] or rr[lev_sec][1] == (a[1]-1) or rr[lev_sec][1] == (a[1]+1):
+            if self.list_levels[self.lev_sec][1] == a[1] or self.list_levels[self.lev_sec][1] == (a[1]-1) or self.list_levels[self.lev_sec][1] == (a[1]+1):
                 self.levi = i
-                print(f'found the right level {i} -- rr = {rr[lev_sec][1]} --- a = {a[1]}')
-                print(rr)
+                print(f'found the right level {i} -- rr = {self.list_levels[self.lev_sec][1]} --- a = {a[1]}')
+                print(self.list_levels)
             else:
                 pass
 
@@ -165,7 +196,6 @@ if __name__ == '__main__':
     t = time.perf_counter()
     test1 = StartAnalysis('D:/Download/map_1.svs')
     test1.tile_gen()
-    test1.get_prop()
     t1 = time.perf_counter()
     s = t1-t
     print(s)
