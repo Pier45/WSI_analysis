@@ -29,12 +29,12 @@ class Classification:
         """
         Create the dict with the key the number of the tile, to each key correspond another sub-dict that as key as
         'image' and value the path to the image.  At the same time it's created a list of numpy arrays that contain
-        the image vectors already padded.
+        the image vectors already padded. Only the folder that start with 'p_' are analayzed, others are skipped.
         """
         self.dictionary = {}
         list_image = []
         folders_tot = os.listdir(self.path)
-        folders = [y for y in folders_tot if y[0] == 'p']
+        folders = [y for y in folders_tot if y[0:2] == 'p_']
         print(folders)
         for i in folders:
             sel_folder = self.path + str(i) + '/' + '*.png'
@@ -79,17 +79,22 @@ class Classification:
         model = tf.keras.models.load_model(path_model)
         np_image = np.asarray(self.np_list_image)
         print(np_image.shape)
-        predict = model.predict(np_image, batch_size=50)
-        probs = np.asarray(predict)
-        clas = np.argmax(probs, axis=1)
-        print(clas.shape)
+        tesu = []
+        for i in range(0, 2):
+            tesu.append(model.predict(np_image, batch_size=50))
+
+        probs = np.asarray(tesu)
+        clas_mean = np.mean(probs, axis=0)
+        aleatoric = np.mean(probs * (1 - probs), axis=0)
+        epistemic = np.mean(probs ** 2, axis=0) - np.mean(probs, axis=0) ** 2
+        print('SHAPE EPI: {} \n SHAPE ALE: {}'.format(epistemic, aleatoric.shape))
 
         for i, y in enumerate(self.dictionary):
-            self.dictionary[y]['class'] = clas[i]
+            self.dictionary[y]['class'] = np.argmax(clas_mean[i])
+            self.dictionary[y]['epi'] = np.sum(epistemic[i])
+            self.dictionary[y]['ale'] = np.sum(aleatoric[i])
 
         print(self.dictionary)
-        somma = np.sum(probs, axis=0)
-        print(clas[0])
 
     def show_image(self, im):
         """GREAT NOTE: LIST ARE index-1 for the 0 index """
@@ -102,7 +107,7 @@ class Classification:
         plt.imshow(self.np_list_image[74, :, :, :])
         plt.show()
 
-    def overlay(self):
+    def overlay(self, unc='None'):
         a = plt.imread(self.path + '/thumbnail/th.png')
         sel_res = a.shape
         image_base = np.zeros((sel_res[0], sel_res[1], 4), dtype=float)
@@ -113,40 +118,52 @@ class Classification:
 
         for i, name_t in enumerate(self.dictionary):
 
-            shape_x = self.dictionary[name_t]['shape_x']
-            shape_y = self.dictionary[name_t]['shape_y']
+            shape_x = int(self.dictionary[name_t]['shape_x']/4)
+            shape_y = int(self.dictionary[name_t]['shape_y']/4)
             column = self.dictionary[name_t]['col']
             row = self.dictionary[name_t]['row']
-            clas = self.dictionary[name_t]['class']
             print('+++ shapex: {} shapey: {} +++'.format(shape_x, shape_y))
             print(column, row, step)
             c0 = column*step
             r0 = row*step
             print(' R0: {:>5d}  RFIN: {:>5d} \n C0:{:>5d}   CFIN: {:>5d}'.format(r0, r0+shape_y, c0, c0+shape_x))
+            if unc == 'None':
+                clas = self.dictionary[name_t]['class']
+                if clas == 1:
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.3
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
+                    n1 += 1
+                elif clas == 2:
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.3
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
+                    n2 += 1
+                elif clas == 3:
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
+                    n3 += 1
+                elif clas == 4:
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
+                    n4 += 1
+                elif clas == 5:
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
+                    n5 += 1
+            elif unc == 'epi':
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['epi'])
+            elif unc == 'ale':
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['ale'])
+            elif unc == 'tot':
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['ale'])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['epi'])
+            else:
+                print(f'Strange command:{unc}')
+                pass
 
-            if clas == 1:
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.3
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
-                n1 += 1
-            elif clas == 2:
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.3
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
-                n2 += 1
-            elif clas == 3:
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
-                n3 += 1
-            elif clas == 4:
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
-                n4 += 1
-            elif clas == 5:
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
-                n5 += 1
+        # transparent layer
+        image_base[:, :, 3] = 0.5
+        image_base = np.where(image_base < 1, image_base, 1)
 
-            # trasparence layer
-            image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] = 0.7
-
-        print('N1 --> {:>4}\nN2 --> {:>4}\nN3 --> {:>4}\nN4 --> {:>4}\nN5 --> {:>4}'.format(n1, n2, n3, n4, n5))
-        print(n1 + n2 + n3 + n4 + n5)
+        if unc == 'None':
+            print('N1 --> {:>4}\nN2 --> {:>4}\nN3 --> {:>4}\nN4 --> {:>4}\nN5 --> {:>4}'.format(n1, n2, n3, n4, n5))
+            print(n1 + n2 + n3 + n4 + n5)
         plt.imshow(a)
         plt.imshow(image_base.astype(np.float))
         plt.axis('off')
@@ -158,7 +175,7 @@ t = time.perf_counter()
 sasa = Classification('C:/Users/piero/Test/map_1_1/')
 #sasa.show_image()
 sasa.classify()
-sasa.overlay()
+sasa.overlay(unc='tot')
 t1 = time.perf_counter()
 
 s = t1-t
