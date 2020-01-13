@@ -75,7 +75,7 @@ class Classification:
         Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
 
-        path_model = 'D:/Download/Model_1_512.h5'
+        path_model = 'C:/Users/piero/Downloads/Model_4.h5'
         model = tf.keras.models.load_model(path_model)
         np_image = np.asarray(self.np_list_image)
         print(np_image.shape)
@@ -87,7 +87,7 @@ class Classification:
         clas_mean = np.mean(probs, axis=0)
         aleatoric = np.mean(probs * (1 - probs), axis=0)
         epistemic = np.mean(probs ** 2, axis=0) - np.mean(probs, axis=0) ** 2
-        print('SHAPE EPI: {} \n SHAPE ALE: {}'.format(epistemic, aleatoric.shape))
+        print('SHAPE EPI: {} \n SHAPE ALE: {}'.format(epistemic.shape, aleatoric.shape))
 
         for i, y in enumerate(self.dictionary):
             self.dictionary[y]['class'] = np.argmax(clas_mean[i])
@@ -172,7 +172,7 @@ class Classification:
 
 
 t = time.perf_counter()
-sasa = Classification('C:/Users/piero/Test/map_1_1/')
+sasa = Classification('C:/Users/piero/Test/10002_2/')
 #sasa.show_image()
 sasa.classify()
 sasa.overlay(unc='tot')
