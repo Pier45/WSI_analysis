@@ -76,6 +76,7 @@ class CreationTFRecord:
         print(f' DATASET: {len(dataset)}    --  LAB: {len(lab)}')
 
         return dataset, lab
+
     def load_image(self, addr, i):
         img = plt.imread(addr)
         if img.shape[0:2] != self.shape[0:2]:

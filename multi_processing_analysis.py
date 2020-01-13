@@ -194,9 +194,10 @@ class StartAnalysis:
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    test1 = StartAnalysis('D:/Download/map_1.svs')
+    test1 = StartAnalysis('C:/Users/piero/10002.svs')
     test1.tile_gen()
     t1 = time.perf_counter()
     s = t1-t
     print(s)
+
 
