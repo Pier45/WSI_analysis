@@ -18,4 +18,6 @@ def load_image(addr, i):
     im.show()
 
 
-load_image(addr='C:/Users/piero\Test\map_1_2\p_18_21_13/tile_244_18_9.png', i=0)
+#load_image(addr='C:/Users/piero\Test\map_1_2\p_18_21_13/tile_244_18_9.png', i=0)
+import os
+os.system('cmd /k "ping"')
