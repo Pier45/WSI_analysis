@@ -11,7 +11,7 @@ import threading
 
 
 class StartAnalysis:
-    def __init__(self, file_path, tile_size=128, overlap=0, limit_bounds=True, lev_sec=2):
+    def __init__(self, file_path, tile_size=64, overlap=0, limit_bounds=True, lev_sec=2):
         self.lev_sec = lev_sec
         self.limit_bounds = limit_bounds
         self.overlap = overlap

@@ -58,14 +58,19 @@ def overlay(di, unc='None'):
     image_base[:, :, 3] = 0.5
     image_base = np.where(image_base < 1, image_base, 1)
     print(image_base.shape)
+
     plt.imshow(az)
     plt.imshow(image_base.astype(np.float))
-    #plt.axis('off')
+    plt.axis('off')
+    plt.savefig('C:/Users/piero/Desktop/sasa.png', bbox_inches='tight', pad_inches=0, dpi=400)
+
+
     plt.show()
     if unc == 'None':
         print('N1 --> {:>4}\nN2 --> {:>4}\nN3 --> {:>4}\nN4 --> {:>4}\nN5 --> {:>4}'.format(n1, n2, n3, n4, n5))
         print(n1+n2+n3+n4+n5)
 
+    plt.savefig('C:/Users/piero/Desktop/sasa.png', bbox_inches='tight', pad_inches=0)
 
 overlay(di=di)
 

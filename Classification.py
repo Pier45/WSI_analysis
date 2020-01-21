@@ -1,8 +1,5 @@
 import os
-import PIL
-import sys
 import time
-import threading
 import glob
 import numpy as np
 from scipy import misc
@@ -15,7 +12,7 @@ class Classification:
         self.path = path
         self.dictionary = {}
         self.np_list_image = []
-        self.shape = (128, 128, 3)
+        self.shape = (64, 64, 3)
         self.select_folder()
 
     def analysis_folder(self, sel_folder):
@@ -70,18 +67,25 @@ class Classification:
                       '\n Shape tile:{}'.format(self.shape, shape_i))
         return np_image, shape_i[0], shape_i[1]
 
+    def load_model(self, state=9):
+        path_model = 'C:/Users/piero/Downloads/Model_1_85aug.h5'
+        self.model = tf.keras.models.load_model(path_model)
+
+        if state == 0:
+            self.classify()
+            self.overlay()
+
+
     def classify(self):
         """
         Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
 
-        path_model = 'C:/Users/piero/Downloads/Model_4.h5'
-        model = tf.keras.models.load_model(path_model)
         np_image = np.asarray(self.np_list_image)
         print(np_image.shape)
         tesu = []
         for i in range(0, 2):
-            tesu.append(model.predict(np_image, batch_size=50))
+            tesu.append(self.model.predict(np_image, batch_size=50))
 
         probs = np.asarray(tesu)
         clas_mean = np.mean(probs, axis=0)
@@ -107,19 +111,24 @@ class Classification:
         plt.imshow(self.np_list_image[74, :, :, :])
         plt.show()
 
-    def overlay(self, unc='None'):
+    def overlay(self, unc='Pred_class'):
         a = plt.imread(self.path + '/thumbnail/th.png')
         sel_res = a.shape
         image_base = np.zeros((sel_res[0], sel_res[1], 4), dtype=float)
         print(f'IMAGE SHAPE BASE {image_base.shape}')
-        step = 32
+
+        step = 64 # per casi di rimpicciolimero grandezza tiles diviso quando si vuole es 128 / 4 = 32
+        if unc == 'Pred_class':
+            res_name = self.path + 'result/' + str(unc) + '.png'
+        else:
+            res_name = self.path + 'result/uncertainty/' + str(unc) + '.png'
 
         n1, n2, n3, n4, n5 = 0, 0, 0, 0, 0
 
         for i, name_t in enumerate(self.dictionary):
 
-            shape_x = int(self.dictionary[name_t]['shape_x']/4)
-            shape_y = int(self.dictionary[name_t]['shape_y']/4)
+            shape_x = int(self.dictionary[name_t]['shape_x']) #/4
+            shape_y = int(self.dictionary[name_t]['shape_y']) #/4
             column = self.dictionary[name_t]['col']
             row = self.dictionary[name_t]['row']
             print('+++ shapex: {} shapey: {} +++'.format(shape_x, shape_y))
@@ -127,7 +136,7 @@ class Classification:
             c0 = column*step
             r0 = row*step
             print(' R0: {:>5d}  RFIN: {:>5d} \n C0:{:>5d}   CFIN: {:>5d}'.format(r0, r0+shape_y, c0, c0+shape_x))
-            if unc == 'None':
+            if unc == 'Pred_class':
                 clas = self.dictionary[name_t]['class']
                 if clas == 1:
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.3
@@ -167,16 +176,25 @@ class Classification:
         plt.imshow(a)
         plt.imshow(image_base.astype(np.float))
         plt.axis('off')
+
+        res_path = self.path + '/result'
+        if not os.path.exists(res_path):
+            os.makedirs(res_path + '/uncertainty')
+
+        plt.savefig(res_name, bbox_inches='tight', pad_inches=0, pdi=1400)
+
         plt.show()
-        #plt.savefig('D:/Download/sasa.png', bbox_inches='tight', pad_inches=0)
 
 
-t = time.perf_counter()
-sasa = Classification('C:/Users/piero/Test/10002_2/')
-#sasa.show_image()
-sasa.classify()
-sasa.overlay(unc='tot')
-t1 = time.perf_counter()
+if __name__ == '__main__':
 
-s = t1-t
-print(s)
+    t = time.perf_counter()
+    sasa = Classification('C:/Users/piero/Test/10002_2/')
+    #sasa.show_image()
+    sasa.load_model()
+    sasa.classify()
+    sasa.overlay(unc='tot')
+    t1 = time.perf_counter()
+
+    s = t1-t
+    print(s)

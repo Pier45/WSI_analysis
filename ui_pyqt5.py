@@ -11,10 +11,11 @@ import traceback
 import sys
 from multi_processing_analysis import StartAnalysis
 from progress_bar import Actions
+from Classification import Classification
 
 
 class Worker(QRunnable):
-
+    """Useful to run easy threads"""
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
         # Store constructor arguments (re-used for processing)
@@ -37,6 +38,8 @@ class WorkerSignals(QObject):
 
 
 class WorkerLong(QRunnable):
+    """Useful to start more complicated threads, it allows to interact with the state of the thread, useful
+    in progress bar and in same case where need to know if the process is ended"""
 
     def __init__(self, fn, *args, **kwargs):
         super(WorkerLong, self).__init__()
@@ -96,7 +99,7 @@ class ImageViewer(QMainWindow):
         self.setCentralWidget(self.scrollArea)
         self.scrollArea.setAlignment(Qt.AlignCenter)
 
-        self.threadpool = QThreadPool()
+        self.threadPool = QThreadPool()
 
         self.toolbar = QToolBar("My main toolbar")
         self.addToolBar(self.toolbar)
@@ -110,6 +113,9 @@ class ImageViewer(QMainWindow):
         self.showMaximized()
 
     def open(self):
+        """This method is the starting point, here is selected the svs files and is created the thumbnail that is
+        immediately showed to the user"""
+
         fileName, _ = QFileDialog.getOpenFileName(self, "Open File",
                 QDir.currentPath())
 
@@ -158,6 +164,8 @@ class ImageViewer(QMainWindow):
                 self.scaleImage(screensize[p]/image_size[p]-0.05)
 
     def progress(self):
+        """Show the progress bar"""
+
         self.pop = QDialog()
         self.ui = Actions()
         title = 'Tiles creation process'
@@ -165,6 +173,8 @@ class ImageViewer(QMainWindow):
         self.pop.show()
 
     def print_(self):
+        """Print the image visualized"""
+
         dialog = QPrintDialog(self.printer, self)
         if dialog.exec_():
             painter = QPainter(self.printer)
@@ -189,6 +199,12 @@ class ImageViewer(QMainWindow):
 
     def progress_fn(self, n):
         print("%d%% done" % n)
+
+    def print_output(self, s):
+        print(s)
+
+    def thread_complete(self):
+        print("THREAD COMPLETE!")
 
     def process_to_start(self, vet, progress_callback):
         n_start, n_stop, name_process, start, stop, ny, levi = vet
@@ -240,6 +256,8 @@ class ImageViewer(QMainWindow):
                 pass
 
     def thread_manager(self):
+        """Here are created the threads that create in the specific folders the tile"""
+
         self.progress()
         for lp in range(0, len(self.list_proc)):
             vet = [self.numx_start[lp], self.numx_stop[lp], self.list_proc[lp], self.start_i[lp], self.stop_i[lp], self.ny, self.levi]
@@ -248,13 +266,7 @@ class ImageViewer(QMainWindow):
             lp.signals.finished.connect(self.thread_complete)
             lp.signals.progress.connect(self.progress_fn)
             lp.signals.progress.connect(self.ui.onCountChanged)
-            self.threadpool.start(lp)
-
-    def print_output(self, s):
-        print(s)
-
-    def thread_complete(self):
-        print("THREAD COMPLETE!")
+            self.threadPool.start(lp)
 
     def zoomIn(self):
         self.scaleImage(1.2)
@@ -283,6 +295,10 @@ class ImageViewer(QMainWindow):
         self.open()
 
     def deep_vis(self):
+        """This method allows to view the svs image at maximum resolution using the browser and a javascript library;
+        it's performed before starting the server a test on the paths in search of spaces, indeed the program does not
+        works if in the path there are with spaces"""
+
         a = os.path.join(os.getcwd() + '/deepzoom/deepzoom_server.py')
         b = self.fileName
         if a.find(' ') != -1 or b.find(' ') != -1:
@@ -294,8 +310,8 @@ class ImageViewer(QMainWindow):
         else:
             print(os.getcwd())
             command = 'cmd /k python {} {}'.format(a, b)
-            worker = Worker(self.test, command)
-            self.threadpool.start(worker)
+            worker = Worker(self.cmd_command, command)
+            self.threadPool.start(worker)
 
             QMessageBox.information(self, "Bayesian Analayzer",
                                     "Now your browser will be opened ad a deep zoomable file\n"
@@ -303,22 +319,35 @@ class ImageViewer(QMainWindow):
                                     "Press ok to continue")
 
             worker2 = Worker(self.open_b)
-            self.threadpool.start(worker2)
+            self.threadPool.start(worker2)
 
     def open_b(self):
+        """Open a new tab in the browser at a specific port"""
+
         url = "http://127.0.0.1:5000/"
         time.sleep(0.5)
         webbrowser.open_new_tab(url)
 
-    def test(self, command):
+    def cmd_command(self, command):
         os.system(command)
 
     def start_an(self):
-        QMessageBox.information(self, "Bayesian Analayzer",
+        res_path = self.path_work + 'result'
+        if not os.path.exists(res_path):
+            cls = Classification(self.path_work)
+            state = 0
+            worker_cl = Worker(cls.load_model, state)
+            self.threadPool.start(worker_cl)
+
+            QMessageBox.information(self, "Bayesian Analayzer",
                                 "The analysis is started!\n \n For results will be avaible"
                                 "in few minutes.")
-
+        else:
+            #qua plottare i risultati
+            print('ooooooooooooooooooooooooooooooooiiiiiiiiiiiii')
+            pass
     def about(self):
+
         QMessageBox.about(self, "About Image Viewer",
                 "<p>The <b>Bayesian Analayzer</b> is built for analayze "
                 "Svs file, that tipicaly are very heavy files (~1Gb) "
@@ -378,13 +407,21 @@ class ImageViewer(QMainWindow):
 
         self.info_deepAct = QAction("&Info about deep viewer", self, triggered=self.info_deep)
 
+        self.v_no_overlay = QAction("View whit no overlay", self, enabled=False, checkable=True)
+        self.v_all_class = QAction("View all classes", self, enabled=False, checkable=True)
+
         self.v_ac = QAction("View only AC", self, enabled=False, checkable=True)
         self.v_ad = QAction("View only AD", self, enabled=False, checkable=True)
         self.v_h = QAction("View only H", self, enabled=False, checkable=True)
 
-        self.start_vis_deepAct = QAction(QIcon('icons/binocul.ico'), "Go to deepzoom visualization", self, enabled=False, shortcut="Ctrl+S", triggered=self.deep_vis)
+        self.v_tot_u = QAction("View total uncertainty", self, enabled=False, checkable=True)
+        self.v_a_u = QAction("View only Aleatoric uncertainty", self, enabled=False, checkable=True)
+        self.v_e_u = QAction("View only Epistemic uncertainty", self, enabled=False, checkable=True)
 
-        self.startAnalysisAct = QAction(QIcon('icons/start.ico'), 'Start', self, triggered=self.start_an,enabled=False, shortcut="Ctrl+S")
+        self.start_vis_deepAct = QAction(QIcon('icons/binocul.ico'), "Go to deepzoom visualization", self, enabled=False,
+                                         shortcut="Ctrl+S", triggered=self.deep_vis)
+
+        self.startAnalysisAct = QAction(QIcon('icons/start.ico'), 'Start', self, triggered=self.start_an, enabled=False, shortcut="Ctrl+S")
 
         self.fastAct = QAction('Fast mode', enabled=True, checkable=True, checked=True,  triggered=self.fast)
 
@@ -403,9 +440,16 @@ class ImageViewer(QMainWindow):
         self.Analyze.addAction(self.startAnalysisAct)
 
         self.viewMenu = QMenu("&View", self)
+        self.viewMenu.addAction(self.v_no_overlay)
+        self.viewMenu.addAction(self.v_all_class)
+        self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.v_ac)
         self.viewMenu.addAction(self.v_ad)
         self.viewMenu.addAction(self.v_h)
+        self.viewMenu.addSeparator()
+        self.viewMenu.addAction(self.v_tot_u)
+        self.viewMenu.addAction(self.v_a_u)
+        self.viewMenu.addAction(self.v_e_u)
         self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.zoomInAct)
         self.viewMenu.addAction(self.zoomOutAct)
