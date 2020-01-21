@@ -29,7 +29,7 @@ class StartAnalysis:
             self.slide = openslide.OpenSlide(file_path)
             self.base_folder_manager()
             self.get_prop()
-            self.get_thumb()
+            #self.get_thumb()
         except openslide.OpenSlideError:
             print("Cannot find file '" + file_path + "'")
 
@@ -53,6 +53,7 @@ class StartAnalysis:
 
         image = self.slide.get_thumbnail(self.list_levels[self.lev_sec])
         image.save(self.path_th + '/th.png')
+        return self.path_folder
 
     def get_prop(self):
         pro = self.slide.properties
@@ -65,7 +66,7 @@ class StartAnalysis:
         acq_date = pro.get('aperio.date')
         self.list_levels = self.slide.level_dimensions
 
-    def tile_gen(self):
+    def tile_gen(self, state=9):
         """Call this function to divide the slice in tiles, it manage the dimension and the edge cuts.
         This function call the method 'manage_process' that create same vectors for the next step, run the theads"""
 
@@ -91,8 +92,14 @@ class StartAnalysis:
 
         self.ntiles_y = numy
 
-        numx_start, numx_stop, list_proc, start_indexs = self.manage_process(numx, numy)
-        self.start_thread(numx_start, numx_stop, list_proc, start_indexs)
+        numx_start, numx_stop, list_proc, start_indexs, stop_index = self.manage_process(numx, numy)
+
+        if state == 0:
+            return numx_start, numx_stop, list_proc, start_indexs, stop_index, numy, self.levi
+        elif state == 1:
+            return self.generator
+        else:
+            self.start_thread(numx_start, numx_stop, list_proc, start_indexs)
 
     def folder_manage(self, name_process):
         """Test if the folder alredy exist, if true return 1 and the thread will stop"""
@@ -161,7 +168,7 @@ class StartAnalysis:
                 break
 
         print(numx_start, numx_stop, list_proc, start_index, end_index)
-        return numx_start, numx_stop, list_proc, start_index
+        return numx_start, numx_stop, list_proc, start_index, end_index
 
     def start_thread(self, numx_start, numx_stop, list_proc, start_indexs):
         """Start the theads, in this way the process is faster."""
@@ -177,16 +184,6 @@ class StartAnalysis:
             #     continue
             # logging.debug('joining %s', t.getName())
             y.join()
-
-        return 'Finisched'
-
-    def status_thread(self):
-
-        for t in threading.enumerate():
-            # if t is main_thread:
-            #     continue
-            # logging.debug('joining %s', t.getName())
-            t.join()
 
         return 'Finisched'
 
