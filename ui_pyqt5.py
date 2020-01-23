@@ -70,11 +70,9 @@ class WorkerLong(QRunnable):
 
 class ImageViewer(QMainWindow):
     def __init__(self):
-        self.path_work = ''
-        self.obj_an = ''
-        self.fileName = ''
-        self.levi = 0
-        self.ny = 0
+        self.path_work, self.res_path = '', ''
+        self.obj_an, self.fileName = '', ''
+        self.levi, self.ny = 0, 0
         self.numx_start, self.numx_stop, self.list_proc, self.start_i, self.stop_i = [], [], [], [], []
         self.lev_sec = 1
 
@@ -105,6 +103,9 @@ class ImageViewer(QMainWindow):
         self.addToolBar(self.toolbar)
         self.toolbar.setStyleSheet("QToolBar{spacing:15px;}")
 
+        #self.button = QPushButton("Test")
+        #self.scrollArea.setWidget(self.button)
+
         self.createActions()
         self.createMenus()
 
@@ -125,6 +126,8 @@ class ImageViewer(QMainWindow):
 
         if fileName:
             self.path_work = self.first_step(fileName)
+            self.res_path = self.path_work + 'result/'
+
             image = QImage(self.path_work + 'thumbnail/th.png')
             p = ''
 
@@ -162,6 +165,16 @@ class ImageViewer(QMainWindow):
 
             if screensize[p] < image_size[p]:
                 self.scaleImage(screensize[p]/image_size[p]-0.05)
+
+    def view(self, name):
+        if name == 'class':
+            view_path = self.res_path + 'Pred_class.png'
+        else:
+            view_path = self.res_path + 'uncertainty/' + name + '.png'
+
+        image = QImage(view_path)
+        self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        self.imageLabel.adjustSize()
 
     def progress(self):
         """Show the progress bar"""
@@ -332,8 +345,7 @@ class ImageViewer(QMainWindow):
         os.system(command)
 
     def start_an(self):
-        res_path = self.path_work + 'result'
-        if not os.path.exists(res_path):
+        if not os.path.exists(self.res_path):
             cls = Classification(self.path_work)
             state = 0
             worker_cl = Worker(cls.load_model, state)
@@ -343,9 +355,11 @@ class ImageViewer(QMainWindow):
                                 "The analysis is started!\n \n For results will be avaible"
                                 "in few minutes.")
         else:
-            #qua plottare i risultati
+            self.view('class')
             print('ooooooooooooooooooooooooooooooooiiiiiiiiiiiii')
             pass
+
+
     def about(self):
 
         QMessageBox.about(self, "About Image Viewer",

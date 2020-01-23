@@ -68,13 +68,15 @@ class Classification:
         return np_image, shape_i[0], shape_i[1]
 
     def load_model(self, state=9):
-        path_model = 'C:/Users/piero/Downloads/Model_1_85aug.h5'
+        path_model = 'Model_1_85aug.h5'
         self.model = tf.keras.models.load_model(path_model)
 
         if state == 0:
             self.classify()
             self.overlay()
-
+            self.overlay(unc='epi')
+            self.overlay(unc='ale')
+            self.overlay(unc='tot')
 
     def classify(self):
         """
@@ -84,7 +86,8 @@ class Classification:
         np_image = np.asarray(self.np_list_image)
         print(np_image.shape)
         tesu = []
-        for i in range(0, 2):
+        for i in range(0, 5):
+            print(i)
             tesu.append(self.model.predict(np_image, batch_size=50))
 
         probs = np.asarray(tesu)
@@ -113,17 +116,20 @@ class Classification:
 
     def overlay(self, unc='Pred_class'):
         a = plt.imread(self.path + '/thumbnail/th.png')
-        sel_res = a.shape
-        image_base = np.zeros((sel_res[0], sel_res[1], 4), dtype=float)
+        image_base = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
         print(f'IMAGE SHAPE BASE {image_base.shape}')
+        step = 64    # per casi di rimpicciolimero grandezza tiles diviso quando si vuole es 128 / 4 = 32
+        res_path = self.path + '/result'
 
-        step = 64 # per casi di rimpicciolimero grandezza tiles diviso quando si vuole es 128 / 4 = 32
+        if not os.path.exists(res_path):
+            os.makedirs(res_path + '/uncertainty')
+
         if unc == 'Pred_class':
             res_name = self.path + 'result/' + str(unc) + '.png'
         else:
             res_name = self.path + 'result/uncertainty/' + str(unc) + '.png'
 
-        n1, n2, n3, n4, n5 = 0, 0, 0, 0, 0
+        n1, n2, n3 = 0, 0, 0
 
         for i, name_t in enumerate(self.dictionary):
 
@@ -131,30 +137,23 @@ class Classification:
             shape_y = int(self.dictionary[name_t]['shape_y']) #/4
             column = self.dictionary[name_t]['col']
             row = self.dictionary[name_t]['row']
-            print('+++ shapex: {} shapey: {} +++'.format(shape_x, shape_y))
-            print(column, row, step)
             c0 = column*step
             r0 = row*step
-            print(' R0: {:>5d}  RFIN: {:>5d} \n C0:{:>5d}   CFIN: {:>5d}'.format(r0, r0+shape_y, c0, c0+shape_x))
             if unc == 'Pred_class':
                 clas = self.dictionary[name_t]['class']
-                if clas == 1:
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.3
+                if clas == 0:
+                    # red
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
                     n1 += 1
-                elif clas == 2:
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.3
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
-                    n2 += 1
-                elif clas == 3:
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
-                    n3 += 1
-                elif clas == 4:
+                elif clas == 1:
+                    # green
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
-                    n4 += 1
-                elif clas == 5:
+                    n2 += 1
+                elif clas == 2:
+                    # blue
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
-                    n5 += 1
+                    n3 += 1
+
             elif unc == 'epi':
                 image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['epi'])
             elif unc == 'ale':
@@ -166,34 +165,32 @@ class Classification:
                 print(f'Strange command:{unc}')
                 pass
 
-        # transparent layer
-        image_base[:, :, 3] = 0.5
+        if unc == 'Pred_class':
+            print('AC --> {:>4}\nH --> {:>4}\nAD --> {:>4}'.format(n1, n2, n3))
+            print(n1 + n2 + n3)
+            image_base[:, :, 3] = 0.4
+        else:
+            image_base[:, :, 3] = 0.7
+
         image_base = np.where(image_base < 1, image_base, 1)
 
-        if unc == 'None':
-            print('N1 --> {:>4}\nN2 --> {:>4}\nN3 --> {:>4}\nN4 --> {:>4}\nN5 --> {:>4}'.format(n1, n2, n3, n4, n5))
-            print(n1 + n2 + n3 + n4 + n5)
+        my_dpi = 200
+        plt.figure(figsize=(a.shape[0] / my_dpi, a.shape[1] / my_dpi), dpi=my_dpi, frameon=False)
         plt.imshow(a)
         plt.imshow(image_base.astype(np.float))
         plt.axis('off')
 
-        res_path = self.path + '/result'
-        if not os.path.exists(res_path):
-            os.makedirs(res_path + '/uncertainty')
-
-        plt.savefig(res_name, bbox_inches='tight', pad_inches=0, pdi=1400)
-
-        plt.show()
+        plt.savefig(res_name, dpi=my_dpi, bbox_inches='tight', pad_inches=0)
 
 
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    sasa = Classification('C:/Users/piero/Test/10002_2/')
+    sasa = Classification('C:/Users/piero/Test/31400_2/')
     #sasa.show_image()
     sasa.load_model()
     sasa.classify()
-    sasa.overlay(unc='tot')
+    sasa.overlay(unc='Pred_class')
     t1 = time.perf_counter()
 
     s = t1-t
