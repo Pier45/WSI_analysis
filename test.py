@@ -69,7 +69,7 @@ def overlay(di, unc='None'):
 
 
 if __name__ == '__main__':
-    overlay(di=di)
+    #overlay(di=di)
     az = plt.imread('C:/Users/piero/Test/31400_2/thumbnail/th.png')
     print(az.shape)
 

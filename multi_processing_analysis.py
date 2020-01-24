@@ -105,12 +105,18 @@ class StartAnalysis:
         """Test if the folder alredy exist, if true return 1 and the thread will stop"""
 
         fold = os.listdir(self.path_folder)
+        flag = 0
         for k in fold:
             if k == name_process:
                 print('Folder alredy exist {}'.format(name_process))
-                return 1
+                flag += 1
             else:
                 pass
+
+        if flag > 0:
+            return True
+        else:
+            return False
 
     def process_to_start(self, n_start, n_stop, name_process, start):
         """Divide the wsi in tiles, thanks to get_tile, if the test with fold managere is false."""
@@ -153,7 +159,7 @@ class StartAnalysis:
         start_index, end_index, numx_start, numx_stop, list_proc = [], [], [], [], []
 
         for num_pro in range(1, n_core + 1):
-            print('.......................{}'.format(int(num_pro - 1)*step_x))
+            #print('.......................{}'.format(int(num_pro - 1)*step_x))
             if int(num_pro - 1)*step_x < numtotx:
                 start_index.append(int((num_pro - 1) * images_per_process + 1))
                 end_index.append(int(num_pro * images_per_process))

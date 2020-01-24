@@ -67,16 +67,16 @@ class Classification:
                       '\n Shape tile:{}'.format(self.shape, shape_i))
         return np_image, shape_i[0], shape_i[1]
 
-    def load_model(self, state=9):
+    def load_model(self, state=9, typean='fast'):
         path_model = 'Model_1_85aug.h5'
         self.model = tf.keras.models.load_model(path_model)
 
         if state == 0:
             self.classify()
-            self.overlay()
-            self.overlay(unc='epi')
-            self.overlay(unc='ale')
-            self.overlay(unc='tot')
+            self.overlay(typean)
+            self.overlay(typean, unc='epi')
+            self.overlay(typean, unc='ale')
+            self.overlay(typean, unc='tot')
 
     def classify(self):
         """
@@ -101,7 +101,7 @@ class Classification:
             self.dictionary[y]['epi'] = np.sum(epistemic[i])
             self.dictionary[y]['ale'] = np.sum(aleatoric[i])
 
-        print(self.dictionary)
+        #print(self.dictionary)
 
     def show_image(self, im):
         """GREAT NOTE: LIST ARE index-1 for the 0 index """
@@ -114,7 +114,7 @@ class Classification:
         plt.imshow(self.np_list_image[74, :, :, :])
         plt.show()
 
-    def overlay(self, unc='Pred_class'):
+    def overlay(self, type_an, unc='Pred_class'):
         a = plt.imread(self.path + '/thumbnail/th.png')
         image_base = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
         print(f'IMAGE SHAPE BASE {image_base.shape}')
@@ -155,12 +155,12 @@ class Classification:
                     n3 += 1
 
             elif unc == 'epi':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['epi'])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]['epi'])
             elif unc == 'ale':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['ale'])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]['ale'])
             elif unc == 'tot':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['ale'])
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += abs(self.dictionary[name_t]['epi'])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]['ale'])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]['epi'])
             else:
                 print(f'Strange command:{unc}')
                 pass
@@ -170,11 +170,16 @@ class Classification:
             print(n1 + n2 + n3)
             image_base[:, :, 3] = 0.4
         else:
-            image_base[:, :, 3] = 0.7
+            image_base[:, :, 3] = 0.5
+            r, c = np.where(image_base[:, :, 0] < 0.1)
+            image_base[r, c, 3] = 0.2
 
         image_base = np.where(image_base < 1, image_base, 1)
+        if type_an == 'fast':
+            my_dpi = 100
+        else:
+            my_dpi = 50
 
-        my_dpi = 200
         plt.figure(figsize=(a.shape[0] / my_dpi, a.shape[1] / my_dpi), dpi=my_dpi, frameon=False)
         plt.imshow(a)
         plt.imshow(image_base.astype(np.float))

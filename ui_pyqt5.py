@@ -73,8 +73,11 @@ class ImageViewer(QMainWindow):
         self.path_work, self.res_path = '', ''
         self.obj_an, self.fileName = '', ''
         self.levi, self.ny = 0, 0
+        self.type_an = 'fast'
         self.numx_start, self.numx_stop, self.list_proc, self.start_i, self.stop_i = [], [], [], [], []
         self.lev_sec = 1
+        user32 = ctypes.windll.user32
+        self.screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 
         super(ImageViewer, self).__init__()
 
@@ -121,8 +124,6 @@ class ImageViewer(QMainWindow):
                 QDir.currentPath())
 
         self.fileName = fileName
-        user32 = ctypes.windll.user32
-        screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 
         if fileName:
             self.path_work = self.first_step(fileName)
@@ -130,25 +131,6 @@ class ImageViewer(QMainWindow):
 
             image = QImage(self.path_work + 'thumbnail/th.png')
             p = ''
-
-            try:
-                image_size = [image.width(), image.height()]
-
-                if image_size[0] > image_size[1]:
-                    p = 0
-                else:
-                    p = 1
-
-                print(image_size)
-                print(screensize[0], screensize[1])
-
-            except():
-                print('No Image')
-
-            if image.isNull():
-                QMessageBox.information(self, "Bayesian Analayzer",
-                        "Cannot load %s." % self.fileName)
-                return
 
             self.imageLabel.setPixmap(QPixmap.fromImage(image))
 
@@ -160,21 +142,56 @@ class ImageViewer(QMainWindow):
             self.updateActions()
             self.thread_manager()
 
-            if not self.fitToWindowAct.isChecked():
-                self.imageLabel.adjustSize()
+            try:
+                image_size = [image.width(), image.height()]
 
-            if screensize[p] < image_size[p]:
-                self.scaleImage(screensize[p]/image_size[p]-0.05)
+                if image_size[0] > image_size[1]:
+                    p = 0
+                else:
+                    p = 1
+
+                print(image_size)
+                print(self.screensize[0], self.screensize[1])
+
+                if not self.fitToWindowAct.isChecked():
+                    self.imageLabel.adjustSize()
+
+                if self.screensize[p] < image_size[p]:
+                    self.imageLabel.resize((self.screensize[p] / image_size[p] - 0.04) * self.imageLabel.pixmap().size())
+
+            except():
+                print('No Image')
+
+            if image.isNull():
+                QMessageBox.information(self, "Bayesian Analayzer",
+                        "Cannot load %s." % self.fileName)
+                return
 
     def view(self, name):
         if name == 'class':
             view_path = self.res_path + 'Pred_class.png'
+        elif name == 'no_ov':
+            view_path = self.path_work + 'thumbnail/th.png'
         else:
             view_path = self.res_path + 'uncertainty/' + name + '.png'
-
+        print(view_path)
         image = QImage(view_path)
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
-        self.imageLabel.adjustSize()
+
+        image_size = [image.width(), image.height()]
+
+        if image_size[0] > image_size[1]:
+            p = 0
+        else:
+            p = 1
+        print(image_size)
+        print(self.screensize[0], self.screensize[1])
+
+        if not self.fitToWindowAct.isChecked():
+            self.imageLabel.adjustSize()
+
+        if self.screensize[p] < image_size[p]:
+            self.imageLabel.resize((self.screensize[p] / image_size[p]- 0.04) * self.imageLabel.pixmap().size())
 
     def progress(self):
         """Show the progress bar"""
@@ -230,7 +247,6 @@ class ImageViewer(QMainWindow):
 
         res = obj_k.tile_gen(state=1)
         f_manager = self.folder_manage(name_process)
-        print(f_manager)
         flag = False
 
         if start == 1:
@@ -261,12 +277,18 @@ class ImageViewer(QMainWindow):
         """Test if the folder alredy exist, if true return 1 and the thread will stop"""
 
         fold = os.listdir(self.path_work)
+        flag = 0
         for k in fold:
             if k == name_process:
                 print('Folder alredy exist {}'.format(name_process))
-                return 1
+                flag += 1
             else:
                 pass
+
+        if flag > 0:
+            return True
+        else:
+            return False
 
     def thread_manager(self):
         """Here are created the threads that create in the specific folders the tile"""
@@ -301,9 +323,11 @@ class ImageViewer(QMainWindow):
         self.updateActions()
 
     def fast(self):
+        self.type_an = 'fast'
         self.slowAct.setChecked(False)
 
     def slow(self):
+        self.type_an = 'slow'
         self.fastAct.setChecked(False)
         self.open()
 
@@ -348,7 +372,7 @@ class ImageViewer(QMainWindow):
         if not os.path.exists(self.res_path):
             cls = Classification(self.path_work)
             state = 0
-            worker_cl = Worker(cls.load_model, state)
+            worker_cl = Worker(cls.load_model, state, self.type_an)
             self.threadPool.start(worker_cl)
 
             QMessageBox.information(self, "Bayesian Analayzer",
@@ -356,9 +380,42 @@ class ImageViewer(QMainWindow):
                                 "in few minutes.")
         else:
             self.view('class')
-            print('ooooooooooooooooooooooooooooooooiiiiiiiiiiiii')
-            pass
+            print('process an already done!!!')
 
+        self.v_no_overlayAct.setEnabled(True)
+        self.v_all_classAct.setEnabled(True)
+
+        self.v_acAct.setEnabled(True)
+        self.v_adAct.setEnabled(True)
+        self.v_hAct.setEnabled(True)
+
+        self.v_tot_uAct.setEnabled(True)
+        self.v_a_uAct.setEnabled(True)
+        self.v_e_uAct.setEnabled(True)
+
+    def v_no_overlay(self):
+        self.view('no_ov')
+
+    def v_all_class(self):
+        self.view('class')
+
+    def v_ac(self):
+        self.view()
+
+    def v_ad(self):
+        self.view()
+
+    def v_h(self):
+        self.view()
+
+    def v_tot_u(self):
+        self.view('tot')
+
+    def v_a_u(self):
+        self.view('ale')
+
+    def v_e_u(self):
+        self.view('epi')
 
     def about(self):
 
@@ -421,16 +478,16 @@ class ImageViewer(QMainWindow):
 
         self.info_deepAct = QAction("&Info about deep viewer", self, triggered=self.info_deep)
 
-        self.v_no_overlay = QAction("View whit no overlay", self, enabled=False, checkable=True)
-        self.v_all_class = QAction("View all classes", self, enabled=False, checkable=True)
+        self.v_no_overlayAct = QAction("View whit no overlay", self, enabled=False, triggered=self.v_no_overlay)
+        self.v_all_classAct = QAction("View all classes", self, enabled=False, triggered=self.v_all_class)
 
-        self.v_ac = QAction("View only AC", self, enabled=False, checkable=True)
-        self.v_ad = QAction("View only AD", self, enabled=False, checkable=True)
-        self.v_h = QAction("View only H", self, enabled=False, checkable=True)
+        self.v_acAct = QAction("View only AC", self, enabled=False, triggered=self.v_ac)
+        self.v_adAct = QAction("View only AD", self, enabled=False, triggered=self.v_ad)
+        self.v_hAct = QAction("View only H", self, enabled=False, triggered=self.v_h)
 
-        self.v_tot_u = QAction("View total uncertainty", self, enabled=False, checkable=True)
-        self.v_a_u = QAction("View only Aleatoric uncertainty", self, enabled=False, checkable=True)
-        self.v_e_u = QAction("View only Epistemic uncertainty", self, enabled=False, checkable=True)
+        self.v_tot_uAct = QAction("View total uncertainty", self, enabled=False, triggered=self.v_tot_u)
+        self.v_a_uAct = QAction("View only Aleatoric uncertainty", self, enabled=False, triggered=self.v_a_u)
+        self.v_e_uAct = QAction("View only Epistemic uncertainty", self, enabled=False, triggered=self.v_e_u)
 
         self.start_vis_deepAct = QAction(QIcon('icons/binocul.ico'), "Go to deepzoom visualization", self, enabled=False,
                                          shortcut="Ctrl+S", triggered=self.deep_vis)
@@ -454,16 +511,16 @@ class ImageViewer(QMainWindow):
         self.Analyze.addAction(self.startAnalysisAct)
 
         self.viewMenu = QMenu("&View", self)
-        self.viewMenu.addAction(self.v_no_overlay)
-        self.viewMenu.addAction(self.v_all_class)
+        self.viewMenu.addAction(self.v_no_overlayAct)
+        self.viewMenu.addAction(self.v_all_classAct)
         self.viewMenu.addSeparator()
-        self.viewMenu.addAction(self.v_ac)
-        self.viewMenu.addAction(self.v_ad)
-        self.viewMenu.addAction(self.v_h)
+        self.viewMenu.addAction(self.v_acAct)
+        self.viewMenu.addAction(self.v_adAct)
+        self.viewMenu.addAction(self.v_hAct)
         self.viewMenu.addSeparator()
-        self.viewMenu.addAction(self.v_tot_u)
-        self.viewMenu.addAction(self.v_a_u)
-        self.viewMenu.addAction(self.v_e_u)
+        self.viewMenu.addAction(self.v_tot_uAct)
+        self.viewMenu.addAction(self.v_a_uAct)
+        self.viewMenu.addAction(self.v_e_uAct)
         self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.zoomInAct)
         self.viewMenu.addAction(self.zoomOutAct)
