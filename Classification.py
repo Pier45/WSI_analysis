@@ -67,27 +67,20 @@ class Classification:
                       '\n Shape tile:{}'.format(self.shape, shape_i))
         return np_image, shape_i[0], shape_i[1]
 
-    def load_model(self, state=9, typean='fast'):
+    def load_model(self):
         path_model = 'Model_1_85aug.h5'
         self.model = tf.keras.models.load_model(path_model)
 
-        if state == 0:
-            self.classify()
-            self.overlay(typean)
-            self.overlay(typean, unc='epi')
-            self.overlay(typean, unc='ale')
-            self.overlay(typean, unc='tot')
-
-    def classify(self):
+    def classify(self, typean, progress_callback):
         """
         Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
-
+        self.load_model()
         np_image = np.asarray(self.np_list_image)
         print(np_image.shape)
         tesu = []
         for i in range(0, 5):
-            print(i)
+            progress_callback.emit(100*i/6)
             tesu.append(self.model.predict(np_image, batch_size=50))
 
         probs = np.asarray(tesu)
@@ -101,6 +94,13 @@ class Classification:
             self.dictionary[y]['epi'] = np.sum(epistemic[i])
             self.dictionary[y]['ale'] = np.sum(aleatoric[i])
 
+        self.overlay(typean)
+        progress_callback.emit(75)
+        self.overlay(typean, unc='epi')
+        progress_callback.emit(85)
+        self.overlay(typean, unc='ale')
+        self.overlay(typean, unc='tot')
+        progress_callback.emit(100)
         #print(self.dictionary)
 
     def show_image(self, im):
@@ -176,9 +176,11 @@ class Classification:
 
         image_base = np.where(image_base < 1, image_base, 1)
         if type_an == 'fast':
-            my_dpi = 100
+            print(' -------------------------SONO IN FAST-------------- ')
+            my_dpi = 300
         else:
-            my_dpi = 50
+            print(' -------------------------SONO IN SLOW-------------- ')
+            my_dpi = 70
 
         plt.figure(figsize=(a.shape[0] / my_dpi, a.shape[1] / my_dpi), dpi=my_dpi, frameon=False)
         plt.imshow(a)
@@ -186,6 +188,7 @@ class Classification:
         plt.axis('off')
 
         plt.savefig(res_name, dpi=my_dpi, bbox_inches='tight', pad_inches=0)
+        plt.close()
 
 
 if __name__ == '__main__':
@@ -193,8 +196,7 @@ if __name__ == '__main__':
     t = time.perf_counter()
     sasa = Classification('C:/Users/piero/Test/31400_2/')
     #sasa.show_image()
-    sasa.load_model()
-    sasa.classify()
+    sasa.classify(typean='fast')
     sasa.overlay(unc='Pred_class')
     t1 = time.perf_counter()
 

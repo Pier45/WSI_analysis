@@ -193,12 +193,11 @@ class ImageViewer(QMainWindow):
         if self.screensize[p] < image_size[p]:
             self.imageLabel.resize((self.screensize[p] / image_size[p]- 0.04) * self.imageLabel.pixmap().size())
 
-    def progress(self):
+    def progress(self, title):
         """Show the progress bar"""
 
         self.pop = QDialog()
         self.ui = Actions()
-        title = 'Tiles creation process'
         self.ui.initUI(self.pop, title)
         self.pop.show()
 
@@ -292,16 +291,18 @@ class ImageViewer(QMainWindow):
 
     def thread_manager(self):
         """Here are created the threads that create in the specific folders the tile"""
-
-        self.progress()
-        for lp in range(0, len(self.list_proc)):
-            vet = [self.numx_start[lp], self.numx_stop[lp], self.list_proc[lp], self.start_i[lp], self.stop_i[lp], self.ny, self.levi]
-            lp = WorkerLong(self.process_to_start, vet)
-            lp.signals.result.connect(self.print_output)
-            lp.signals.finished.connect(self.thread_complete)
-            lp.signals.progress.connect(self.progress_fn)
-            lp.signals.progress.connect(self.ui.onCountChanged)
-            self.threadPool.start(lp)
+        if os.listdir(self.path_work)[0] == self.list_proc[0]:
+            pass
+        else:
+            self.progress(title='Tiles creation process')
+            for lp in range(0, len(self.list_proc)):
+                vet = [self.numx_start[lp], self.numx_stop[lp], self.list_proc[lp], self.start_i[lp], self.stop_i[lp], self.ny, self.levi]
+                lp = WorkerLong(self.process_to_start, vet)
+                lp.signals.result.connect(self.print_output)
+                lp.signals.finished.connect(self.thread_complete)
+                lp.signals.progress.connect(self.progress_fn)
+                lp.signals.progress.connect(self.ui.onCountChanged)
+                self.threadPool.start(lp)
 
     def zoomIn(self):
         self.scaleImage(1.2)
@@ -336,17 +337,15 @@ class ImageViewer(QMainWindow):
         it's performed before starting the server a test on the paths in search of spaces, indeed the program does not
         works if in the path there are with spaces"""
 
-        a = os.path.join(os.getcwd() + '/deepzoom/deepzoom_server.py')
         b = self.fileName
-        if a.find(' ') != -1 or b.find(' ') != -1:
-            print('ho trovato lo spazio', a.find(' '), b.find(' '))
+        if b.find(' ') != -1:
+            print('there is a space in the path', b.find(' '))
             QMessageBox.critical(self, "About Image Viewer",
-                              "There are same space in the path: \n\n {} \n\n {} \n\n"
+                              "There are same space in the path: \n\n {} \n\n"
                               "The deepzoom function need no space in the path.\n"
-                              "Please, rename the folder without space and star again the program.".format(a, b))
+                              "Please, rename the folder without space and star again the program.".format(b))
         else:
-            print(os.getcwd())
-            command = 'cmd /k python {} {}'.format(a, b)
+            command = 'cmd /k python deepzoom/deepzoom_server.py {}'.format(b)
             worker = Worker(self.cmd_command, command)
             self.threadPool.start(worker)
 
@@ -369,15 +368,15 @@ class ImageViewer(QMainWindow):
         os.system(command)
 
     def start_an(self):
+
         if not os.path.exists(self.res_path):
             cls = Classification(self.path_work)
             state = 0
-            worker_cl = Worker(cls.load_model, state, self.type_an)
+            self.progress(title='Analysis')
+            worker_cl = WorkerLong(cls.classify, self.type_an)
+            worker_cl.signals.progress.connect(self.progress_fn)
+            worker_cl.signals.progress.connect(self.ui.onCountChanged)
             self.threadPool.start(worker_cl)
-
-            QMessageBox.information(self, "Bayesian Analayzer",
-                                "The analysis is started!\n \n For results will be avaible"
-                                "in few minutes.")
         else:
             self.view('class')
             print('process an already done!!!')

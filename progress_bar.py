@@ -1,6 +1,5 @@
-from PyQt5.QtCore import QThread, pyqtSignal
-from PyQt5.QtWidgets import (QApplication, QDialog,
-                             QProgressBar, QPushButton)
+from PyQt5.QtWidgets import (QApplication, QDialog, QProgressBar, QPushButton)
+import sys
 
 
 class Actions:
@@ -10,7 +9,6 @@ class Actions:
         self.progress = QProgressBar(owindow)
         self.progress.setGeometry(0, 0, 300, 50)
         self.progress.setMaximum(100)
-
 
     def onCountChanged(self, value):
         self.progress.setValue(value)
