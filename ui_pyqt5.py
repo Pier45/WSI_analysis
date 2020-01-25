@@ -1,7 +1,8 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QFont, QIcon
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel, QPushButton,
-        QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QToolBar,  QDialog, QProgressBar)
+    QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QToolBar,  QDialog, QHBoxLayout, QFrame,
+    QSplitter, QStyleFactory)
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 import os
 import ctypes
@@ -130,8 +131,6 @@ class ImageViewer(QMainWindow):
             self.res_path = self.path_work + 'result/'
 
             image = QImage(self.path_work + 'thumbnail/th.png')
-            p = ''
-
             self.imageLabel.setPixmap(QPixmap.fromImage(image))
 
             self.scaleFactor = 1
@@ -167,10 +166,11 @@ class ImageViewer(QMainWindow):
                         "Cannot load %s." % self.fileName)
                 return
 
-    def view(self, name):
-        if name == 'class':
-            view_path = self.res_path + 'Pred_class.png'
-        elif name == 'no_ov':
+    def view(self, name, fold):
+        if fold == 'result':
+            print(self.res_path + name + '.png')
+            view_path = self.res_path + name + '.png'
+        elif fold == 'th':
             view_path = self.path_work + 'thumbnail/th.png'
         else:
             view_path = self.res_path + 'uncertainty/' + name + '.png'
@@ -233,6 +233,12 @@ class ImageViewer(QMainWindow):
         print(s)
 
     def thread_complete(self):
+        print("THREAD COMPLETE!")
+
+    def thread_cl_complete(self):
+        self.pop.hide()
+        print("THREAD COMPLETE!")
+        self.view('Pred_class', 'result')
         print("THREAD COMPLETE!")
 
     def process_to_start(self, vet, progress_callback):
@@ -376,9 +382,10 @@ class ImageViewer(QMainWindow):
             worker_cl = WorkerLong(cls.classify, self.type_an)
             worker_cl.signals.progress.connect(self.progress_fn)
             worker_cl.signals.progress.connect(self.ui.onCountChanged)
+            worker_cl.signals.finished.connect(self.thread_cl_complete)
             self.threadPool.start(worker_cl)
         else:
-            self.view('class')
+            self.view('Pred_class', 'result')
             print('process an already done!!!')
 
         self.v_no_overlayAct.setEnabled(True)
@@ -393,61 +400,46 @@ class ImageViewer(QMainWindow):
         self.v_e_uAct.setEnabled(True)
 
     def v_no_overlay(self):
-        self.view('no_ov')
+        self.view('no_ov', 'th')
 
     def v_all_class(self):
-        self.view('class')
+        self.view('Pred_class', 'result')
 
     def v_ac(self):
-        self.view()
+        self.view('AC', 'result')
 
     def v_ad(self):
-        self.view()
+        self.view('AD', 'result')
 
     def v_h(self):
-        self.view()
+        self.view('H', 'result')
 
     def v_tot_u(self):
-        self.view('tot')
+        self.view('tot', 'uncertainty')
 
     def v_a_u(self):
-        self.view('ale')
+        self.view('ale', 'uncertainty')
 
     def v_e_u(self):
-        self.view('epi')
+        self.view('epi', 'uncertainty')
 
     def about(self):
 
         QMessageBox.about(self, "About Image Viewer",
-                "<p>The <b>Bayesian Analayzer</b> is built for analayze "
-                "Svs file, that tipicaly are very heavy files (~1Gb) "
-                "whit a machine learning net. </p>"
-                "<p>an image. QScrollArea provides a scrolling view around "
-                "another widget. If the child widget exceeds the size of the "
-                "frame, QScrollArea automatically provides scroll bars.</p>"
-                "<p>The example demonstrates how QLabel's ability to scale "
-                "its contents (QLabel.scaledContents), and QScrollArea's "
-                "ability to automatically resize its contents "
-                "(QScrollArea.widgetResizable), can be used to implement "
-                "zooming and scaling features.</p>"
-                "<p>In addition the example shows how to use QPainter to "
-                "print an image.</p>")
-
-    def info_deep(self):
-        QMessageBox.about(self, "About Image Viewer",
                           "<p>The <b>Bayesian Analayzer</b> is built for analayze "
                           "Svs file, that tipicaly are very heavy files (~1Gb) "
                           "whit a machine learning net. </p>"
-                          "<p>an image. QScrollArea provides a scrolling view around "
-                          "another widget. If the child widget exceeds the size of the "
-                          "frame, QScrollArea automatically provides scroll bars.</p>"
-                          "<p>The example demonstrates how QLabel's ability to scale "
-                          "its contents (QLabel.scaledContents), and QScrollArea's "
-                          "ability to automatically resize its contents "
-                          "(QScrollArea.widgetResizable), can be used to implement "
-                          "zooming and scaling features.</p>"
-                          "<p>In addition the example shows how to use QPainter to "
-                          "print an image.</p>")
+                          "<p>In addition, the program allows to zoom in at maximum resolution "
+                          "thanks to your browser.</p>")
+
+    def info_deep(self):
+        QMessageBox.about(self, "Deepzoom Viewer",
+                          "<p>The <b>Deepzoom</b> function allows the user to zoom in "
+                          "Svs file, at the maximum of the resolution.</p>"
+                          "<p>The program will open a tab in your browser, where you can "
+                          "zoom in to the image at maximum resolution.</p>"
+                          "<p>In addition, at the right side, are also shows some info about the svs file "
+                          "that the user is analyzing.</p>")
 
     def createActions(self):
         self.openAct = QAction(QIcon('icons/folder.png'), "Select svs", self, shortcut="Ctrl+O",
@@ -480,9 +472,9 @@ class ImageViewer(QMainWindow):
         self.v_no_overlayAct = QAction("View whit no overlay", self, enabled=False, triggered=self.v_no_overlay)
         self.v_all_classAct = QAction("View all classes", self, enabled=False, triggered=self.v_all_class)
 
-        self.v_acAct = QAction("View only AC", self, enabled=False, triggered=self.v_ac)
-        self.v_adAct = QAction("View only AD", self, enabled=False, triggered=self.v_ad)
-        self.v_hAct = QAction("View only H", self, enabled=False, triggered=self.v_h)
+        self.v_acAct = QAction(QIcon('icons/AC.ico'), "View only AC", self, enabled=False, triggered=self.v_ac)
+        self.v_adAct = QAction(QIcon('icons/AD.ico'), "View only AD", self, enabled=False, triggered=self.v_ad)
+        self.v_hAct = QAction(QIcon('icons/H.ico'), "View only H", self, enabled=False, triggered=self.v_h)
 
         self.v_tot_uAct = QAction("View total uncertainty", self, enabled=False, triggered=self.v_tot_u)
         self.v_a_uAct = QAction("View only Aleatoric uncertainty", self, enabled=False, triggered=self.v_a_u)
@@ -543,6 +535,10 @@ class ImageViewer(QMainWindow):
         self.toolbar.addAction(self.zoomOutAct)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.start_vis_deepAct)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.v_acAct)
+        self.toolbar.addAction(self.v_adAct)
+        self.toolbar.addAction(self.v_hAct)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.exitAct)
 

@@ -11,6 +11,7 @@ class Classification:
     def __init__(self, path):
         self.path = path
         self.dictionary = {}
+        self.my_dpi = 300
         self.np_list_image = []
         self.shape = (64, 64, 3)
         self.select_folder()
@@ -79,8 +80,12 @@ class Classification:
         np_image = np.asarray(self.np_list_image)
         print(np_image.shape)
         tesu = []
+        progress_callback.emit(5)
+
         for i in range(0, 5):
-            progress_callback.emit(100*i/6)
+            if i != 0:
+                progress_callback.emit(100*i/6)
+
             tesu.append(self.model.predict(np_image, batch_size=50))
 
         probs = np.asarray(tesu)
@@ -117,6 +122,10 @@ class Classification:
     def overlay(self, type_an, unc='Pred_class'):
         a = plt.imread(self.path + '/thumbnail/th.png')
         image_base = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
+        image_base_H = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
+        image_base_AC = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
+        image_base_AD = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
+
         print(f'IMAGE SHAPE BASE {image_base.shape}')
         step = 64    # per casi di rimpicciolimero grandezza tiles diviso quando si vuole es 128 / 4 = 32
         res_path = self.path + '/result'
@@ -125,7 +134,7 @@ class Classification:
             os.makedirs(res_path + '/uncertainty')
 
         if unc == 'Pred_class':
-            res_name = self.path + 'result/' + str(unc) + '.png'
+            res_name = [self.path+'result/'+str(unc)+'.png', self.path+'result/AC.png', self.path+'result/H.png', self.path+'result/AD.png']
         else:
             res_name = self.path + 'result/uncertainty/' + str(unc) + '.png'
 
@@ -144,14 +153,17 @@ class Classification:
                 if clas == 0:
                     # red
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
+                    image_base_AC[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
                     n1 += 1
                 elif clas == 1:
                     # green
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
+                    image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
                     n2 += 1
                 elif clas == 2:
                     # blue
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
+                    image_base_AD[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
                     n3 += 1
 
             elif unc == 'epi':
@@ -165,29 +177,35 @@ class Classification:
                 print(f'Strange command:{unc}')
                 pass
 
+        if type_an == 'slow':
+            self.my_dpi = 70
+
         if unc == 'Pred_class':
             print('AC --> {:>4}\nH --> {:>4}\nAD --> {:>4}'.format(n1, n2, n3))
             print(n1 + n2 + n3)
             image_base[:, :, 3] = 0.4
+            image_base_AC[:, :, 3] = 0.4
+            image_base_AD[:, :, 3] = 0.3
+            image_base_H[:, :, 3] = 0.3
+            list_im = [image_base, image_base_AC, image_base_H, image_base_AD]
+
+            for im, name in enumerate(res_name, 0):
+                self.save_img(list_im[im], a, name)
         else:
             image_base[:, :, 3] = 0.5
             r, c = np.where(image_base[:, :, 0] < 0.1)
             image_base[r, c, 3] = 0.2
+            self.save_img(image_base, a, res_name)
 
+    def save_img(self, image_base, a, res_name):
         image_base = np.where(image_base < 1, image_base, 1)
-        if type_an == 'fast':
-            print(' -------------------------SONO IN FAST-------------- ')
-            my_dpi = 300
-        else:
-            print(' -------------------------SONO IN SLOW-------------- ')
-            my_dpi = 70
 
-        plt.figure(figsize=(a.shape[0] / my_dpi, a.shape[1] / my_dpi), dpi=my_dpi, frameon=False)
+        plt.figure(figsize=(a.shape[0] / self.my_dpi, a.shape[1] / self.my_dpi), dpi=self.my_dpi, frameon=False)
         plt.imshow(a)
         plt.imshow(image_base.astype(np.float))
         plt.axis('off')
 
-        plt.savefig(res_name, dpi=my_dpi, bbox_inches='tight', pad_inches=0)
+        plt.savefig(res_name, dpi=self.my_dpi, bbox_inches='tight', pad_inches=0)
         plt.close()
 
 
