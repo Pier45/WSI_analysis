@@ -13,6 +13,7 @@ import sys
 from multi_processing_analysis import StartAnalysis
 from progress_bar import Actions
 from Classification import Classification
+from modifyset import Mod
 
 
 class Worker(QRunnable):
@@ -75,6 +76,8 @@ class ImageViewer(QMainWindow):
         self.obj_an, self.fileName = '', ''
         self.levi, self.ny = 0, 0
         self.type_an = 'fast'
+        self.model_name = 'Model_1_85aug.h5'
+        self.monte_c = 5
         self.numx_start, self.numx_stop, self.list_proc, self.start_i, self.stop_i = [], [], [], [], []
         self.lev_sec = 1
         user32 = ctypes.windll.user32
@@ -121,8 +124,7 @@ class ImageViewer(QMainWindow):
         """This method is the starting point, here is selected the svs files and is created the thumbnail that is
         immediately showed to the user"""
 
-        fileName, _ = QFileDialog.getOpenFileName(self, "Open File",
-                QDir.currentPath())
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open File", "*.svs")
 
         self.fileName = fileName
 
@@ -304,10 +306,11 @@ class ImageViewer(QMainWindow):
             for lp in range(0, len(self.list_proc)):
                 vet = [self.numx_start[lp], self.numx_stop[lp], self.list_proc[lp], self.start_i[lp], self.stop_i[lp], self.ny, self.levi]
                 lp = WorkerLong(self.process_to_start, vet)
-                lp.signals.result.connect(self.print_output)
+                if lp == 0:
+                    lp.signals.result.connect(self.print_output)
+                    lp.signals.progress.connect(self.progress_fn)
+                    lp.signals.progress.connect(self.ui.onCountChanged)
                 lp.signals.finished.connect(self.thread_complete)
-                lp.signals.progress.connect(self.progress_fn)
-                lp.signals.progress.connect(self.ui.onCountChanged)
                 self.threadPool.start(lp)
 
     def zoomIn(self):
@@ -377,9 +380,8 @@ class ImageViewer(QMainWindow):
 
         if not os.path.exists(self.res_path):
             cls = Classification(self.path_work)
-            state = 0
             self.progress(title='Analysis')
-            worker_cl = WorkerLong(cls.classify, self.type_an)
+            worker_cl = WorkerLong(cls.classify, self.type_an, self.monte_c, self.model_name)
             worker_cl.signals.progress.connect(self.progress_fn)
             worker_cl.signals.progress.connect(self.ui.onCountChanged)
             worker_cl.signals.finished.connect(self.thread_cl_complete)
@@ -422,6 +424,26 @@ class ImageViewer(QMainWindow):
 
     def v_e_u(self):
         self.view('epi', 'uncertainty')
+
+    def select_model(self):
+        QMessageBox.information(self, "Deepzoom Viewer",
+                             "<p>The model must have tree class for output, AC, AD, H.</p>")
+        self.model_name, _ = QFileDialog.getOpenFileName(self, "Open File", "*.h5")
+
+    def five(self):
+        self.tfiveAct.setChecked(False)
+        self.fiftyAct.setChecked(False)
+        self.monte_c = 5
+
+    def tfive(self):
+        self.fiveAct.setChecked(False)
+        self.fiftyAct.setChecked(False)
+        self.monte_c = 25
+
+    def fifty(self):
+        self.fiveAct.setChecked(False)
+        self.tfiveAct.setChecked(False)
+        self.monte_c = 50
 
     def about(self):
 
@@ -489,6 +511,13 @@ class ImageViewer(QMainWindow):
 
         self.slowAct = QAction('Slow mode', enabled=True, checkable=True, triggered=self.slow)
 
+        self.select_modAct = QAction('Change model', enabled=True, triggered=self.select_model)
+
+        self.fiveAct = QAction('5', enabled=True, checkable=True,checked=True, triggered=self.five)
+        self.tfiveAct = QAction('25', enabled=True, checkable=True, triggered=self.tfive)
+        self.fiftyAct = QAction('50', enabled=True, checkable=True, triggered=self.fifty)
+
+
     def createMenus(self):
         self.fileMenu = QMenu("&File", self)
         self.fileMenu.addAction(self.openAct)
@@ -496,9 +525,24 @@ class ImageViewer(QMainWindow):
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
 
-        self.Analyze = QMenu("&Analysis", self.fileMenu)
+        self.Analyze = QMenu("&Analysis", self)
         self.Analyze.addAction(self.fastAct)
         self.Analyze.addAction(self.slowAct)
+        self.Analyze.addSeparator()
+
+        self.modi = QMenu("&Modify Settings", self)
+        self.modi.addAction(self.select_modAct)
+
+        self.monte_n = QMenu("&Select Monte Carlo Sample", self)
+        self.monte_n.addAction(self.fiveAct)
+        self.monte_n.addAction(self.tfiveAct)
+        self.monte_n.addAction(self.fiftyAct)
+
+        self.modi.addAction(self.monte_n.menuAction())
+
+        self.Analyze.addAction(self.modi.menuAction())
+
+        self.Analyze.addSeparator()
         self.Analyze.addAction(self.startAnalysisAct)
 
         self.viewMenu = QMenu("&View", self)

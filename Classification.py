@@ -67,21 +67,21 @@ class Classification:
                       '\n Shape tile:{}'.format(self.shape, shape_i))
         return np_image, shape_i[0], shape_i[1]
 
-    def load_model(self):
-        path_model = 'Model_1_85aug.h5'
-        self.model = tf.keras.models.load_model(path_model)
+    def load_model(self, model_name):
+        self.model = tf.keras.models.load_model(model_name)
 
-    def classify(self, typean, progress_callback):
+    def classify(self, typean, monte_c, model_n, progress_callback):
         """
         Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
-        self.load_model()
+        self.load_model(model_name=model_n)
         np_image = np.asarray(self.np_list_image)
         print(np_image.shape)
         tesu = []
         progress_callback.emit(5)
+        mc = monte_c
 
-        for i in range(0, 5):
+        for i in range(0, mc):
             if i != 0:
                 progress_callback.emit(100*i/6)
 
