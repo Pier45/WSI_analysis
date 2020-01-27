@@ -2,9 +2,10 @@ import os
 import time
 import glob
 import numpy as np
-from scipy import misc
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import imread
+import json
 
 
 class Classification:
@@ -41,22 +42,21 @@ class Classification:
                 sub_d = {}
                 complete_name = j[list(j).index('\\') + 1:-4]
                 partial = complete_name[list(complete_name).index('_') + 1:]
-                n_tile = int(partial[:partial.index('_')])
+                n_tile = partial[:partial.index('_')]
                 tile_pos = partial[list(partial).index('_') + 1:]
                 column = int(tile_pos[:list(tile_pos).index('_')])
                 row = int(tile_pos[list(tile_pos).index('_')+1:])
                 np_image, shape_x, shape_y = self.tile_control(j)
-                sub_d['im_path'], sub_d['shape_x'], sub_d['shape_y'], sub_d['col'], sub_d['row'] = j, shape_x, shape_y, column, row
+                sub_d["im_path"], sub_d["shape_x"], sub_d["shape_y"], sub_d["col"], sub_d["row"] = j, shape_x, shape_y, column, row
                 list_image.append(np_image)
                 self.dictionary[n_tile] = sub_d
             print('Selected Folder:   {:<40} Number of elements: {}'.format(sel_folder, n_elements))
 
         self.np_list_image = np.asarray(list_image)
-        print(self.np_list_image.shape)
 
     def tile_control(self, j):
         """ This method read the image, modify it as numpy array and at the end control if same padding is needed."""
-        image = misc.imread(j)
+        image = imread(j)
         np_image = np.asarray(image/255, dtype=float)
         shape_i = image.shape
         if shape_i != self.shape:
@@ -95,9 +95,9 @@ class Classification:
         print('SHAPE EPI: {} \n SHAPE ALE: {}'.format(epistemic.shape, aleatoric.shape))
 
         for i, y in enumerate(self.dictionary):
-            self.dictionary[y]['class'] = np.argmax(clas_mean[i])
-            self.dictionary[y]['epi'] = np.sum(epistemic[i])
-            self.dictionary[y]['ale'] = np.sum(aleatoric[i])
+            self.dictionary[y]["class"] = np.argmax(clas_mean[i])
+            self.dictionary[y]["epi"] = np.sum(epistemic[i])
+            self.dictionary[y]["ale"] = np.sum(aleatoric[i])
 
         self.overlay(typean)
         progress_callback.emit(75)
@@ -106,7 +106,9 @@ class Classification:
         self.overlay(typean, unc='ale')
         self.overlay(typean, unc='tot')
         progress_callback.emit(100)
-        #print(self.dictionary)
+
+        with open(os.path.join(self.path, 'dictionary_js.txt'), 'w') as f:
+            json.dump(self.dictionary, f)
 
     def show_image(self, im):
         """GREAT NOTE: LIST ARE index-1 for the 0 index """
@@ -212,7 +214,7 @@ class Classification:
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    sasa = Classification('C:/Users/piero/Test/31400_2/')
+    sasa = Classification('C:/Users/piero/Test/james_2/')
     #sasa.show_image()
     sasa.classify(typean='fast')
     sasa.overlay(unc='Pred_class')
