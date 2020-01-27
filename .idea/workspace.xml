@@ -24,8 +24,8 @@
     <option name="WARN_ABOUT_DETACHED_HEAD" value="false" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$USER_HOME$/OneDrive/Politecnico Torino/Tesi/ui_pyqt5.py" root0="SKIP_INSPECTION" />
     <setting file="file://$PROJECT_DIR$/multi_processing_analysis.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/OneDrive/Politecnico Torino/Tesi/ui_pyqt5.py" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProjectId" id="1UNOXOzkkkQso0bL05PtRYB81Ai" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -46,7 +46,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.ui_pyqt5 (1)">
+  <component name="RunManager" selected="Python.Classification">
     <configuration name="Classification" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Multiprocessing_analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -154,8 +154,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.ui_pyqt5 (1)" />
         <item itemvalue="Python.Classification" />
+        <item itemvalue="Python.ui_pyqt5 (1)" />
         <item itemvalue="Python.ooo" />
         <item itemvalue="Python.progress_bar" />
         <item itemvalue="Python.test" />

@@ -56,9 +56,8 @@ class Classification:
 
     def tile_control(self, j):
         """ This method read the image, modify it as numpy array and at the end control if same padding is needed."""
-        image = imread(j)
-        np_image = np.asarray(image/255, dtype=float)
-        shape_i = image.shape
+        np_image = imread(j)
+        shape_i = np_image.shape
         if shape_i != self.shape:
             try:
                 np_image = np.pad(np_image, ((0, self.shape[0] - shape_i[0]), (0, self.shape[1] - shape_i[1]), (0, 0)),
@@ -95,17 +94,18 @@ class Classification:
         print('SHAPE EPI: {} \n SHAPE ALE: {}'.format(epistemic.shape, aleatoric.shape))
 
         for i, y in enumerate(self.dictionary):
-            self.dictionary[y]["class"] = np.argmax(clas_mean[i])
-            self.dictionary[y]["epi"] = np.sum(epistemic[i])
-            self.dictionary[y]["ale"] = np.sum(aleatoric[i])
+            self.dictionary[y]["class"] = int(np.argmax(clas_mean[i]))
+            self.dictionary[y]["epi"] = float(np.round(np.sum(epistemic[i]), decimals=5))
+            self.dictionary[y]["ale"] = float(np.round(np.sum(aleatoric[i]), decimals=5))
 
         self.overlay(typean)
-        progress_callback.emit(75)
+        progress_callback.emit(80)
         self.overlay(typean, unc='epi')
-        progress_callback.emit(85)
+        progress_callback.emit(90)
         self.overlay(typean, unc='ale')
         self.overlay(typean, unc='tot')
         progress_callback.emit(100)
+        print(self.dictionary)
 
         with open(os.path.join(self.path, 'dictionary_js.txt'), 'w') as f:
             json.dump(self.dictionary, f)
@@ -144,14 +144,14 @@ class Classification:
 
         for i, name_t in enumerate(self.dictionary):
 
-            shape_x = int(self.dictionary[name_t]['shape_x']) #/4
-            shape_y = int(self.dictionary[name_t]['shape_y']) #/4
-            column = self.dictionary[name_t]['col']
-            row = self.dictionary[name_t]['row']
+            shape_x = int(self.dictionary[name_t]["shape_x"]) #/4
+            shape_y = int(self.dictionary[name_t]["shape_y"]) #/4
+            column = self.dictionary[name_t]["col"]
+            row = self.dictionary[name_t]["row"]
             c0 = column*step
             r0 = row*step
             if unc == 'Pred_class':
-                clas = self.dictionary[name_t]['class']
+                clas = self.dictionary[name_t]["class"]
                 if clas == 0:
                     # red
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
@@ -169,12 +169,12 @@ class Classification:
                     n3 += 1
 
             elif unc == 'epi':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]['epi'])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]["epi"])
             elif unc == 'ale':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]['ale'])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]["ale"])
             elif unc == 'tot':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]['ale'])
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]['epi'])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]["ale"])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]["epi"])
             else:
                 print(f'Strange command:{unc}')
                 pass
@@ -208,16 +208,17 @@ class Classification:
         plt.axis('off')
 
         plt.savefig(res_name, dpi=self.my_dpi, bbox_inches='tight', pad_inches=0)
+        plt.show()
         plt.close()
 
 
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    sasa = Classification('C:/Users/piero/Test/james_2/')
+    sasa = Classification('C:/Users/piero/Test/31400_2/')
     #sasa.show_image()
     sasa.classify(typean='fast')
-    sasa.overlay(unc='Pred_class')
+    #sasa.overlay(unc='Pred_class')
     t1 = time.perf_counter()
 
     s = t1-t
