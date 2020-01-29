@@ -306,10 +306,10 @@ class ImageViewer(QMainWindow):
             for lp in range(0, len(self.list_proc)):
                 vet = [self.numx_start[lp], self.numx_stop[lp], self.list_proc[lp], self.start_i[lp], self.stop_i[lp], self.ny, self.levi]
                 lp = WorkerLong(self.process_to_start, vet)
-                if lp == 0:
-                    lp.signals.result.connect(self.print_output)
-                    lp.signals.progress.connect(self.progress_fn)
-                    lp.signals.progress.connect(self.ui.onCountChanged)
+
+                lp.signals.result.connect(self.print_output)
+                lp.signals.progress.connect(self.progress_fn)
+                lp.signals.progress.connect(self.ui.onCountChanged)
                 lp.signals.finished.connect(self.thread_complete)
                 self.threadPool.start(lp)
 
@@ -449,19 +449,19 @@ class ImageViewer(QMainWindow):
 
         QMessageBox.about(self, "About Image Viewer",
                           "<p>The <b>Bayesian Analayzer</b> is built for analayze "
-                          "Svs file, that tipicaly are very heavy files (~1Gb) "
-                          "whit a machine learning net. </p>"
+                          "Svs file, tipicaly very heavy files (~1Gb) "
+                          "thanks to a bayesian net. </p>"
                           "<p>In addition, the program allows to zoom in at maximum resolution "
-                          "thanks to your browser.</p>")
+                          "by opening a tab in the browser.</p>")
 
     def info_deep(self):
         QMessageBox.about(self, "Deepzoom Viewer",
                           "<p>The <b>Deepzoom</b> function allows the user to zoom in "
-                          "Svs file, at the maximum of the resolution.</p>"
-                          "<p>The program will open a tab in your browser, where you can "
-                          "zoom in to the image at maximum resolution.</p>"
-                          "<p>In addition, at the right side, are also shows some info about the svs file "
-                          "that the user is analyzing.</p>")
+                          "Svs file, at maximum resolution.</p>"
+                          "<p>The program will open a tab in your browser at 127.0.0.1:8080. </p>"
+                          "<p>In addition, at the right side, are also showed some info about the svs file "
+                          "instead to the left there could be same additional images, this depends"
+                          "to the selected file.</p>")
 
     def createActions(self):
         self.openAct = QAction(QIcon('icons/folder.png'), "Select svs", self, shortcut="Ctrl+O",
@@ -503,7 +503,7 @@ class ImageViewer(QMainWindow):
         self.v_e_uAct = QAction("View only Epistemic uncertainty", self, enabled=False, triggered=self.v_e_u)
 
         self.start_vis_deepAct = QAction(QIcon('icons/binocul.ico'), "Go to deepzoom visualization", self, enabled=False,
-                                         shortcut="Ctrl+S", triggered=self.deep_vis)
+                                         shortcut="Ctrl+D", triggered=self.deep_vis)
 
         self.startAnalysisAct = QAction(QIcon('icons/start.ico'), 'Start', self, triggered=self.start_an, enabled=False, shortcut="Ctrl+S")
 

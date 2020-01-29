@@ -6,6 +6,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imread
 import json
+from PIL import Image
 
 
 class Classification:
@@ -78,7 +79,7 @@ class Classification:
         np_image = np.asarray(self.np_list_image)
         print(np_image.shape)
         tesu = []
-        progress_callback.emit(5)
+        progress_callback.emit(1)
         mc = monte_c
 
         for i in range(0, mc):
@@ -169,12 +170,12 @@ class Classification:
                     n3 += 1
 
             elif unc == 'epi':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]["epi"])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["epi"])
             elif unc == 'ale':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]["ale"])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["ale"])
             elif unc == 'tot':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]["ale"])
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += abs(self.dictionary[name_t]["epi"])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["ale"])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["epi"])
             else:
                 print(f'Strange command:{unc}')
                 pass
@@ -192,33 +193,41 @@ class Classification:
             list_im = [image_base, image_base_AC, image_base_H, image_base_AD]
 
             for im, name in enumerate(res_name, 0):
-                self.save_img(list_im[im], a, name)
+                self.new_save(list_im[im], name)
         else:
-            image_base[:, :, 3] = 0.5
-            r, c = np.where(image_base[:, :, 0] < 0.1)
-            image_base[r, c, 3] = 0.2
-            self.save_img(image_base, a, res_name)
+            r_h, c_h = np.where(image_base[:, :, 2] > 0.5)
+            image_base[r_h, c_h, 3] = 0.5
+            r_m, c_m = np.where(image_base[:, :, 2] > 0.45)
+            image_base[r_m, c_m, 3] = 0.4
+            r_c, c_c = np.where(image_base[:, :, 2] < 0.45)
+            image_base[r_c, c_c, 3] = 0.25
+            r, c = np.where(image_base[:, :, 2] < 0.2)
+            image_base[r, c, 3] = 0.1
+            self.new_save(image_base, res_name)
 
-    def save_img(self, image_base, a, res_name):
+    def new_save(self, image_base, res_name):
         image_base = np.where(image_base < 1, image_base, 1)
+        background = Image.open(self.path + '/thumbnail/th.png')
+        foreground = Image.fromarray(np.uint8(image_base*255), mode='RGBA')
+        background.paste(foreground, (0, 0), foreground)
+        background.save(res_name)
 
-        plt.figure(figsize=(a.shape[0] / self.my_dpi, a.shape[1] / self.my_dpi), dpi=self.my_dpi, frameon=False)
-        plt.imshow(a)
-        plt.imshow(image_base.astype(np.float))
-        plt.axis('off')
 
-        plt.savefig(res_name, dpi=self.my_dpi, bbox_inches='tight', pad_inches=0)
-        plt.show()
-        plt.close()
+    def load_dict(self):
+        name_f = os.path.join(self.path, 'dictionary_js.txt')
+        with open(name_f, 'r') as f:
+            self.dictionary = json.load(f)
+        pass
 
 
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    sasa = Classification('C:/Users/piero/Test/31400_2/')
+    sasa = Classification('C:/Users/piero/Test/10002_2/')
     #sasa.show_image()
-    sasa.classify(typean='fast')
-    #sasa.overlay(unc='Pred_class')
+    #sasa.classify(typean='fast')
+    sasa.load_dict()
+    sasa.overlay(type_an='fast', unc='Pred_class')
     t1 = time.perf_counter()
 
     s = t1-t
