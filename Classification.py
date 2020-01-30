@@ -217,7 +217,6 @@ class Classification:
         name_f = os.path.join(self.path, 'dictionary_js.txt')
         with open(name_f, 'r') as f:
             self.dictionary = json.load(f)
-        pass
 
 
 if __name__ == '__main__':

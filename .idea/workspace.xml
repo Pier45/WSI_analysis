@@ -24,8 +24,8 @@
     <option name="WARN_ABOUT_DETACHED_HEAD" value="false" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$USER_HOME$/OneDrive/Politecnico Torino/Tesi/ui_pyqt5.py" root0="SKIP_INSPECTION" />
     <setting file="file://$PROJECT_DIR$/multi_processing_analysis.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/OneDrive/Politecnico Torino/Tesi/ui_pyqt5.py" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProjectId" id="1UNOXOzkkkQso0bL05PtRYB81Ai" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -46,7 +46,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.ui_pyqt5 (1)">
+  <component name="RunManager" selected="Python.hist">
     <configuration name="Classification" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Multiprocessing_analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -68,7 +68,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="modifyset" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="hist" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Multiprocessing_analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -80,7 +80,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/modifyset.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/hist.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -89,7 +89,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="output" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="ooo" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Multiprocessing_analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -97,11 +97,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$USER_HOME$" />
-      <option name="IS_MODULE_SDK" value="false" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$USER_HOME$/output.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ooo.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -154,11 +154,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.hist" />
+        <item itemvalue="Python.ooo" />
         <item itemvalue="Python.ui_pyqt5 (1)" />
         <item itemvalue="Python.Classification" />
         <item itemvalue="Python.progress_bar" />
-        <item itemvalue="Python.output" />
-        <item itemvalue="Python.modifyset" />
       </list>
     </recent_temporary>
   </component>
