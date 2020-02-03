@@ -8,28 +8,47 @@ import multiprocessing
 import time
 from math import ceil
 import threading
+import glob
+import time
 
 
 class StartAnalysis:
-    def __init__(self, file_path, tile_size=64, overlap=0, limit_bounds=True, lev_sec=2):
+    def __init__(self, tile_size=64, overlap=0, limit_bounds=True, lev_sec=2):
         self.lev_sec = lev_sec
         self.limit_bounds = limit_bounds
         self.overlap = overlap
         self.tile_size = tile_size
         self.levi = 1000
-        self.file_path = file_path
+        self.file_path = ''
         self.generator = ''
         self.ntiles_y = 0
         self.path_folder = ''
         self.path_th = ''
+        self.newshape = (64, 64, 3)
         self.start_folder = 'C:/Users/piero/Test/'
         # script finale
         # self.start_folder = str(os.getcwd()) + '/'
+
+    def list_files(self, path_svs, save_path, progress_callback):
+        list_name = os.listdir(path_svs)
+        list_f_svs = glob.glob(os.path.join(path_svs, '*.svs'))
+        print(list_f_svs)
+        for n, j in enumerate(list_f_svs, 0):
+            progress_callback.emit(100*(n+1)/len(list_f_svs))
+            print(n, j)
+            self.openSvs(j)
+            numx = self.tile_gen(state=2)
+            self.process_create_dataset(numx, list_name[n], save_p=save_path)
+
+
+    def openSvs(self, file_path, flag = 0):
         try:
+            self.file_path = file_path
             self.slide = openslide.OpenSlide(file_path)
-            self.base_folder_manager()
             self.get_prop()
             #self.get_thumb()
+            if flag == 0:
+                self.base_folder_manager()
         except openslide.OpenSlideError:
             print("Cannot find file '" + file_path + "'")
 
@@ -42,8 +61,8 @@ class StartAnalysis:
         folder_name = file_name + '_' + str(self.lev_sec)
         newpath = self.start_folder + folder_name
         if not os.path.exists(newpath):
-            os.makedirs(newpath)
-            os.mkdir(newpath+'/thumbnail')
+            #os.makedirs(newpath)
+            os.makedirs(newpath+'/thumbnail')
 
         self.path_th = newpath+'/thumbnail'
         self.path_folder = newpath + '/'
@@ -98,6 +117,8 @@ class StartAnalysis:
             return numx_start, numx_stop, list_proc, start_indexs, stop_index, numy, self.levi
         elif state == 1:
             return self.generator
+        elif state == 2:
+            return numx
         else:
             self.start_thread(numx_start, numx_stop, list_proc, start_indexs)
 
@@ -117,6 +138,21 @@ class StartAnalysis:
             return True
         else:
             return False
+
+    def process_create_dataset(self, numx, fname, save_p):
+        """Divide the wsi in tiles, thanks to get_tile, if the test with fold managere is false."""
+        start = 0
+
+        for x in range(0, numx):
+            for y in range(0, self.ntiles_y):
+                im = self.generator.get_tile(self.levi, (x, y))
+                im.thumbnail(size=self.newshape)
+                nome = save_p + '/p_' + fname[:fname.index('.svs')] + '_tile_' + str(start) + '_' + str(x) + '_' + str(y) + '.png'
+                print(nome)
+                im.save(nome, 'PNG')
+                start += 1
+        return 'End of First Analysis'
+
 
     def process_to_start(self, n_start, n_stop, name_process, start):
         """Divide the wsi in tiles, thanks to get_tile, if the test with fold managere is false."""
@@ -197,8 +233,11 @@ class StartAnalysis:
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    test1 = StartAnalysis('C:/Users/piero/10002.svs')
-    test1.tile_gen()
+    #test1 = StartAnalysis()
+    #test1.openSvs('C:/Users/piero/10002.svs')
+    #test1.tile_gen()
+    tete = StartAnalysis(lev_sec=0)
+    tete.list_files('C:/Users/piero/Desktop/train/AC', 'C:/Users/piero/test2')
     t1 = time.perf_counter()
     s = t1-t
     print(s)

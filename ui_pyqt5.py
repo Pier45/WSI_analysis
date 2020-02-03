@@ -219,9 +219,11 @@ class ImageViewer(QMainWindow):
     def first_step(self, filename):
 
         if self.slowAct.isChecked():
-            obj_an = StartAnalysis(filename, lev_sec=self.lev_sec)
+            obj_an = StartAnalysis(lev_sec=self.lev_sec)
+            obj_an.openSvs(filename)
         else:
-            obj_an = StartAnalysis(filename)
+            obj_an = StartAnalysis()
+            obj_an.openSvs(filename)
 
         ph = obj_an.get_thumb()
         self.numx_start, self.numx_stop, self.list_proc, self.start_i, self.stop_i, self.ny, self.levi = obj_an.tile_gen(state=0)
@@ -248,9 +250,11 @@ class ImageViewer(QMainWindow):
         print(n_start, n_stop, name_process, start, stop, ny, levi)
 
         if self.slowAct.isChecked():
-            obj_k = StartAnalysis(self.fileName, lev_sec=self.lev_sec)
+            obj_k = StartAnalysis(lev_sec=self.lev_sec)
+            obj_k.openSvs(self.fileName)
         else:
-            obj_k = StartAnalysis(self.fileName)
+            obj_k = StartAnalysis()
+            obj_k.openSvs(self.fileName)
 
         res = obj_k.tile_gen(state=1)
         f_manager = self.folder_manage(name_process)
