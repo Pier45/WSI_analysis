@@ -40,8 +40,7 @@ class StartAnalysis:
             numx = self.tile_gen(state=2)
             self.process_create_dataset(numx, list_name[n], save_p=save_path)
 
-
-    def openSvs(self, file_path, flag = 0):
+    def openSvs(self, file_path, flag=0):
         try:
             self.file_path = file_path
             self.slide = openslide.OpenSlide(file_path)
