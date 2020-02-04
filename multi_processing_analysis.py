@@ -29,16 +29,16 @@ class StartAnalysis:
         # script finale
         # self.start_folder = str(os.getcwd()) + '/'
 
-    def list_files(self, path_svs, save_path, progress_callback):
+    def list_files(self, path_svs, save_path, progress_callback, view):
         list_name = os.listdir(path_svs)
         list_f_svs = glob.glob(os.path.join(path_svs, '*.svs'))
         print(list_f_svs)
         for n, j in enumerate(list_f_svs, 0):
-            progress_callback.emit(100*(n+1)/len(list_f_svs))
             print(n, j)
-            self.openSvs(j)
+            self.openSvs(j, flag=1)
             numx = self.tile_gen(state=2)
             self.process_create_dataset(numx, list_name[n], save_p=save_path)
+            progress_callback.emit(100*(n+1)/len(list_f_svs))
 
     def openSvs(self, file_path, flag=0):
         try:
@@ -146,12 +146,11 @@ class StartAnalysis:
             for y in range(0, self.ntiles_y):
                 im = self.generator.get_tile(self.levi, (x, y))
                 im.thumbnail(size=self.newshape)
-                nome = save_p + '/p_' + fname[:fname.index('.svs')] + '_tile_' + str(start) + '_' + str(x) + '_' + str(y) + '.png'
+                nome = save_p + '/pz_' + fname[:fname.index('.svs')] + '_tile_' + str(start) + '_' + str(x) + '_' + str(y) + '.png'
                 print(nome)
                 im.save(nome, 'PNG')
                 start += 1
         return 'End of First Analysis'
-
 
     def process_to_start(self, n_start, n_stop, name_process, start):
         """Divide the wsi in tiles, thanks to get_tile, if the test with fold managere is false."""

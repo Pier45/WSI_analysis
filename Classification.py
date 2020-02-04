@@ -10,10 +10,10 @@ from PIL import Image
 
 
 class Classification:
-    def __init__(self, path):
+    def __init__(self, path, ty):
         self.path = path
+        self.ty = ty
         self.dictionary = {}
-        self.my_dpi = 300
         self.np_list_image = []
         self.shape = (64, 64, 3)
         self.select_folder()
@@ -34,20 +34,25 @@ class Classification:
         self.dictionary = {}
         list_image = []
         folders_tot = os.listdir(self.path)
-        folders = [y for y in folders_tot if y[0:2] == 'p_']
-        print(folders)
+        if self.ty == 'analysis':
+            folders = [y for y in folders_tot if y[0:2] == 'p_']
+        else:
+            folders = ['/AC', '/H', '/AD']
+
         for i in folders:
-            sel_folder = self.path + str(i) + '/' + '*.png'
+            sel_folder = self.path + str(i) + '/*.png'
             list_files, n_elements = self.analysis_folder(sel_folder)
             for j in list_files:
                 sub_d = {}
-                complete_name = j[list(j).index('\\') + 1:-4]
-                partial = complete_name[list(complete_name).index('_') + 1:]
+                complete_name = j[j.index('tile'):-4]
+                partial = complete_name[complete_name.index('_') + 1:]
                 n_tile = partial[:partial.index('_')]
                 tile_pos = partial[list(partial).index('_') + 1:]
                 column = int(tile_pos[:list(tile_pos).index('_')])
                 row = int(tile_pos[list(tile_pos).index('_')+1:])
                 np_image, shape_x, shape_y = self.tile_control(j)
+                if self.ty == 'datacleaning':
+                    sub_d['name'] = j[j.index('pz_'):j.index('tile')]
                 sub_d["im_path"], sub_d["shape_x"], sub_d["shape_y"], sub_d["col"], sub_d["row"] = j, shape_x, shape_y, column, row
                 list_image.append(np_image)
                 self.dictionary[n_tile] = sub_d
@@ -71,7 +76,7 @@ class Classification:
     def load_model(self, model_name):
         self.model = tf.keras.models.load_model(model_name)
 
-    def classify(self, typean, monte_c, model_n, progress_callback):
+    def classify(self, typean, monte_c, model_n, progress_callback, view):
         """
         Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
@@ -99,14 +104,16 @@ class Classification:
             self.dictionary[y]["epi"] = float(np.round(np.sum(epistemic[i]), decimals=5))
             self.dictionary[y]["ale"] = float(np.round(np.sum(aleatoric[i]), decimals=5))
 
-        self.overlay(typean)
-        progress_callback.emit(80)
-        self.overlay(typean, unc='epi')
-        progress_callback.emit(90)
-        self.overlay(typean, unc='ale')
-        self.overlay(typean, unc='tot')
-        progress_callback.emit(100)
-        print(self.dictionary)
+        if typean == 'datacleaning':
+            progress_callback.emit(100)
+        else:
+            self.overlay(typean)
+            progress_callback.emit(80)
+            self.overlay(typean, unc='epi')
+            progress_callback.emit(90)
+            self.overlay(typean, unc='ale')
+            self.overlay(typean, unc='tot')
+            progress_callback.emit(100)
 
         with open(os.path.join(self.path, 'dictionary_js.txt'), 'w') as f:
             json.dump(self.dictionary, f)
@@ -179,9 +186,6 @@ class Classification:
             else:
                 print(f'Strange command:{unc}')
                 pass
-
-        if type_an == 'slow':
-            self.my_dpi = 70
 
         if unc == 'Pred_class':
             print('AC --> {:>4}\nH --> {:>4}\nAD --> {:>4}'.format(n1, n2, n3))

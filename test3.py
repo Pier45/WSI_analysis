@@ -1,7 +1,8 @@
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-
+import glob
+import os
 
 
 def load_image(addr, i):
@@ -21,5 +22,6 @@ def load_image(addr, i):
 #load_image(addr='C:/Users/piero\Test\map_1_2\p_18_21_13/tile_244_18_9.png', i=0)
 p = 'C:/Users/piero/Downloads/result/uncertainty/tot.png'
 
-if not os.path.exists(res_path):
-    os.makedirs(res_path + '/uncertainty')
+a = 'C:/Users/piero/Desktop/train'
+print(len(glob.glob(os.path.join(path_train, '*/*.svs'))))
+

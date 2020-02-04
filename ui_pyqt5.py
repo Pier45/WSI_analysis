@@ -381,9 +381,8 @@ class ImageViewer(QMainWindow):
         os.system(command)
 
     def start_an(self):
-
         if not os.path.exists(self.res_path):
-            cls = Classification(self.path_work)
+            cls = Classification(self.path_work, ty='analysis')
             self.progress(title='Analysis')
             worker_cl = WorkerLong(cls.classify, self.type_an, self.monte_c, self.model_name)
             worker_cl.signals.progress.connect(self.progress_fn)

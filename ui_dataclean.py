@@ -17,6 +17,8 @@ import matplotlib.pyplot as plt
 #import seaborn as sns
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+import time
+from Classification import Classification
 
 matplotlib.use('Qt5Agg')
 
@@ -37,9 +39,10 @@ class QVLine(QFrame):
 
 class MplCanvas(FigureCanvasQTAgg):
 
-    def __init__(self, parent=None, width=5, height=4, dpi=100, name='dadadada'):
+    def __init__(self, name, parent=None, width=10, height=8, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
+        self.axes.set_title(name)
         super(MplCanvas, self).__init__(fig)
 
 
@@ -90,18 +93,13 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.title = 'Bayesian Datacleaning'
-        self.left = 900
-        self.top = 300
-        self.width = 900
-        self.height = 1000
         self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
 
         self.table_widget = MyTableWidget(self)
         self.setCentralWidget(self.table_widget)
         self.createAct()
         self.createMenu()
-        self.show()
+        self.showMaximized()
 
     def createAct(self):
         self.aboutAct = QAction("&About", self)
@@ -120,11 +118,14 @@ class MyTableWidget(QWidget):
 
     def __init__(self, parent):
         super(QWidget, self).__init__(parent)
-        self.train_path = ""
-        self.val_path = ""
+        self.train_path = "D:/test/train"
+        self.val_path = "D:/test/val"
+        self.model_path = "C:/Users/piero/Documents/GitHub/WSI_analysis/Model_1_85aug.h5"
         self.epoch = 100
         self.model = 'drop'
-        self.path_work = 'C:/Users/piero/test2'
+        self.batch_dim = 100
+        self.monte = 5
+        self.path_work = "D:/test"
         self.layout = QVBoxLayout(self)
         self.HMonte = QHBoxLayout(self)
 
@@ -237,15 +238,23 @@ class MyTableWidget(QWidget):
         # Elements section 2
         self.progrestrain = QProgressBar(self)
         self.text = QLineEdit(self)
+        self.text_batch = QLineEdit(self)
         self.start_train = QPushButton("Start")
         self.start_train.clicked.connect(self.train)
         self.state_train = QLabel("Press start to train the model.")
         self.state_train.setMargin(10)
+        self.state_train.setFixedWidth(600)
+        self.state_train.setFixedHeight(1500)
+        self.state_train.setAlignment(Qt.AlignTop)
+
         self.scrolltr = QScrollArea()
         self.scrolltr.setAlignment(Qt.AlignTop)
         self.scrolltr.setWidget(self.state_train)
 
-        self.description_tr = QLabel('Insert numer of epochs: ')
+        self.description_tr = QLabel('Insert numer of epochs:  ')
+        self.description_batch = QLabel('Insert dimension of batch:  ')
+        self.description_batch2 = QLabel('Default value: 100 ')
+
         self.description_model = QLabel('Select one of the 2 available models:')
         self.description_tr2 = QLabel('Default epochs: 100')
         self.kl = QRadioButton('Kl divergence')
@@ -257,11 +266,20 @@ class MyTableWidget(QWidget):
         self.ok_text = QPushButton('Ok')
         self.ok_text.clicked.connect(self.ok_epochs)
 
-        self.set_train = QHBoxLayout(self)
-        self.set_train.addWidget(self.description_tr)
-        self.set_train.addWidget(self.text)
-        self.set_train.addWidget(self.ok_text)
-        self.set_train.addWidget(self.description_tr2)
+        self.ok_batc = QPushButton('Ok')
+        self.ok_batc.clicked.connect(self.ok_batch)
+
+        self.set_epochs = QHBoxLayout(self)
+        self.set_epochs.addWidget(self.description_tr)
+        self.set_epochs.addWidget(self.text)
+        self.set_epochs.addWidget(self.ok_text)
+        self.set_epochs.addWidget(self.description_tr2)
+
+        self.set_batch_size = QHBoxLayout(self)
+        self.set_batch_size.addWidget(self.description_batch)
+        self.set_batch_size.addWidget(self.text_batch)
+        self.set_batch_size.addWidget(self.ok_batc)
+        self.set_batch_size.addWidget(self.description_batch2)
 
         self.set_model = QHBoxLayout(self)
         self.set_model.addWidget(self.description_model)
@@ -270,7 +288,8 @@ class MyTableWidget(QWidget):
 
         # tab2
         self.tab2.layout.addLayout(self.set_model)
-        self.tab2.layout.addLayout(self.set_train)
+        self.tab2.layout.addLayout(self.set_epochs)
+        self.tab2.layout.addLayout(self.set_batch_size)
         self.tab2.layout.addWidget(self.start_train)
 
         self.tab2.layout.addWidget(self.scrolltr)
@@ -281,19 +300,38 @@ class MyTableWidget(QWidget):
         # Elements section 3
         self.description_clas = QLabel('The purpose of this step is to obtain the values of uncertainty values')
         self.description_monte = QLabel('Write here Monte Carlo samples:')
+        self.title_train_cl = QLabel('TRAINING SET')
+        self.title_test_cl = QLabel('VALIDATION SET')
+        self.title_train_cl.setFont(newfont)
+        self.title_test_cl.setFont(newfont)
+
+        self.description_monte2 = QLabel('Default value: {}'.format(self.monte))
         self.text_monte = QLineEdit()
         self.prog_monte = QProgressBar()
         self.ok_monte = QPushButton('Ok')
-        self.start_classify = QPushButton('Start')
+        self.ok_monte.clicked.connect(self.ok_m)
+        self.start_classify_train = QPushButton('Start')
+        self.start_classify_train.clicked.connect(self.cl_train)
+
+        self.start_classify_val = QPushButton('Start')
+        self.start_classify_val.clicked.connect(self.cl_test)
+
 
         self.HMonte.addWidget(self.description_monte)
         self.HMonte.addWidget(self.text_monte)
         self.HMonte.addWidget(self.ok_monte)
+        self.HMonte.addWidget(self.description_monte2)
 
         # tab 3
         self.tab3.layout.addWidget(self.description_clas, alignment=Qt.AlignTop)
+        self.tab3.layout.addWidget(QHLine())
         self.tab3.layout.addLayout(self.HMonte)
-        self.tab3.layout.addWidget(self.start_classify)
+        self.tab3.layout.addWidget(self.title_train_cl)
+        self.tab3.layout.addWidget(self.start_classify_train)
+        self.tab3.layout.addWidget(QHLine())
+        self.tab3.layout.addWidget(self.title_test_cl)
+        self.tab3.layout.addWidget(self.start_classify_val)
+
         self.tab3.layout.addStretch(1)
         self.tab3.layout.addWidget(self.prog_monte)
 
@@ -304,14 +342,18 @@ class MyTableWidget(QWidget):
         list_tot = [6, 4, 5, 5, 2, 3, 3, 1, 1]
 
         # Elements 4
-        hist_ale = MplCanvas(self, width=5, height=4, dpi=100)
+        hist_ale = MplCanvas('Aleatoric uncertanty', self, width=5, height=4, dpi=100)
         hist_ale.axes.hist(list_ale, 50, alpha=0.75)
-        hist_epi = MplCanvas(self, width=5, height=4, dpi=100)
+        hist_epi = MplCanvas('Epistemic uncertanty', self, width=5, height=4, dpi=100)
         hist_epi.axes.hist(list_epi, 50, alpha=0.75)
-        hist_tot = MplCanvas(self, width=5, height=4, dpi=100)
+        hist_tot = MplCanvas('Total uncertanty', self, width=5, height=4, dpi=100)
         hist_tot.axes.hist(list_tot, 50, alpha=0.75)
+        hist_removed = MplCanvas('Tiles removed for class', self, width=5, height=4, dpi=100)
+        hist_removed.axes.hist(list_tot, 50, alpha=0.75)
         self.description_total_before = QLabel('Total number of tiles before data cleaning: 45000')
+        self.description_select_data = QLabel('Select which dataset analyze:')
         self.description_total_after = QLabel('Total number of tiles after data cleaning: 45000')
+        self.description_total_after.hide()
         self.description_types = QLabel('Select one of the two modes, Auto the software will find the correct'
                                         'threshold to divide the images between certain and uncertain; in Manual '
                                         'you have to write the desired value in the text box.')
@@ -321,6 +363,8 @@ class MyTableWidget(QWidget):
         self.auto.toggled.connect(self.update_auto)
         self.manual = QRadioButton('Manual')
         self.manual.toggled.connect(self.update_man)
+        self.dataset_train = QRadioButton('Training set')
+        self.dataset_val = QRadioButton('Validation set')
         self.manual_value = QLineEdit()
         self.manual_value.hide()
         self.start_clean = QPushButton('Start analysis')
@@ -343,13 +387,23 @@ class MyTableWidget(QWidget):
         self.folder_cl.addWidget(self.description_folder)
         self.folder_cl.addWidget(self.folder_cl_data)
 
-
-        self.number = QHBoxLayout()
+        self.number = QVBoxLayout()
         self.number.addWidget(self.description_total_before)
         self.number.addWidget(self.description_total_after)
+
+        self.h_number = QHBoxLayout()
+        self.h_number.addLayout(self.number)
+        self.h_number.addWidget(hist_removed)
+
+        self.h_select_dataset = QHBoxLayout()
+        self.h_select_dataset.addWidget(self.description_select_data)
+        self.h_select_dataset.addWidget(self.dataset_train)
+        self.h_select_dataset.addWidget(self.dataset_val)
         # tab 4
+        self.tab4.layout.addLayout(self.h_select_dataset)
+        self.tab4.layout.addWidget(QHLine())
         self.tab4.layout.addLayout(self.hist_o)
-        self.tab4.layout.addLayout(self.number)
+        self.tab4.layout.addLayout(self.h_number)
         self.tab4.layout.addWidget(QHLine())
         self.tab4.layout.addWidget(self.description_types)
         self.tab4.layout.addLayout(self.mode)
@@ -366,10 +420,29 @@ class MyTableWidget(QWidget):
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
 
+        start_time = time.asctime(time.localtime(time.time()))
+        self.log_epoch = "Start  {}".format(start_time)
+
     def first_selection(self):
         fl = QFileDialog.getExistingDirectory(self, "Select Directory")
         if fl != '':
             self.path_work = fl
+        else:
+            pass
+
+    def ok_m(self):
+        tex = self.text_monte.text()
+        if tex.isdecimal() and int(tex) > 0:
+            self.description_monte2.setText('Monte Carlo samples:  {}'.format(tex))
+            self.monte = tex
+        else:
+            pass
+
+    def ok_batch(self):
+        tex = self.text_batch.text()
+        if tex.isdecimal() and int(tex) > 0:
+            self.description_batch2.setText('Batch dimension:  {}'.format(tex))
+            self.batch_dim = tex
         else:
             pass
 
@@ -438,9 +511,6 @@ class MyTableWidget(QWidget):
         self.state_train.setText(str(s))
         print(s)
 
-    def caso(self, val):
-        self.state_train.setText(str(val))
-
     def thread_complete(self):
         print("THREAD COMPLETE!")
 
@@ -480,7 +550,7 @@ class MyTableWidget(QWidget):
     def ok_epochs(self):
         textboxValue = self.text.text()
         if textboxValue.isdecimal() and int(textboxValue) > 0:
-            self.description_tr2.setText('Limit epochs: {}'.format(textboxValue))
+            self.description_tr2.setText('Limit epochs:  {}'.format(textboxValue))
             self.epoch = textboxValue
         else:
             pass
@@ -488,21 +558,45 @@ class MyTableWidget(QWidget):
         print(textboxValue)
 
     def train(self):
-        self.state_train.setText('The training is starting...')
+        self.state_train.setText('The training is starting, in few second other information will be showed...')
 
         if self.model == 'drop':
-            obj_model = ModelDropOut(epochs=self.epoch, path_train='C:/Users/piero/test2', path_val='C:/Users/piero/test2')
+            obj_model = ModelDropOut(epochs=self.epoch, path_train=self.train_path, path_val=self.val_path, b_dim=int(self.batch_dim))
         else:
-            obj_model = ModelDropOut(epochs=self.epoch, path_train='C:/Users/piero/test2', path_val='C:/Users/piero/test2')
+            obj_model = ModelDropOut(epochs=self.epoch, path_train=self.train_path, path_val=self.val_path, b_dim=int(self.batch_dim))
 
         k = WorkerLong(obj_model.start_train)
         k.signals.result.connect(self.print_output)
-        k.signals.progress.connect(self.progress_fn)
-        k.signals.result1.connect(self.caso)
+        k.signals.progress.connect(self.progrestrain.setValue)
+        k.signals.result1.connect(self.tr_view)
         k.signals.finished.connect(self.thread_train_complete)
         self.threadPool.start(k)
 
-        pass
+    def cl_train(self):
+        self.start_an('train')
+
+    def cl_test(self):
+        self.start_an('val')
+
+    def start_an(self, data):
+        path = os.path.join(self.path_work, data)
+
+        cls = Classification(path, ty='datacleaning')
+        worker_cl = WorkerLong(cls.classify, 'datacleaning', self.monte, self.model_path)
+        worker_cl.signals.result.connect(self.print_output)
+        worker_cl.signals.progress.connect(self.progress_fn)
+        worker_cl.signals.progress.connect(self.prog_monte.setValue)
+        worker_cl.signals.finished.connect(self.thread_complete)
+        self.threadPool.start(worker_cl)
+
+    def tr_view(self, val):
+        if 'Epoch' in str(val):
+            self.log_epoch = self.log_epoch + '\n' + str(val)
+            self.state_train.setText(str(self.log_epoch))
+            print('trova la parola epoca EMETTE:', self.log_epoch)
+        else:
+            show_b = self.log_epoch + '\n' + str(val)
+            self.state_train.setText(str(show_b))
 
 
 if __name__ == '__main__':

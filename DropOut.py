@@ -4,29 +4,36 @@ import numpy as np
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import time
+import glob
+import os
 
 
 class MyCallback(Callback):
-    def __init__(self, view):
+    def __init__(self, progress, view, tot):
         self.view = view
+        self.progress = progress
+        self.tot = tot
+        self.logs = {}
 
     def on_batch_end(self, batch, logs={}):
-        self.view.emit('The average loss for epoch {}'.format(batch))
+        self.logs = logs
+        self.view.emit('===> Batch: {:5}   Accuracy: {:5.3f}'.format(batch, logs['acc']))
 
-    def on_epoch_end(self, epoch, logs=None):
-        print('The average loss for epoch {} is {:7.2f} and mean absolute error is {:7.2f}.'.format(epoch, logs['loss'], logs['mae']))
-        self.view.emit('The average loss for epoch {} is {:7.2f} and mean absolute error is {:7.2f}.'.format(epoch, logs['loss'], logs['mae']))
+    def on_epoch_end(self, epoch, logs={}):
+        self.view.emit('Epoch:  {:5}   Loss:  {:13.2f}   --   Train acc:  {:5.3f}   '
+                       'Val acc:  {:5.3f}'.format(int(epoch)+1, logs['loss'], logs['acc'], logs['val_acc']))
+        self.progress.emit(100*(int(epoch)+1)/self.tot)
 
 
 class ModelDropOut:
-    def __init__(self, epochs, path_train, path_val):
+    def __init__(self, epochs, path_train, path_val, b_dim):
         self.shape = (64, 64, 3)
         self.n_classes = 3
         self.epochs = epochs
-        self.batch_dim_train = 400
-        self.batch_dim_val = 200
-        self.n_image_train = 61904
-        self.n_image_val = 19656
+        self.batch_dim_train = b_dim
+        self.batch_dim_val = b_dim
+        self.n_image_train = len(glob.glob(os.path.join(path_train, '*/*.png')))
+        self.n_image_val = len(glob.glob(os.path.join(path_val, '*/*.png')))
 
         self.path_train = path_train
         self.path_val = path_val
@@ -116,8 +123,9 @@ class ModelDropOut:
         filepath = "weights.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
         earlyStopping = EarlyStopping(monitor='val_acc', patience=15, verbose=0, mode='max')
-        iups = MyCallback(view)
-        callbacks_list = [checkpoint, earlyStopping, iups]
+        iups = MyCallback(progress_callback, view, self.epochs)
+        # checkpoint,
+        callbacks_list = [earlyStopping, iups]
 
         history = model.fit_generator(train,
                                       steps_per_epoch=STEPS_PER_EPOCH_T,
