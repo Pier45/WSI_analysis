@@ -26,12 +26,13 @@ class MyCallback(Callback):
 
 
 class ModelDropOut:
-    def __init__(self, epochs, path_train, path_val, b_dim):
+    def __init__(self, n_model, epochs, path_train, path_val, b_dim):
         self.shape = (64, 64, 3)
         self.n_classes = 3
-        self.epochs = epochs
-        self.batch_dim_train = b_dim
-        self.batch_dim_val = b_dim
+        self.name_model = n_model
+        self.epochs = int(epochs)
+        self.batch_dim_train = int(b_dim)
+        self.batch_dim_val = int(b_dim)
         self.n_image_train = len(glob.glob(os.path.join(path_train, '*/*.png')))
         self.n_image_val = len(glob.glob(os.path.join(path_val, '*/*.png')))
 
@@ -103,14 +104,6 @@ class ModelDropOut:
 
         return out
 
-    def start_est(self, progress_callback, view):
-        i = 0
-        while i < 10:
-            view.emit('caio'+str(i))
-            progress_callback.emit(i)
-            time.sleep(1)
-            i +=1
-
     def start_train(self, progress_callback, view):
         model = self.costruction_model()
         model.summary()
@@ -136,6 +129,7 @@ class ModelDropOut:
                                       callbacks=callbacks_list
                                       )
 
+        model.save(self.name_model)
         #return model, history
 
 

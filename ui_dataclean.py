@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import (QWidget, QMainWindow, QVBoxLayout, QSizePolicy, QHBoxLayout,
-                             QSplitter, QStyleFactory, QApplication, QLabel, QScrollArea, QMenu, QAction,
-                             QFileDialog, QProgressBar, QListWidget, QLineEdit)
+from PyQt5.QtWidgets import (QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QScrollArea, QMenu, QAction,
+                             QFileDialog, QProgressBar, QListWidget, QLineEdit, QButtonGroup, QMessageBox, QToolBox)
 from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QFont, QIcon
 from PyQt5.QtWidgets import QPushButton, QAction, QTabWidget, QRadioButton, QFrame
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QRunnable, QThreadPool, Qt
@@ -10,15 +9,17 @@ import traceback
 import os
 from multi_processing_analysis import StartAnalysis
 from DropOut import ModelDropOut
+from Kl import ModelKl
 import json
 import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-#import seaborn as sns
+import seaborn as sns
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import time
 from Classification import Classification
+from uncertenty_analysis import Th
 
 matplotlib.use('Qt5Agg')
 
@@ -43,6 +44,7 @@ class MplCanvas(FigureCanvasQTAgg):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         self.axes.set_title(name)
+        self.axes.set_xlim(0, 1)
         super(MplCanvas, self).__init__(fig)
 
 
@@ -99,16 +101,26 @@ class App(QMainWindow):
         self.setCentralWidget(self.table_widget)
         self.createAct()
         self.createMenu()
+        self.setWindowIcon(QIcon('icons/target.ico'))
         self.showMaximized()
 
     def createAct(self):
-        self.aboutAct = QAction("&About", self)
+        self.aboutAct = QAction("&Tutorial", self,triggered=self.tutorial)
+        self.exit = QAction("Exit", self, triggered=self.close)
+
+    def tutorial(self):
+        QMessageBox.information(self, "Bayesian datacleaner",
+                                "The program is divided in tabs,\n"
+                                "follow the structure of the programs. \n \n "
+                                "Press ok to continue")
 
     def createMenu(self):
         fileMenu = QMenu("&File", self)
-        fileMenu.addAction(self.aboutAct)
+        fileMenu.addAction(self.exit)
 
         about = QMenu("About", self)
+        about.addAction(self.aboutAct)
+
 
         self.menuBar().addMenu(fileMenu)
         self.menuBar().addMenu(about)
@@ -120,14 +132,19 @@ class MyTableWidget(QWidget):
         super(QWidget, self).__init__(parent)
         self.train_path = "D:/test/train"
         self.val_path = "D:/test/val"
-        self.model_path = "C:/Users/piero/Documents/GitHub/WSI_analysis/Model_1_85aug.h5"
+        self.new_path_model = "C:/Users/piero/Documents/GitHub/WSI_analysis/Model_1_85aug.h5"
+        self.list_ale, self.list_epi, self.list_tot = [], [], []
         self.epoch = 100
         self.model = 'drop'
         self.batch_dim = 100
         self.monte = 5
+        self.obj_clean = ''
+        self.path_save_clean, self.train_js, self.val_js = '', '', ''
         self.path_work = "D:/test"
+        self.path_tiles_train, self.path_tiles_val = '', ''
+        self.flag = 0
+        self.selected_th = 0
         self.layout = QVBoxLayout(self)
-        self.HMonte = QHBoxLayout(self)
 
         self.threadPool = QThreadPool()
 
@@ -253,7 +270,7 @@ class MyTableWidget(QWidget):
 
         self.description_tr = QLabel('Insert numer of epochs:  ')
         self.description_batch = QLabel('Insert dimension of batch:  ')
-        self.description_batch2 = QLabel('Default value: 100 ')
+        self.description_batch2 = QLabel('Default value: 100')
 
         self.description_model = QLabel('Select one of the 2 available models:')
         self.description_tr2 = QLabel('Default epochs: 100')
@@ -286,10 +303,25 @@ class MyTableWidget(QWidget):
         self.set_model.addWidget(self.kl)
         self.set_model.addWidget(self.drop)
 
+        self.description_optional = QLabel('Optional, select two folder where can retrive '
+                                           'the training end validation tiles:')
+        self.retrive_train = QPushButton('Train')
+        self.retrive_train.clicked.connect(self.ret_train)
+        self.retrive_test = QPushButton('Val')
+        self.retrive_test.clicked.connect(self.ret_test)
+        self.new_folder = QHBoxLayout(self)
+        self.new_folder.addWidget(self.retrive_train)
+        self.new_folder.addWidget(self.retrive_test)
+        self.new_folder.addStretch(1)
+
         # tab2
         self.tab2.layout.addLayout(self.set_model)
         self.tab2.layout.addLayout(self.set_epochs)
         self.tab2.layout.addLayout(self.set_batch_size)
+        self.tab2.layout.addWidget(QHLine())
+        self.tab2.layout.addWidget(self.description_optional)
+        self.tab2.layout.addLayout(self.new_folder)
+        self.tab2.layout.addWidget(QHLine())
         self.tab2.layout.addWidget(self.start_train)
 
         self.tab2.layout.addWidget(self.scrolltr)
@@ -316,7 +348,7 @@ class MyTableWidget(QWidget):
         self.start_classify_val = QPushButton('Start')
         self.start_classify_val.clicked.connect(self.cl_test)
 
-
+        self.HMonte = QHBoxLayout(self)
         self.HMonte.addWidget(self.description_monte)
         self.HMonte.addWidget(self.text_monte)
         self.HMonte.addWidget(self.ok_monte)
@@ -331,56 +363,69 @@ class MyTableWidget(QWidget):
         self.tab3.layout.addWidget(QHLine())
         self.tab3.layout.addWidget(self.title_test_cl)
         self.tab3.layout.addWidget(self.start_classify_val)
-
         self.tab3.layout.addStretch(1)
         self.tab3.layout.addWidget(self.prog_monte)
 
         self.tab3.setLayout(self.tab3.layout)
 
-        list_ale = [6, 4, 5, 5, 2, 3, 3, 1, 1]
-        list_epi = [6, 4, 5, 5, 5, 5, 5, 1, 1]
-        list_tot = [6, 4, 5, 5, 2, 3, 3, 1, 1]
-
         # Elements 4
-        hist_ale = MplCanvas('Aleatoric uncertanty', self, width=5, height=4, dpi=100)
-        hist_ale.axes.hist(list_ale, 50, alpha=0.75)
-        hist_epi = MplCanvas('Epistemic uncertanty', self, width=5, height=4, dpi=100)
-        hist_epi.axes.hist(list_epi, 50, alpha=0.75)
-        hist_tot = MplCanvas('Total uncertanty', self, width=5, height=4, dpi=100)
-        hist_tot.axes.hist(list_tot, 50, alpha=0.75)
-        hist_removed = MplCanvas('Tiles removed for class', self, width=5, height=4, dpi=100)
-        hist_removed.axes.hist(list_tot, 50, alpha=0.75)
-        self.description_total_before = QLabel('Total number of tiles before data cleaning: 45000')
-        self.description_select_data = QLabel('Select which dataset analyze:')
-        self.description_total_after = QLabel('Total number of tiles after data cleaning: 45000')
+        self.hist_ale = MplCanvas('Aleatoric uncertanty', self, width=5, height=4, dpi=100)
+        self.hist_epi = MplCanvas('Epistemic uncertanty', self, width=5, height=4, dpi=100)
+        self.hist_tot = MplCanvas('Total uncertanty', self, width=5, height=4, dpi=100)
+        self.hist_removed = QPushButton('Show number of tiles that i will remove for class')
+        self.hist_removed.hide()
+        self.hist_removed.clicked.connect(self.show_class_removed)
+
+        self.description_total_before = QLabel()
+        self.description_total_before.hide()
+        self.description_total_after = QLabel()
         self.description_total_after.hide()
+        self.description_select_data = QLabel('Select which dataset analyze:')
         self.description_types = QLabel('Select one of the two modes, Auto the software will find the correct'
                                         'threshold to divide the images between certain and uncertain; in Manual '
                                         'you have to write the desired value in the text box.')
         self.description_folder = QLabel('Folder where the dataset cleaned will be created:')
-        self.folder_cl_data = QPushButton('Select a Folder')
+        self.folder_cl_data = QPushButton('Select a emplty folder')
+        self.folder_cl_data.clicked.connect(self.conclusion_folder)
         self.auto = QRadioButton('Auto')
         self.auto.toggled.connect(self.update_auto)
         self.manual = QRadioButton('Manual')
         self.manual.toggled.connect(self.update_man)
+        self.mode_group = QButtonGroup()
+        self.mode_group.addButton(self.auto)
+        self.mode_group.addButton(self.manual)
+        self.prog_copy = QProgressBar()
+
         self.dataset_train = QRadioButton('Training set')
+        self.dataset_train.toggled.connect(self.clean_train)
         self.dataset_val = QRadioButton('Validation set')
+        self.dataset_val.toggled.connect(self.clean_val)
+        self.dataset_group = QButtonGroup()
+        self.dataset_group.addButton(self.dataset_train)
+        self.dataset_group.addButton(self.dataset_val)
+
         self.manual_value = QLineEdit()
         self.manual_value.hide()
-        self.start_clean = QPushButton('Start analysis')
+        self.start_clean = QPushButton('Start analysis with manual threshold')
+        self.start_clean.clicked.connect(self.push_manual)
+        self.start_clean.hide()
         self.create_new_dataset = QPushButton('Create new data set')
+        self.create_new_dataset.clicked.connect(self.conclusion_cleaning)
+        self.create_new_dataset.setEnabled(False)
 
         self.mode = QHBoxLayout()
         self.mode.addWidget(self.auto, alignment=Qt.AlignCenter)
         self.mode.addWidget(self.manual, alignment=Qt.AlignCenter)
         self.mode.addWidget(self.manual_value)
+        self.mode.addWidget(self.start_clean)
+        self.mode.addStretch(1)
 
         self.hist_v = QVBoxLayout()
-        self.hist_v.addWidget(hist_ale)
-        self.hist_v.addWidget(hist_epi)
+        self.hist_v.addWidget(self.hist_ale)
+        self.hist_v.addWidget(self.hist_epi)
 
         self.hist_o = QHBoxLayout()
-        self.hist_o.addWidget(hist_tot)
+        self.hist_o.addWidget(self.hist_tot)
         self.hist_o.addLayout(self.hist_v)
 
         self.folder_cl = QHBoxLayout()
@@ -393,7 +438,7 @@ class MyTableWidget(QWidget):
 
         self.h_number = QHBoxLayout()
         self.h_number.addLayout(self.number)
-        self.h_number.addWidget(hist_removed)
+        self.h_number.addWidget(self.hist_removed)
 
         self.h_select_dataset = QHBoxLayout()
         self.h_select_dataset.addWidget(self.description_select_data)
@@ -407,10 +452,10 @@ class MyTableWidget(QWidget):
         self.tab4.layout.addWidget(QHLine())
         self.tab4.layout.addWidget(self.description_types)
         self.tab4.layout.addLayout(self.mode)
-        self.tab4.layout.addWidget(self.start_clean)
         self.tab4.layout.addWidget(QHLine())
         self.tab4.layout.addLayout(self.folder_cl)
         self.tab4.layout.addWidget(self.create_new_dataset)
+        self.tab4.layout.addWidget(self.prog_copy)
         self.tab4.layout.addStretch(1)
 
         self.tab4.setLayout(self.tab4.layout)
@@ -423,10 +468,52 @@ class MyTableWidget(QWidget):
         start_time = time.asctime(time.localtime(time.time()))
         self.log_epoch = "Start  {}".format(start_time)
 
+    def show_class_removed(self):
+        self.obj_clean.removed_class()
+
+    def ret_test(self):
+        fl = QFileDialog.getExistingDirectory(self, "Select Directory")
+        if fl != '':
+            self.path_tiles_val = fl
+        else:
+            pass
+
+    def ret_train(self):
+        fl = QFileDialog.getExistingDirectory(self, "Select Directory")
+        if fl != '':
+            self.path_tiles_train = fl
+        else:
+            pass
+
+    def conclusion_cleaning(self):
+        if not os.path.exists(os.path.join(self.path_save_clean, 'AC')):
+            os.mkdir(os.path.join(self.path_save_clean, 'AC'))
+            os.mkdir(os.path.join(self.path_save_clean, 'H'))
+            os.mkdir(os.path.join(self.path_save_clean, 'AD'))
+
+        work_copy = WorkerLong(self.obj_clean.clean_json, self.path_save_clean)
+
+        work_copy.signals.result.connect(self.print_output)
+        work_copy.signals.progress.connect(self.progress_fn)
+        work_copy.signals.progress.connect(self.prog_copy.setValue())
+        work_copy.signals.finished.connect(self.thread_complete)
+        self.threadPool.start(work_copy)
+
+
+    def conclusion_folder(self):
+        save_fl = QFileDialog.getExistingDirectory(self, "Select Directory")
+        if save_fl != '':
+            self.path_save_clean = save_fl
+            self.create_new_dataset.setEnabled(True)
+        else:
+            pass
+
     def first_selection(self):
         fl = QFileDialog.getExistingDirectory(self, "Select Directory")
         if fl != '':
             self.path_work = fl
+            self.path_tiles_train = os.path.join(fl, 'train')
+            self.path_tiles_val = os.path.join(fl, 'val')
         else:
             pass
 
@@ -446,6 +533,43 @@ class MyTableWidget(QWidget):
         else:
             pass
 
+    def draw_hist(self, path_js, name):
+        self.obj_clean = Th(path_js, name)
+        print('sono in f')
+        self.list_ale, self.list_epi, self.list_tot = self.obj_clean.create_list()
+
+        self.hist_tot.axes.clear()
+        self.hist_tot.axes.set_xlim(0, 1)
+        self.hist_tot.axes.set_title('Total uncertainty')
+        self.hist_tot.axes.hist(self.list_tot, 500, alpha=0.70, edgecolor='#003153')
+        self.hist_tot.draw()
+        self.hist_ale.axes.clear()
+        self.hist_ale.axes.set_xlim(0, 1)
+        self.hist_ale.axes.set_title('Aleatoric uncertainty')
+        self.hist_ale.axes.hist(self.list_ale, 100, alpha=0.70, edgecolor='#003153')
+        self.hist_ale.draw()
+        self.hist_epi.axes.clear()
+        self.hist_epi.axes.set_xlim(0, 1)
+        self.hist_epi.axes.set_title('Epistemic uncertainty')
+        self.hist_epi.axes.hist(self.list_epi, 500, alpha=0.70, edgecolor='#003153')
+        self.hist_epi.draw()
+
+    def clean_train(self):
+        self.train_js = 'D:/Download/tr_js.txt'
+        self.draw_hist(self.train_js, 'train')
+        self.description_total_before.setText('Total number of tiles before cleaning: {}'.format(len(self.list_tot)))
+        self.description_total_before.show()
+        self.description_total_after.hide()
+        self.hist_removed.hide()
+
+    def clean_val(self):
+        self.val_js = 'D:/Download/test_js.txt'
+        self.draw_hist(self.val_js, 'val')
+        self.description_total_before.setText('Total number of tiles before cleaning: {}'.format(len(self.list_tot)))
+        self.description_total_before.show()
+        self.description_total_after.hide()
+        self.hist_removed.hide()
+
     def load_kl(self):
         self.model = 'kl'
 
@@ -453,12 +577,29 @@ class MyTableWidget(QWidget):
         self.model = 'drop'
 
     def update_auto(self):
+        self.obj_clean.otsu()
+        self.newth, self.thfin, number_new_dataset1, number_new_dataset = self.obj_clean.th_managment()
+        self.description_total_after.setText('Total number of tiles after cleaning: \n'
+                                             'Otsu Threshold:   {:10}\n'
+                                             'New Threshold:    {:10}'.format(number_new_dataset, number_new_dataset1))
+        self.description_total_after.show()
+        self.hist_removed.show()
+        self.hist_tot.axes.axvline(x=self.newth, ls='--', color='k', label='New Threshold')
+        self.hist_tot.axes.axvline(x=self.thfin, color='red', label='Otsu Threshold')
+        if self.flag == 0:
+            self.hist_tot.axes.legend(prop={'size': 10})
+            self.flag = 1
+        else:
+            pass
+        self.hist_tot.draw()
         if self.auto.isChecked():
             self.manual_value.hide()
+            self.start_clean.hide()
 
     def update_man(self):
         if self.manual.isChecked():
             self.manual_value.show()
+            self.start_clean.show()
 
     def select_folder_train(self):
         self.train_path = QFileDialog.getExistingDirectory(self, "Select Directory")
@@ -503,6 +644,23 @@ class MyTableWidget(QWidget):
                 pass
         else:
             pass
+
+    def push_manual(self):
+        tex = float(self.manual_value.text())
+        if 1 > tex > 0.1:
+            print('dentro id')
+            self.selected_th = tex
+            self.obj_clean.otsu()
+            print('TEXT--------', tex)
+
+            self.man, self.thfin, number_new_dataset1, number_new_dataset = self.obj_clean.th_managment(self.selected_th)
+            self.description_total_after.setText('Total number of tiles after cleaning: \n'
+                                                 'Otsu Threshold:        {:10}\n'
+                                                 'Manual Threshold:      {:10}'.format(number_new_dataset, number_new_dataset1))
+            self.description_total_after.show()
+            self.hist_removed.show()
+            self.hist_tot.axes.axvline(x=self.man, ls='--', color='y', label='Manual Threshold')
+            self.hist_tot.draw()
 
     def progress_fn(self, n):
         print("%d%% done" % n)
@@ -559,11 +717,16 @@ class MyTableWidget(QWidget):
 
     def train(self):
         self.state_train.setText('The training is starting, in few second other information will be showed...')
-
+        t_stamp = time.strftime("%Y_%m%d_%H%M%S")
         if self.model == 'drop':
-            obj_model = ModelDropOut(epochs=self.epoch, path_train=self.train_path, path_val=self.val_path, b_dim=int(self.batch_dim))
+            self.new_path_model = os.path.join(self.path_work, 'ModelDrop-' + t_stamp + '.h5')
+            print(self.train_path)
+            obj_model = ModelDropOut(n_model=self.new_path_model, epochs=self.epoch, path_train=self.path_tiles_train,
+                                     path_val=self.path_tiles_val, b_dim=int(self.batch_dim))
         else:
-            obj_model = ModelDropOut(epochs=self.epoch, path_train=self.train_path, path_val=self.val_path, b_dim=int(self.batch_dim))
+            self.new_path_model = os.path.join(self.path_work, 'ModelKl-' + t_stamp + '.h5')
+            obj_model = ModelKl(n_model=self.new_path_model, epochs=self.epoch, path_train=self.path_tiles_train,
+                                path_val=self.path_tiles_val, b_dim=int(self.batch_dim))
 
         k = WorkerLong(obj_model.start_train)
         k.signals.result.connect(self.print_output)
@@ -574,15 +737,17 @@ class MyTableWidget(QWidget):
 
     def cl_train(self):
         self.start_an('train')
+        self.train_js = os.path.join(self.path_work, 'train', 'dictionary_js.txt')
 
     def cl_test(self):
         self.start_an('val')
+        self.val_js = os.path.join(self.path_work, 'val', 'dictionary_js.txt')
 
     def start_an(self, data):
         path = os.path.join(self.path_work, data)
 
         cls = Classification(path, ty='datacleaning')
-        worker_cl = WorkerLong(cls.classify, 'datacleaning', self.monte, self.model_path)
+        worker_cl = WorkerLong(cls.classify, 'datacleaning', self.monte, self.new_path_model)
         worker_cl.signals.result.connect(self.print_output)
         worker_cl.signals.progress.connect(self.progress_fn)
         worker_cl.signals.progress.connect(self.prog_monte.setValue)

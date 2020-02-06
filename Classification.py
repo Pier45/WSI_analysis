@@ -17,6 +17,7 @@ class Classification:
         self.np_list_image = []
         self.shape = (64, 64, 3)
         self.select_folder()
+        self.cl = ['AC', 'H', 'AD']
 
     def analysis_folder(self, sel_folder):
         """ Analyze the selected folder, finding all the png files"""
@@ -53,6 +54,7 @@ class Classification:
                 np_image, shape_x, shape_y = self.tile_control(j)
                 if self.ty == 'datacleaning':
                     sub_d['name'] = j[j.index('pz_'):j.index('tile')]
+                    sub_d['true_class'] = i[1:]
                 sub_d["im_path"], sub_d["shape_x"], sub_d["shape_y"], sub_d["col"], sub_d["row"] = j, shape_x, shape_y, column, row
                 list_image.append(np_image)
                 self.dictionary[n_tile] = sub_d
@@ -100,7 +102,7 @@ class Classification:
         print('SHAPE EPI: {} \n SHAPE ALE: {}'.format(epistemic.shape, aleatoric.shape))
 
         for i, y in enumerate(self.dictionary):
-            self.dictionary[y]["class"] = int(np.argmax(clas_mean[i]))
+            self.dictionary[y]["pred_class"] = self.cl[int(np.argmax(clas_mean[i]))]
             self.dictionary[y]["epi"] = float(np.round(np.sum(epistemic[i]), decimals=5))
             self.dictionary[y]["ale"] = float(np.round(np.sum(aleatoric[i]), decimals=5))
 

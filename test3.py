@@ -23,5 +23,6 @@ def load_image(addr, i):
 p = 'C:/Users/piero/Downloads/result/uncertainty/tot.png'
 
 a = 'C:/Users/piero/Desktop/train'
-print(len(glob.glob(os.path.join(path_train, '*/*.svs'))))
-
+cl = {"AC": 1, "AD": 1, "H": 10}
+plt.bar(cl.keys(), cl.values())
+plt.show()
