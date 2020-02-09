@@ -1,9 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras.layers as tk_layer
-import numpy as np
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import time
 import glob
 import os
 
@@ -26,7 +24,7 @@ class MyCallback(Callback):
 
 
 class ModelDropOut:
-    def __init__(self, n_model, epochs, path_train, path_val, b_dim):
+    def __init__(self, n_model, epochs, path_train, path_val, b_dim, aug=0):
         self.shape = (64, 64, 3)
         self.n_classes = 3
         self.name_model = n_model
@@ -38,15 +36,24 @@ class ModelDropOut:
 
         self.path_train = path_train
         self.path_val = path_val
+        self.aug = aug
+
+    def load_train(self):
+        if self.aug == 1:
+            train_datagen = ImageDataGenerator(rescale=1. / 255,
+                                               shear_range=0.2,
+                                               zoom_range=0.2,
+                                               brightness_range=(0.5, 1),
+                                               horizontal_flip=True,
+                                               fill_mode="nearest"
+                                               )
+        else:
+            train_datagen = ImageDataGenerator(rescale=1. / 255)
+
+        return train_datagen
 
     def flow_directory(self):
-        train_datagen = ImageDataGenerator(rescale=1./255
-                                        #shear_range=0.2,
-                                        #zoom_range=0.2,
-                                        #brightness_range=(0.5, 1),
-                                        #horizontal_flip=True,
-                                        #fill_mode="nearest"
-                                       )
+        train_datagen = self.load_train()
 
         test_datagen = ImageDataGenerator(rescale=1./255)
 

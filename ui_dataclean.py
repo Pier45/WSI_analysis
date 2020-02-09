@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QScrollArea, QMenu, QAction,
-                             QFileDialog, QProgressBar, QListWidget, QLineEdit, QButtonGroup, QMessageBox, QToolBox)
+                             QFileDialog, QProgressBar, QListWidget, QLineEdit, QButtonGroup, QMessageBox)
 from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QFont, QIcon
-from PyQt5.QtWidgets import QPushButton, QAction, QTabWidget, QRadioButton, QFrame
+from PyQt5.QtWidgets import QPushButton, QAction, QTabWidget, QRadioButton, QFrame, QCheckBox
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QRunnable, QThreadPool, Qt
 import sys
 import matplotlib
@@ -138,12 +138,10 @@ class MyTableWidget(QWidget):
         self.model = 'drop'
         self.batch_dim = 100
         self.monte = 5
-        self.obj_clean = ''
         self.path_save_clean, self.train_js, self.val_js = '', '', ''
         self.path_work = "D:/test"
-        self.path_tiles_train, self.path_tiles_val = '', ''
-        self.flag = 0
-        self.selected_th = 0
+        self.path_tiles_train, self.path_tiles_val, self.selected_th = '', '', ''
+        self.flag, self.aug = 0, 0
         self.layout = QVBoxLayout(self)
 
         self.threadPool = QThreadPool()
@@ -251,6 +249,7 @@ class MyTableWidget(QWidget):
         self.tab1.layout.addWidget(self.start)
 
         self.tab1.setLayout(self.tab1.layout)
+        self.o = 0
 
         # Elements section 2
         self.progrestrain = QProgressBar(self)
@@ -314,10 +313,13 @@ class MyTableWidget(QWidget):
         self.new_folder.addWidget(self.retrive_test)
         self.new_folder.addStretch(1)
 
+        self.data_aug = QCheckBox('Data Agumentation')
+        self.data_aug.stateChanged.connect(self.agumentation)
         # tab2
         self.tab2.layout.addLayout(self.set_model)
         self.tab2.layout.addLayout(self.set_epochs)
         self.tab2.layout.addLayout(self.set_batch_size)
+        self.tab2.layout.addWidget(self.data_aug)
         self.tab2.layout.addWidget(QHLine())
         self.tab2.layout.addWidget(self.description_optional)
         self.tab2.layout.addLayout(self.new_folder)
@@ -381,15 +383,17 @@ class MyTableWidget(QWidget):
         self.description_total_after = QLabel()
         self.description_total_after.hide()
         self.description_select_data = QLabel('Select which dataset analyze:')
-        self.description_types = QLabel('Select one of the two modes, Auto the software will find the correct'
+        self.description_types = QLabel('Select one of the two modes, Auto the software will find the correct '
                                         'threshold to divide the images between certain and uncertain; in Manual '
                                         'you have to write the desired value in the text box.')
         self.description_folder = QLabel('Folder where the dataset cleaned will be created:')
         self.folder_cl_data = QPushButton('Select a emplty folder')
         self.folder_cl_data.clicked.connect(self.conclusion_folder)
         self.auto = QRadioButton('Auto')
+        self.auto.setEnabled(False)
         self.auto.toggled.connect(self.update_auto)
         self.manual = QRadioButton('Manual')
+        self.manual.setEnabled(False)
         self.manual.toggled.connect(self.update_man)
         self.mode_group = QButtonGroup()
         self.mode_group.addButton(self.auto)
@@ -444,6 +448,26 @@ class MyTableWidget(QWidget):
         self.h_select_dataset.addWidget(self.description_select_data)
         self.h_select_dataset.addWidget(self.dataset_train)
         self.h_select_dataset.addWidget(self.dataset_val)
+
+        self.otsu_th = QRadioButton('Otsu threshold')
+        self.otsu_th.setEnabled(False)
+        self.otsu_th.toggled.connect(self.sel_otsu)
+        self.new_th = QRadioButton('New threshold')
+        self.new_th.setEnabled(False)
+        self.new_th.toggled.connect(self.sel_new)
+        self.manul_th = QRadioButton('Manual threshold')
+        self.manul_th.setEnabled(False)
+        self.manul_th.toggled.connect(self.sel_manual)
+        self.group_th = QButtonGroup()
+        self.group_th.addButton(self.otsu_th)
+        self.group_th.addButton(self.new_th)
+        self.group_th.addButton(self.manul_th)
+
+        self.h_selection_th = QHBoxLayout()
+        self.h_selection_th.addWidget(self.otsu_th)
+        self.h_selection_th.addWidget(self.new_th)
+        self.h_selection_th.addWidget(self.manul_th)
+        self.h_selection_th.addStretch(1)
         # tab 4
         self.tab4.layout.addLayout(self.h_select_dataset)
         self.tab4.layout.addWidget(QHLine())
@@ -454,6 +478,7 @@ class MyTableWidget(QWidget):
         self.tab4.layout.addLayout(self.mode)
         self.tab4.layout.addWidget(QHLine())
         self.tab4.layout.addLayout(self.folder_cl)
+        self.tab4.layout.addLayout(self.h_selection_th)
         self.tab4.layout.addWidget(self.create_new_dataset)
         self.tab4.layout.addWidget(self.prog_copy)
         self.tab4.layout.addStretch(1)
@@ -467,6 +492,22 @@ class MyTableWidget(QWidget):
 
         start_time = time.asctime(time.localtime(time.time()))
         self.log_epoch = "Start  {}".format(start_time)
+
+    def sel_otsu(self):
+        self.selected_th = 'otsu'
+
+    def sel_new(self):
+        self.selected_th = 'new'
+
+    def sel_manual(self):
+        self.selected_th = 'manual'
+
+    def agumentation(self, state):
+        if Qt.Checked == state:
+            self.aug = 1
+            print(self.aug, 'aidsaidiaaaaaaaaaaaaaaaaaaa')
+        else:
+            self.aug = 0
 
     def show_class_removed(self):
         self.obj_clean.removed_class()
@@ -491,14 +532,13 @@ class MyTableWidget(QWidget):
             os.mkdir(os.path.join(self.path_save_clean, 'H'))
             os.mkdir(os.path.join(self.path_save_clean, 'AD'))
 
-        work_copy = WorkerLong(self.obj_clean.clean_json, self.path_save_clean)
+        work_copy = WorkerLong(self.obj_clean.clean_js, self.selected_th, self.path_save_clean)
 
         work_copy.signals.result.connect(self.print_output)
         work_copy.signals.progress.connect(self.progress_fn)
-        work_copy.signals.progress.connect(self.prog_copy.setValue())
+        work_copy.signals.progress.connect(self.prog_copy.setValue)
         work_copy.signals.finished.connect(self.thread_complete)
         self.threadPool.start(work_copy)
-
 
     def conclusion_folder(self):
         save_fl = QFileDialog.getExistingDirectory(self, "Select Directory")
@@ -554,6 +594,10 @@ class MyTableWidget(QWidget):
         self.hist_epi.axes.hist(self.list_epi, 500, alpha=0.70, edgecolor='#003153')
         self.hist_epi.draw()
 
+    def unlock_an(self):
+        self.auto.setEnabled(True)
+        self.manual.setEnabled(True)
+
     def clean_train(self):
         self.train_js = 'D:/Download/tr_js.txt'
         self.draw_hist(self.train_js, 'train')
@@ -561,6 +605,7 @@ class MyTableWidget(QWidget):
         self.description_total_before.show()
         self.description_total_after.hide()
         self.hist_removed.hide()
+        self.unlock_an()
 
     def clean_val(self):
         self.val_js = 'D:/Download/test_js.txt'
@@ -569,6 +614,7 @@ class MyTableWidget(QWidget):
         self.description_total_before.show()
         self.description_total_after.hide()
         self.hist_removed.hide()
+        self.unlock_an()
 
     def load_kl(self):
         self.model = 'kl'
@@ -586,6 +632,7 @@ class MyTableWidget(QWidget):
         self.hist_removed.show()
         self.hist_tot.axes.axvline(x=self.newth, ls='--', color='k', label='New Threshold')
         self.hist_tot.axes.axvline(x=self.thfin, color='red', label='Otsu Threshold')
+        self.hist_tot.axes.axvline(x=-3, ls='--', color='y', label='Manual Threshold')
         if self.flag == 0:
             self.hist_tot.axes.legend(prop={'size': 10})
             self.flag = 1
@@ -595,6 +642,12 @@ class MyTableWidget(QWidget):
         if self.auto.isChecked():
             self.manual_value.hide()
             self.start_clean.hide()
+            self.th_update()
+
+    def th_update(self):
+        self.otsu_th.setEnabled(True)
+        self.new_th.setEnabled(True)
+        self.manul_th.setEnabled(True)
 
     def update_man(self):
         if self.manual.isChecked():
@@ -647,6 +700,7 @@ class MyTableWidget(QWidget):
 
     def push_manual(self):
         tex = float(self.manual_value.text())
+        self.th_update()
         if 1 > tex > 0.1:
             print('dentro id')
             self.selected_th = tex
@@ -722,11 +776,11 @@ class MyTableWidget(QWidget):
             self.new_path_model = os.path.join(self.path_work, 'ModelDrop-' + t_stamp + '.h5')
             print(self.train_path)
             obj_model = ModelDropOut(n_model=self.new_path_model, epochs=self.epoch, path_train=self.path_tiles_train,
-                                     path_val=self.path_tiles_val, b_dim=int(self.batch_dim))
+                                     path_val=self.path_tiles_val, b_dim=int(self.batch_dim), aug=self.aug)
         else:
             self.new_path_model = os.path.join(self.path_work, 'ModelKl-' + t_stamp + '.h5')
             obj_model = ModelKl(n_model=self.new_path_model, epochs=self.epoch, path_train=self.path_tiles_train,
-                                path_val=self.path_tiles_val, b_dim=int(self.batch_dim))
+                                path_val=self.path_tiles_val, b_dim=int(self.batch_dim), aug=self.aug)
 
         k = WorkerLong(obj_model.start_train)
         k.signals.result.connect(self.print_output)

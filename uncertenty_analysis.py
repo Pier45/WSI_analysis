@@ -17,6 +17,7 @@ class Th:
         self.newth = 0
         self.list_ale, self.list_epi, self.list_tot = [], [], []
         self.tot_n = 0
+        self.d_th = {'otsu': 0.0, 'new': 0.0, 'manual': 0.0}
 
     def openf(self):
         with open(self.path, 'r') as myfile:
@@ -68,6 +69,7 @@ class Th:
                 self.thfin = t
                 self.vfin = value
 
+        self.d_th['otsu'] = self.thfin
 
     def th_managment(self, manual_th=0):
         minimo = round(self.tot_n * 0.6)
@@ -80,24 +82,26 @@ class Th:
               '60% of dataset:             {}\n'
               'Elemets UncT < Otsu Th:     {}'.format(self.tot_n, minimo, number_new_dataset))
 
-        if minimo > number_new_dataset:
-            max_pos = np.where(his == np.max(his[pos[0][0]:]))
-            der = np.diff(his[pos[0][0]:max_pos[0][0]])
-            print(his[pos[0][0]:max_pos[0][0]])
-            print(der)
-            max_variation = np.where(der == np.max(der))
-            print('MAX VAR --', max_variation)
-            new_ph = his[pos[0][0]+max_variation[0][0]]
-            npos = np.where(his[pos[0][0]:] > new_ph)
-            self.newth = bi[npos[0][0] + pos[0][0]]
-        else:
-            self.newth = self.thfin
-
         if manual_th == 0:
+            if minimo > number_new_dataset:
+                max_pos = np.where(his == np.max(his[pos[0][0]:]))
+                der = np.diff(his[pos[0][0]:max_pos[0][0]])
+                print(his[pos[0][0]:max_pos[0][0]])
+                print(der)
+                max_variation = np.where(der == np.max(der))
+                print('MAX VAR --', max_variation)
+                new_ph = his[pos[0][0] + max_variation[0][0]]
+                npos = np.where(his[pos[0][0]:] > new_ph)
+                self.newth = bi[npos[0][0] + pos[0][0]]
+            else:
+                self.newth = self.thfin
+
+            self.d_th['new'] = self.newth
             pos1 = np.where(bi == self.newth)
             number_new_dataset1 = np.sum(his[:pos1[0][0]])
         else:
             newTh = [i for i in bi if i > manual_th]
+            self.d_th['manual'] = newTh[0]
             self.newth = newTh[0]
             pos1 = np.where(bi == self.newth)
             number_new_dataset1 = np.sum(his[:pos1[0][0]])
@@ -105,13 +109,13 @@ class Th:
         print('Elements new dataset:          {}\nNew Th: {}'.format(number_new_dataset1, self.newth))
         return self.newth, self.thfin, number_new_dataset1, number_new_dataset
 
-    def clean_json(self, conclusive_path, progress_callback, view):
+    def clean_js(self, selected_th, conclusive_path, progress_callback, view):
         dizio_new = {}
         for i in self.dizio:
-            if self.dizio[i]['Unc_tot'] < self.newth:
+            if float(self.dizio[i]['Unc_tot']) < self.d_th[selected_th]:
                 dizio_new[i] = self.dizio[i]
-        
-        name = os.path.join(conclusive_path , self.fname + '_cleanss_js.txt')
+
+        name = os.path.join(conclusive_path, self.fname + '_cleanss_js.txt')
         print(name)
         with open(name, 'w') as f:
             json.dump(dizio_new, f)
