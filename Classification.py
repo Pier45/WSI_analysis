@@ -78,7 +78,7 @@ class Classification:
     def load_model(self, model_name):
         self.model = tf.keras.models.load_model(model_name)
 
-    def classify(self, typean, monte_c, model_n, progress_callback, view):
+    def classify(self, typean, monte_c, model_n, progress_callback, view=0):
         """
         Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
@@ -103,8 +103,8 @@ class Classification:
 
         for i, y in enumerate(self.dictionary):
             self.dictionary[y]["pred_class"] = self.cl[int(np.argmax(clas_mean[i]))]
-            self.dictionary[y]["epi"] = float(np.round(np.sum(epistemic[i]), decimals=5))
-            self.dictionary[y]["ale"] = float(np.round(np.sum(aleatoric[i]), decimals=5))
+            self.dictionary[y]["epi"] = float(np.round(np.sum(epistemic[i]), 4))
+            self.dictionary[y]["ale"] = float(np.round(np.sum(aleatoric[i]), 4))
 
         if typean == 'datacleaning':
             progress_callback.emit(100)
@@ -118,7 +118,7 @@ class Classification:
             progress_callback.emit(100)
 
         with open(os.path.join(self.path, 'dictionary_js.txt'), 'w') as f:
-            json.dump(self.dictionary, f)
+            json.dump(self.dictionary, f, indent=4)
 
     def show_image(self, im):
         """GREAT NOTE: LIST ARE index-1 for the 0 index """
@@ -161,18 +161,18 @@ class Classification:
             c0 = column*step
             r0 = row*step
             if unc == 'Pred_class':
-                clas = self.dictionary[name_t]["class"]
-                if clas == 0:
+                clas = self.dictionary[name_t]["pred_class"]
+                if clas == 'AC':
                     # red
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
                     image_base_AC[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
                     n1 += 1
-                elif clas == 1:
+                elif clas == 'H':
                     # green
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
                     image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
                     n2 += 1
-                elif clas == 2:
+                elif clas == 'AD':
                     # blue
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
                     image_base_AD[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5

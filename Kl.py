@@ -3,7 +3,7 @@ import tensorflow.keras.layers as tk_layer
 import numpy as np
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import tensorflow_probability as tfp
+#import tensorflow_probability as tfp
 import glob
 import os
 

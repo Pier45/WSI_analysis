@@ -111,7 +111,16 @@ class App(QMainWindow):
     def tutorial(self):
         QMessageBox.information(self, "Bayesian datacleaner",
                                 "The program is divided in tabs,\n"
-                                "follow the structure of the programs. \n \n "
+                                "you should follow the tab sequence to ensure that all function will work in the"
+                                " right way. \n \n "
+                                "In the first tab 'Get tiles' you have to select a folder where you want to save all"
+                                " data that will be created during the cleaning, after this you can select the train "
+                                "and validation folders,"
+                                " inside this the svs files should be organized in three class, AC,"
+                                " AD, H. When you have done press Start and the process will run. \n"
+                                "In Train tab you can select some parameters of the training model, and if needed "
+                                "select a specific training and validation set, push start and wait the end of the "
+                                "learning process."
                                 "Press ok to continue")
 
     def createMenu(self):
@@ -120,7 +129,6 @@ class App(QMainWindow):
 
         about = QMenu("About", self)
         about.addAction(self.aboutAct)
-
 
         self.menuBar().addMenu(fileMenu)
         self.menuBar().addMenu(about)
@@ -138,9 +146,9 @@ class MyTableWidget(QWidget):
         self.model = 'drop'
         self.batch_dim = 100
         self.monte = 5
-        self.path_save_clean, self.train_js, self.val_js = '', '', ''
+        self.train_js, self.val_js = "train_js.txt", "test_js.txt"
         self.path_work = "D:/test"
-        self.path_tiles_train, self.path_tiles_val, self.selected_th = '', '', ''
+        self.path_tiles_train, self.path_tiles_val, self.selected_th, self.path_save_clean = '', '', '', ''
         self.flag, self.aug = 0, 0
         self.layout = QVBoxLayout(self)
 
@@ -152,14 +160,12 @@ class MyTableWidget(QWidget):
         self.tab2 = QWidget()
         self.tab3 = QWidget()
         self.tab4 = QWidget()
-        #self.tabs.resize(500, 400)
 
         # Add tabs
         self.tabs.addTab(self.tab1, "Get Tiles")
         self.tabs.addTab(self.tab2, "Training")
         self.tabs.addTab(self.tab3, "Classify")
         self.tabs.addTab(self.tab4, "Datacleaning")
-
 
         # Create first tab
         self.tab1.layout = QVBoxLayout(self)
@@ -249,7 +255,6 @@ class MyTableWidget(QWidget):
         self.tab1.layout.addWidget(self.start)
 
         self.tab1.setLayout(self.tab1.layout)
-        self.o = 0
 
         # Elements section 2
         self.progrestrain = QProgressBar(self)
@@ -348,7 +353,7 @@ class MyTableWidget(QWidget):
         self.start_classify_train.clicked.connect(self.cl_train)
 
         self.start_classify_val = QPushButton('Start')
-        self.start_classify_val.clicked.connect(self.cl_test)
+        self.start_classify_val.clicked.connect(self.cl_val)
 
         self.HMonte = QHBoxLayout(self)
         self.HMonte.addWidget(self.description_monte)
@@ -599,7 +604,6 @@ class MyTableWidget(QWidget):
         self.manual.setEnabled(True)
 
     def clean_train(self):
-        self.train_js = 'D:/Download/tr_js.txt'
         self.draw_hist(self.train_js, 'train')
         self.description_total_before.setText('Total number of tiles before cleaning: {}'.format(len(self.list_tot)))
         self.description_total_before.show()
@@ -608,7 +612,6 @@ class MyTableWidget(QWidget):
         self.unlock_an()
 
     def clean_val(self):
-        self.val_js = 'D:/Download/test_js.txt'
         self.draw_hist(self.val_js, 'val')
         self.description_total_before.setText('Total number of tiles before cleaning: {}'.format(len(self.list_tot)))
         self.description_total_before.show()
@@ -793,7 +796,7 @@ class MyTableWidget(QWidget):
         self.start_an('train')
         self.train_js = os.path.join(self.path_work, 'train', 'dictionary_js.txt')
 
-    def cl_test(self):
+    def cl_val(self):
         self.start_an('val')
         self.val_js = os.path.join(self.path_work, 'val', 'dictionary_js.txt')
 
