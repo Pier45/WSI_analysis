@@ -264,7 +264,7 @@ class MyTableWidget(QWidget):
         self.start_train.clicked.connect(self.train)
         self.state_train = QLabel("Press start to train the model.")
         self.state_train.setMargin(10)
-        self.state_train.setFixedWidth(600)
+        self.state_train.setFixedWidth(900)
         self.state_train.setFixedHeight(1500)
         self.state_train.setAlignment(Qt.AlignTop)
 
@@ -730,7 +730,7 @@ class MyTableWidget(QWidget):
         print("THREAD COMPLETE!")
 
     def thread_train_complete(self):
-        self.state_train.setText('Training Completed!')
+        self.state_train.setText('Training completed! The history is saved in the work folder.')
         print("THREAD COMPLETE!")
 
     def th_tiles(self, pr, path, name):
@@ -794,17 +794,17 @@ class MyTableWidget(QWidget):
 
     def cl_train(self):
         self.start_an('train')
-        self.train_js = os.path.join(self.path_work, 'train', 'dictionary_js.txt')
+        self.train_js = os.path.join(self.path_work, 'train', 'dictionary_monte_' + str(self.monte) + '_js.txt')
 
     def cl_val(self):
         self.start_an('val')
-        self.val_js = os.path.join(self.path_work, 'val', 'dictionary_js.txt')
+        self.val_js = os.path.join(self.path_work, 'val', 'dictionary_monte' + str(self.monte) + '_js.txt')
 
     def start_an(self, data):
         path = os.path.join(self.path_work, data)
-
+        self.new_path_model = 'C:/Users/piero/Documents/GitHub/WSI_analysis/Model_1_85aug.h5'
         cls = Classification(path, ty='datacleaning')
-        worker_cl = WorkerLong(cls.classify, 'datacleaning', self.monte, self.new_path_model)
+        worker_cl = WorkerLong(cls.classify, 'datacleaning', int(self.monte), self.new_path_model)
         worker_cl.signals.result.connect(self.print_output)
         worker_cl.signals.progress.connect(self.progress_fn)
         worker_cl.signals.progress.connect(self.prog_monte.setValue)

@@ -6,6 +6,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 #import tensorflow_probability as tfp
 import glob
 import os
+import json
 
 class MyCallback(Callback):
     def __init__(self, progress, view, tot):
@@ -27,10 +28,11 @@ class MyCallback(Callback):
 class ModelKl:
 
     def __init__(self, n_model, epochs, path_train, path_val, b_dim, aug=0):
-        self.shape = (64,64,3)
+        self.shape = (64, 64, 3)
         self.n_classes = 3
         self.epochs = int(epochs)
         self.name_model = n_model
+        self.history = n_model[:n_model.index('.h5')] + '.txt'
         self.batch_dim_train = int(b_dim)
         self.batch_dim_val = int(b_dim)
         self.n_image_train = len(glob.glob(os.path.join(path_train, '*/*.png')))
@@ -179,6 +181,8 @@ class ModelKl:
                                       callbacks=callbacks_list
                                       )
         model.save(self.name_model)
+        with open(self.history, 'w') as file:
+            json.dump(history.history, file)
         #return model, history
 
 

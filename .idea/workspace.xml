@@ -46,7 +46,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.ui_pyqt5">
+  <component name="RunManager" selected="Python.ui_dataclean">
     <configuration name="Classification" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Multiprocessing_analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -154,8 +154,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.ui_pyqt5" />
         <item itemvalue="Python.ui_dataclean" />
+        <item itemvalue="Python.ui_pyqt5" />
         <item itemvalue="Python.uncertenty_analysis" />
         <item itemvalue="Python.test3" />
         <item itemvalue="Python.Classification" />

@@ -4,6 +4,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import glob
 import os
+import json
 
 
 class MyCallback(Callback):
@@ -28,6 +29,7 @@ class ModelDropOut:
         self.shape = (64, 64, 3)
         self.n_classes = 3
         self.name_model = n_model
+        self.history = n_model[:n_model.index('.h5')] + '.txt'
         self.epochs = int(epochs)
         self.batch_dim_train = int(b_dim)
         self.batch_dim_val = int(b_dim)
@@ -137,6 +139,9 @@ class ModelDropOut:
                                       )
 
         model.save(self.name_model)
+
+        with open(self.history, 'w') as file:
+            json.dump(history.history, file)
         #return model, history
 
 

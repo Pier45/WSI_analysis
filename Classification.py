@@ -117,7 +117,7 @@ class Classification:
             self.overlay(typean, unc='tot')
             progress_callback.emit(100)
 
-        with open(os.path.join(self.path, 'dictionary_js.txt'), 'w') as f:
+        with open(os.path.join(self.path, 'dictionary_' + str(monte_c) + 'js.txt'), 'w') as f:
             json.dump(self.dictionary, f, indent=4)
 
     def show_image(self, im):
@@ -217,7 +217,6 @@ class Classification:
         foreground = Image.fromarray(np.uint8(image_base*255), mode='RGBA')
         background.paste(foreground, (0, 0), foreground)
         background.save(res_name)
-
 
     def load_dict(self):
         name_f = os.path.join(self.path, 'dictionary_js.txt')
