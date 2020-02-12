@@ -160,12 +160,15 @@ class MyTableWidget(QWidget):
         self.tab2 = QWidget()
         self.tab3 = QWidget()
         self.tab4 = QWidget()
+        self.tab5 = QWidget()
 
         # Add tabs
         self.tabs.addTab(self.tab1, "Get Tiles")
         self.tabs.addTab(self.tab2, "Training")
-        self.tabs.addTab(self.tab3, "Classify")
+        self.tabs.addTab(self.tab3, "Uncertainty analysis")
         self.tabs.addTab(self.tab4, "Datacleaning")
+        self.tabs.addTab(self.tab5, "Testing")
+
 
         # Create first tab
         self.tab1.layout = QVBoxLayout(self)
@@ -376,9 +379,9 @@ class MyTableWidget(QWidget):
         self.tab3.setLayout(self.tab3.layout)
 
         # Elements 4
-        self.hist_ale = MplCanvas('Aleatoric uncertanty', self, width=5, height=4, dpi=100)
-        self.hist_epi = MplCanvas('Epistemic uncertanty', self, width=5, height=4, dpi=100)
-        self.hist_tot = MplCanvas('Total uncertanty', self, width=5, height=4, dpi=100)
+        self.hist_ale = MplCanvas('Aleatoric uncertainty', self, width=5, height=4, dpi=100)
+        self.hist_epi = MplCanvas('Epistemic uncertainty', self, width=5, height=4, dpi=100)
+        self.hist_tot = MplCanvas('Total uncertainty', self, width=5, height=4, dpi=100)
         self.hist_removed = QPushButton('Show number of tiles that i will remove for class')
         self.hist_removed.hide()
         self.hist_removed.clicked.connect(self.show_class_removed)
