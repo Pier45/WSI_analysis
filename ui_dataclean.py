@@ -19,7 +19,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationTool
 from matplotlib.figure import Figure
 import time
 from Classification import Classification
-from uncertenty_analysis import Th
+from uncertainty_analysis import Th
 
 matplotlib.use('Qt5Agg')
 
@@ -102,6 +102,7 @@ class App(QMainWindow):
         self.createAct()
         self.createMenu()
         self.setWindowIcon(QIcon('icons/target.ico'))
+        self.setStyleSheet(open('stileor.css').read())
         self.showMaximized()
 
     def createAct(self):
@@ -110,9 +111,8 @@ class App(QMainWindow):
 
     def tutorial(self):
         QMessageBox.information(self, "Bayesian datacleaner",
-                                "The program is divided in tabs,\n"
-                                "you should follow the tab sequence to ensure that all function will work in the"
-                                " right way. \n \n "
+                                "The program is divided in tabs, you should follow the tab sequence to ensure that all"
+                                " function will work in the right way. \n \n "
                                 "In the first tab 'Get tiles' you have to select a folder where you want to save all"
                                 " data that will be created during the cleaning, after this you can select the train "
                                 "and validation folders,"
@@ -140,13 +140,14 @@ class MyTableWidget(QWidget):
         super(QWidget, self).__init__(parent)
         self.train_path = "D:/test/train"
         self.val_path = "D:/test/val"
+        self.test_path = ""
         self.new_path_model = "C:/Users/piero/Documents/GitHub/WSI_analysis/Model_1_85aug.h5"
         self.list_ale, self.list_epi, self.list_tot = [], [], []
         self.epoch = 100
         self.model = 'drop'
         self.batch_dim = 100
         self.monte = 5
-        self.train_js, self.val_js = "train_js.txt", "test_js.txt"
+        self.train_js, self.val_js, self.test_js = "train_js.txt", "test_js.txt", ""
         self.path_work = "D:/test"
         self.path_tiles_train, self.path_tiles_val, self.selected_th, self.path_save_clean = '', '', '', ''
         self.flag, self.aug = 0, 0
@@ -166,7 +167,7 @@ class MyTableWidget(QWidget):
         self.tabs.addTab(self.tab1, "Get Tiles")
         self.tabs.addTab(self.tab2, "Training")
         self.tabs.addTab(self.tab3, "Uncertainty analysis")
-        self.tabs.addTab(self.tab4, "Datacleaning")
+        self.tabs.addTab(self.tab4, "Data cleaning")
         self.tabs.addTab(self.tab5, "Testing")
 
 
@@ -186,21 +187,29 @@ class MyTableWidget(QWidget):
         self.title_train.setFont(newfont)
         self.title_val = QLabel('VALIDATION SET')
         self.title_val.setFont(newfont)
+        self.title_test = QLabel('TEST SET')
+        self.title_test.setFont(newfont)
 
         self.start = QPushButton("Start")
         self.start.clicked.connect(self.start_tiles)
         self.description_t = QLabel("Press here to select the train folder: ")
         self.description_v = QLabel("Press here to select the validation folder: ")
+        self.description_test = QLabel("Press here to select the test folder: ")
         self.folder_train = QPushButton("Select folder")
         self.folder_train.clicked.connect(self.select_folder_train)
         self.folder_val = QPushButton("Select folder")
         self.folder_val.clicked.connect(self.select_folder_val)
+        self.folder_test = QPushButton("Select folder")
+        self.folder_test.clicked.connect(self.select_folder_test)
         self.prog1 = QProgressBar(self)
         self.prog2 = QProgressBar(self)
         self.prog3 = QProgressBar(self)
         self.prog1_v = QProgressBar(self)
         self.prog2_v = QProgressBar(self)
         self.prog3_v = QProgressBar(self)
+        self.prog1_test = QProgressBar(self)
+        self.prog2_test = QProgressBar(self)
+        self.prog3_test = QProgressBar(self)
         # train
         self.list_ac = QListWidget(self)
         self.list_ad = QListWidget(self)
@@ -209,6 +218,11 @@ class MyTableWidget(QWidget):
         self.list_ac_v = QListWidget(self)
         self.list_ad_v = QListWidget(self)
         self.list_h_v = QListWidget(self)
+        # test
+        # validation
+        self.list_ac_test = QListWidget(self)
+        self.list_ad_test = QListWidget(self)
+        self.list_h_test = QListWidget(self)
 
         self.first_layout = QHBoxLayout(self)
         self.first_layout.addWidget(self.first)
@@ -222,6 +236,10 @@ class MyTableWidget(QWidget):
         self.h_val.addWidget(self.description_v)
         self.h_val.addWidget(self.folder_val)
 
+        self.h_test = QHBoxLayout(self)
+        self.h_test.addWidget(self.description_test)
+        self.h_test.addWidget(self.folder_test)
+
         self.list_t = QHBoxLayout(self)
         self.list_t.addWidget(self.list_ac)
         self.list_t.addWidget(self.list_ad)
@@ -232,6 +250,11 @@ class MyTableWidget(QWidget):
         self.list_v.addWidget(self.list_ad_v)
         self.list_v.addWidget(self.list_h_v)
 
+        self.list_test = QHBoxLayout(self)
+        self.list_test.addWidget(self.list_ac_test)
+        self.list_test.addWidget(self.list_ad_test)
+        self.list_test.addWidget(self.list_h_test)
+
         self.pr = QHBoxLayout(self)
         self.pr.addWidget(self.prog1)
         self.pr.addWidget(self.prog2)
@@ -241,6 +264,11 @@ class MyTableWidget(QWidget):
         self.pr_v.addWidget(self.prog1_v)
         self.pr_v.addWidget(self.prog2_v)
         self.pr_v.addWidget(self.prog3_v)
+
+        self.pr_test = QHBoxLayout(self)
+        self.pr_test.addWidget(self.prog1_test)
+        self.pr_test.addWidget(self.prog2_test)
+        self.pr_test.addWidget(self.prog3_test)
 
         # tab1
         self.tab1.layout.addLayout(self.first_layout)
@@ -254,6 +282,11 @@ class MyTableWidget(QWidget):
         self.tab1.layout.addLayout(self.h_val)
         self.tab1.layout.addLayout(self.list_v)
         self.tab1.layout.addLayout(self.pr_v)
+        self.tab1.layout.addWidget(QHLine())
+        self.tab1.layout.addWidget(self.title_test)
+        self.tab1.layout.addLayout(self.h_test)
+        self.tab1.layout.addLayout(self.list_test)
+        self.tab1.layout.addLayout(self.pr_test)
         self.tab1.layout.addWidget(QHLine())
         self.tab1.layout.addWidget(self.start)
 
@@ -343,8 +376,10 @@ class MyTableWidget(QWidget):
         self.description_clas = QLabel('The purpose of this step is to obtain the values of uncertainty values')
         self.description_monte = QLabel('Write here Monte Carlo samples:')
         self.title_train_cl = QLabel('TRAINING SET')
-        self.title_test_cl = QLabel('VALIDATION SET')
+        self.title_val_cl = QLabel('VALIDATION SET')
+        self.title_test_cl = QLabel('TEST SET')
         self.title_train_cl.setFont(newfont)
+        self.title_val_cl.setFont(newfont)
         self.title_test_cl.setFont(newfont)
 
         self.description_monte2 = QLabel('Default value: {}'.format(self.monte))
@@ -357,6 +392,9 @@ class MyTableWidget(QWidget):
 
         self.start_classify_val = QPushButton('Start')
         self.start_classify_val.clicked.connect(self.cl_val)
+
+        self.start_classify_test = QPushButton('Start')
+        self.start_classify_test.clicked.connect(self.cl_test)
 
         self.HMonte = QHBoxLayout(self)
         self.HMonte.addWidget(self.description_monte)
@@ -371,8 +409,11 @@ class MyTableWidget(QWidget):
         self.tab3.layout.addWidget(self.title_train_cl)
         self.tab3.layout.addWidget(self.start_classify_train)
         self.tab3.layout.addWidget(QHLine())
-        self.tab3.layout.addWidget(self.title_test_cl)
+        self.tab3.layout.addWidget(self.title_val_cl)
         self.tab3.layout.addWidget(self.start_classify_val)
+        self.tab3.layout.addWidget(QHLine())
+        self.tab3.layout.addWidget(self.title_test_cl)
+        self.tab3.layout.addWidget(self.start_classify_test)
         self.tab3.layout.addStretch(1)
         self.tab3.layout.addWidget(self.prog_monte)
 
@@ -488,8 +529,8 @@ class MyTableWidget(QWidget):
         self.tab4.layout.addLayout(self.folder_cl)
         self.tab4.layout.addLayout(self.h_selection_th)
         self.tab4.layout.addWidget(self.create_new_dataset)
-        self.tab4.layout.addWidget(self.prog_copy)
         self.tab4.layout.addStretch(1)
+        self.tab4.layout.addWidget(self.prog_copy)
 
         self.tab4.setLayout(self.tab4.layout)
 
@@ -663,9 +704,9 @@ class MyTableWidget(QWidget):
     def select_folder_train(self):
         self.train_path = QFileDialog.getExistingDirectory(self, "Select Directory")
         if self.train_path != '':
-            self.cl = os.listdir(self.train_path)
+            cl = os.listdir(self.train_path)
             try:
-                for i in self.cl:
+                for i in cl:
                     nfiles = os.listdir(os.path.join(self.train_path, i))
                     if i == 'AC' or i == 'ac':
                         self.list_ac.addItems(nfiles)
@@ -676,7 +717,27 @@ class MyTableWidget(QWidget):
                     else:
                         pass
                     print(self.train_path)
-                    print("we jack")
+            except:
+                pass
+        else:
+            pass
+
+    def select_folder_test(self):
+        self.test_path = QFileDialog.getExistingDirectory(self, "Select Directory")
+        if self.test_path != '':
+            cl = os.listdir(self.test_path)
+            try:
+                for i in cl:
+                    nfiles = os.listdir(os.path.join(self.test_path, i))
+                    if i == 'AC' or i == 'ac':
+                        self.list_ac_test.addItems(nfiles)
+                    elif i == 'AD' or i == 'ad':
+                        self.list_ad_test.addItems(nfiles)
+                    elif i == 'H' or i == 'h':
+                        self.list_h_test.addItems(nfiles)
+                    else:
+                        pass
+                    print(self.test_path)
             except:
                 pass
         else:
@@ -685,9 +746,9 @@ class MyTableWidget(QWidget):
     def select_folder_val(self):
         self.val_path = QFileDialog.getExistingDirectory(self, "Select Directory")
         if self.val_path != '':
-            self.cl = os.listdir(self.val_path)
+            cl = os.listdir(self.val_path)
             try:
-                for i in self.cl:
+                for i in cl:
                     nfiles = os.listdir(os.path.join(self.val_path, i))
                     if i == 'AC' or i == 'ac':
                         self.list_ac_v.addItems(nfiles)
@@ -698,7 +759,6 @@ class MyTableWidget(QWidget):
                     else:
                         pass
                     print(self.val_path)
-                    print("we jack")
             except:
                 pass
         else:
@@ -758,22 +818,21 @@ class MyTableWidget(QWidget):
             self.threadPool.start(name_th)
 
     def start_tiles(self):
-        pr = [[self.prog1, self.prog2, self.prog3], [self.prog1_v, self.prog2_v, self.prog3_v]]
-        ph = [self.train_path, self.val_path]
-        datas = ['train', 'val']
+        pr = [[self.prog1, self.prog2, self.prog3], [self.prog1_v, self.prog2_v, self.prog3_v],
+              [self.prog1_test, self.prog2_test, self.prog3_test]]
+        ph = [self.train_path, self.val_path, self.test_path]
+        dataset = ['train', 'val', 'test']
 
-        for t, i in enumerate(datas):
+        for t, i in enumerate(dataset):
             self.th_tiles(pr[t], ph[t], name=i)
 
     def ok_epochs(self):
-        textboxValue = self.text.text()
-        if textboxValue.isdecimal() and int(textboxValue) > 0:
-            self.description_tr2.setText('Limit epochs:  {}'.format(textboxValue))
-            self.epoch = textboxValue
+        text_value = self.text.text()
+        if text_value.isdecimal() and int(text_value) > 0:
+            self.description_tr2.setText('Limit epochs:  {}'.format(text_value))
+            self.epoch = text_value
         else:
             pass
-
-        print(textboxValue)
 
     def train(self):
         self.state_train.setText('The training is starting, in few second other information will be showed...')
@@ -798,6 +857,10 @@ class MyTableWidget(QWidget):
     def cl_train(self):
         self.start_an('train')
         self.train_js = os.path.join(self.path_work, 'train', 'dictionary_monte_' + str(self.monte) + '_js.txt')
+
+    def cl_test(self):
+        self.start_an('test')
+        self.test_js = os.path.join(self.path_work, 'test', 'dictionary_monte_' + str(self.monte) + '_js.txt')
 
     def cl_val(self):
         self.start_an('val')

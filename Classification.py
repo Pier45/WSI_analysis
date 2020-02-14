@@ -53,7 +53,7 @@ class Classification:
                 row = int(tile_pos[list(tile_pos).index('_')+1:])
                 np_image, shape_x, shape_y = self.tile_control(j)
                 if self.ty == 'datacleaning':
-                    sub_d['name'] = j[j.index('pz_'):j.index('tile')]
+                    sub_d['name'] = j[j.index('pz_'):j.index('_tile')]
                     sub_d['true_class'] = i[1:]
                 sub_d["im_path"], sub_d["shape_x"], sub_d["shape_y"], sub_d["col"], sub_d["row"] = j, shape_x, shape_y, column, row
                 list_image.append(np_image)
