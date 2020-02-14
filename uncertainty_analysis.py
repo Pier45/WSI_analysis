@@ -26,7 +26,6 @@ class Th:
     
     def create_list(self):
         self.openf()
-        print('open the file')
         for i in self.dizio:
             self.list_ale.append(float(self.dizio[i]['ale']))
             self.list_epi.append(float(self.dizio[i]['epi']))
@@ -34,6 +33,9 @@ class Th:
             self.list_tot.append(self.dizio[i]['Unc_tot'])
         
         self.tot_n = len(self.list_tot)
+
+        #with open('new_val_js.txt', 'w') as f:
+        #    json.dump(self.dizio, f, indent=4)
 
         return self.list_ale, self.list_epi, self.list_tot
 
@@ -76,8 +78,10 @@ class Th:
         
         his, bi = np.histogram(self.list_tot, np.arange(0, 1, 0.01))
         pos = np.where(bi == self.thfin)
+        print('POS', pos)
         number_new_dataset = np.sum(his[:pos[0][0]])
 
+        print('---------', his[:pos[0][0]])
         print('Total number tiles:         {}\n'
               '60% of dataset:             {}\n'
               'Elemets UncT < Otsu Th:     {}'.format(self.tot_n, minimo, number_new_dataset))
@@ -86,10 +90,7 @@ class Th:
             if minimo > number_new_dataset:
                 max_pos = np.where(his == np.max(his[pos[0][0]:]))
                 der = np.diff(his[pos[0][0]:max_pos[0][0]])
-                print(his[pos[0][0]:max_pos[0][0]])
-                print(der)
                 max_variation = np.where(der == np.max(der))
-                print('MAX VAR --', max_variation)
                 new_ph = his[pos[0][0] + max_variation[0][0]]
                 npos = np.where(his[pos[0][0]:] > new_ph)
                 self.newth = bi[npos[0][0] + pos[0][0]]
@@ -106,7 +107,9 @@ class Th:
             pos1 = np.where(bi == self.newth)
             number_new_dataset1 = np.sum(his[:pos1[0][0]])
 
-        print('Elements new dataset:          {}\nNew Th: {}'.format(number_new_dataset1, self.newth))
+        print('Elements new dataset:       {}\n'
+              'Otsu Th:    {}\n'
+              'New Th:     {}'.format(number_new_dataset1, self.thfin, self.newth))
         return self.newth, self.thfin, number_new_dataset1, number_new_dataset
 
     def clean_js(self, selected_th, conclusive_path, progress_callback, view):

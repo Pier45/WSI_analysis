@@ -147,7 +147,7 @@ class MyTableWidget(QWidget):
         self.model = 'drop'
         self.batch_dim = 100
         self.monte = 5
-        self.train_js, self.val_js, self.test_js = "train_js.txt", "test_js.txt", ""
+        self.train_js, self.val_js, self.test_js = "new_train_js.txt", "new_val_js.txt", ""
         self.path_work = "D:/test"
         self.path_tiles_train, self.path_tiles_val, self.selected_th, self.path_save_clean = '', '', '', ''
         self.flag, self.aug = 0, 0
@@ -440,6 +440,8 @@ class MyTableWidget(QWidget):
         self.folder_cl_data.clicked.connect(self.conclusion_folder)
         self.auto = QRadioButton('Auto')
         self.auto.setEnabled(False)
+        self.control = QRadioButton('Control')
+        self.control.hide()
         self.auto.toggled.connect(self.update_auto)
         self.manual = QRadioButton('Manual')
         self.manual.setEnabled(False)
@@ -447,6 +449,7 @@ class MyTableWidget(QWidget):
         self.mode_group = QButtonGroup()
         self.mode_group.addButton(self.auto)
         self.mode_group.addButton(self.manual)
+        self.mode_group.addButton(self.control)
         self.prog_copy = QProgressBar()
 
         self.dataset_train = QRadioButton('Training set')
@@ -624,7 +627,6 @@ class MyTableWidget(QWidget):
 
     def draw_hist(self, path_js, name):
         self.obj_clean = Th(path_js, name)
-        print('sono in f')
         self.list_ale, self.list_epi, self.list_tot = self.obj_clean.create_list()
 
         self.hist_tot.axes.clear()
@@ -647,21 +649,26 @@ class MyTableWidget(QWidget):
         self.auto.setEnabled(True)
         self.manual.setEnabled(True)
 
+        self.auto.setChecked(False)
+        self.manual.setChecked(False)
+        self.control.setChecked(True)
+        self.control.setChecked(True)
+
     def clean_train(self):
+        self.unlock_an()
         self.draw_hist(self.train_js, 'train')
         self.description_total_before.setText('Total number of tiles before cleaning: {}'.format(len(self.list_tot)))
         self.description_total_before.show()
         self.description_total_after.hide()
         self.hist_removed.hide()
-        self.unlock_an()
 
     def clean_val(self):
+        self.unlock_an()
         self.draw_hist(self.val_js, 'val')
         self.description_total_before.setText('Total number of tiles before cleaning: {}'.format(len(self.list_tot)))
         self.description_total_before.show()
         self.description_total_after.hide()
         self.hist_removed.hide()
-        self.unlock_an()
 
     def load_kl(self):
         self.model = 'kl'
@@ -686,6 +693,7 @@ class MyTableWidget(QWidget):
         else:
             pass
         self.hist_tot.draw()
+
         if self.auto.isChecked():
             self.manual_value.hide()
             self.start_clean.hide()
@@ -868,7 +876,7 @@ class MyTableWidget(QWidget):
 
     def start_an(self, data):
         path = os.path.join(self.path_work, data)
-        self.new_path_model = 'C:/Users/piero/Documents/GitHub/WSI_analysis/Model_1_85aug.h5'
+        self.new_path_model = 'Model_1_85aug.h5'
         cls = Classification(path, ty='datacleaning')
         worker_cl = WorkerLong(cls.classify, 'datacleaning', int(self.monte), self.new_path_model)
         worker_cl.signals.result.connect(self.print_output)
