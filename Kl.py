@@ -7,6 +7,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import glob
 import os
 import json
+import pandas as pd
 
 class MyCallback(Callback):
     def __init__(self, progress, view, tot):
@@ -181,8 +182,13 @@ class ModelKl:
                                       callbacks=callbacks_list
                                       )
         model.save(self.name_model)
-        with open(self.history, 'w') as file:
-            json.dump(history.history, file)
+
+        hist_df = pd.DataFrame(history.history)
+
+        # save to json:
+        with open(self.history, mode='w') as f:
+            hist_df.to_json(f)
+
         #return model, history
 
 

@@ -5,6 +5,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import glob
 import os
 import json
+import pandas as pd
 
 
 class MyCallback(Callback):
@@ -140,9 +141,11 @@ class ModelDropOut:
 
         model.save(self.name_model)
 
-        with open(self.history, 'w') as file:
-            json.dump(history.history, file)
-        #return model, history
+        hist_df = pd.DataFrame(history.history)
+
+        # save to json:
+        with open(self.history, mode='w') as f:
+            hist_df.to_json(f)
 
 
 if __name__ == '__main__':
