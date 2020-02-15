@@ -20,6 +20,7 @@ from matplotlib.figure import Figure
 import time
 from Classification import Classification
 from uncertainty_analysis import Th
+from test_widget import TestTab
 
 matplotlib.use('Qt5Agg')
 
@@ -168,8 +169,8 @@ class MyTableWidget(QWidget):
         self.tabs.addTab(self.tab2, "Training")
         self.tabs.addTab(self.tab3, "Uncertainty analysis")
         self.tabs.addTab(self.tab4, "Data cleaning")
-        self.tabs.addTab(self.tab5, "Testing")
-
+        t5 = TestTab(self)
+        self.tabs.addTab(t5, "Testing")
 
         # Create first tab
         self.tab1.layout = QVBoxLayout(self)
@@ -805,10 +806,11 @@ class MyTableWidget(QWidget):
         print("THREAD COMPLETE!")
 
     def th_tiles(self, pr, path, name):
-
-        for y, k in enumerate(self.cl, 0):
+        cl = os.listdir(self.path)
+        for y, k in enumerate(cl, 0):
             save_folder = os.path.join(self.path_work, name, k)
             f_p = os.path.join(path, k)
+            print(save_folder)
             if os.path.exists(save_folder):
                 pass
             else:
@@ -832,6 +834,7 @@ class MyTableWidget(QWidget):
         dataset = ['train', 'val', 'test']
 
         for t, i in enumerate(dataset):
+            print(pr[t], ph[t], i)
             self.th_tiles(pr[t], ph[t], name=i)
 
     def ok_epochs(self):

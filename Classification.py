@@ -33,6 +33,7 @@ class Classification:
         the image vectors already padded. Only the folder that start with 'p_' are analayzed, others are skipped.
         """
         self.dictionary = {}
+        n_tile = 0
         list_image = []
         folders_tot = os.listdir(self.path)
         if self.ty == 'analysis':
@@ -47,7 +48,6 @@ class Classification:
                 sub_d = {}
                 complete_name = j[j.index('tile'):-4]
                 partial = complete_name[complete_name.index('_') + 1:]
-                n_tile = partial[:partial.index('_')]
                 tile_pos = partial[list(partial).index('_') + 1:]
                 column = int(tile_pos[:list(tile_pos).index('_')])
                 row = int(tile_pos[list(tile_pos).index('_')+1:])
@@ -55,11 +55,15 @@ class Classification:
                 if self.ty == 'datacleaning':
                     sub_d['name'] = j[j.index('pz_'):j.index('_tile')]
                     sub_d['true_class'] = i[1:]
+                    n_tile += 1
+                else:
+                    n_tile = partial[:partial.index('_')]
                 sub_d["im_path"], sub_d["shape_x"], sub_d["shape_y"], sub_d["col"], sub_d["row"] = j, shape_x, shape_y, column, row
                 list_image.append(np_image)
                 self.dictionary[n_tile] = sub_d
-            print('Selected Folder:   {:<40} Number of elements: {}'.format(sel_folder, n_elements))
+            print('Selected Folder:   {:<40} Number of elements: {}   elementi{}'.format(sel_folder, n_elements, len(list_image)))
 
+        print(len(self.dictionary))
         self.np_list_image = np.asarray(list_image)
 
     def tile_control(self, j):
@@ -83,8 +87,7 @@ class Classification:
         Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
         self.load_model(model_name=model_n)
-        np_image = np.asarray(self.np_list_image)
-        print(np_image.shape)
+        print(self.np_list_image.shape)
         tesu = []
         progress_callback.emit(1)
         mc = monte_c
@@ -93,13 +96,13 @@ class Classification:
             if i != 0:
                 progress_callback.emit(100*i/6)
 
-            tesu.append(self.model.predict(np_image, batch_size=50))
+            tesu.append(self.model.predict(self.np_list_image, batch_size=50))
 
         probs = np.asarray(tesu)
         clas_mean = np.mean(probs, axis=0)
         aleatoric = np.mean(probs * (1 - probs), axis=0)
         epistemic = np.mean(probs ** 2, axis=0) - np.mean(probs, axis=0) ** 2
-        print('SHAPE EPI: {} \n SHAPE ALE: {}'.format(epistemic.shape, aleatoric.shape))
+        print('TESU: {} \n SHAPE EPI: {} \n SHAPE ALE: {}'.format(len(tesu), epistemic.shape, aleatoric.shape))
 
         for i, y in enumerate(self.dictionary):
             self.dictionary[y]["pred_class"] = self.cl[int(np.argmax(clas_mean[i]))]
@@ -117,7 +120,8 @@ class Classification:
             self.overlay(typean, unc='tot')
             progress_callback.emit(100)
 
-        with open(os.path.join(self.path, 'dictionary_' + str(monte_c) + 'js.txt'), 'w') as f:
+        print('dictionary', len(self.dictionary))
+        with open(os.path.join(self.path, 'dictionary_' + str(monte_c) + '_js.txt'), 'w') as f:
             json.dump(self.dictionary, f, indent=4)
 
     def show_image(self, im):
