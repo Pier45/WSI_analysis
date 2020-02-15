@@ -169,8 +169,8 @@ class MyTableWidget(QWidget):
         self.tabs.addTab(self.tab2, "Training")
         self.tabs.addTab(self.tab3, "Uncertainty analysis")
         self.tabs.addTab(self.tab4, "Data cleaning")
-        t5 = TestTab(self)
-        self.tabs.addTab(t5, "Testing")
+        self.t5 = TestTab(parent=self)
+        self.tabs.addTab(self.t5, "Testing")
 
         # Create first tab
         self.tab1.layout = QVBoxLayout(self)
@@ -183,7 +183,7 @@ class MyTableWidget(QWidget):
         self.first_button = QPushButton("Select folder")
         self.first_button.clicked.connect(self.first_selection)
 
-        newfont = QFont("Times", 15, QFont.Bold)
+        newfont = QFont("Helvetica", 15, QFont.Bold)
         self.title_train = QLabel('TRAINING SET')
         self.title_train.setFont(newfont)
         self.title_val = QLabel('VALIDATION SET')
@@ -558,7 +558,6 @@ class MyTableWidget(QWidget):
     def agumentation(self, state):
         if Qt.Checked == state:
             self.aug = 1
-            print(self.aug, 'aidsaidiaaaaaaaaaaaaaaaaaaa')
         else:
             self.aug = 0
 
@@ -868,14 +867,20 @@ class MyTableWidget(QWidget):
     def cl_train(self):
         self.start_an('train')
         self.train_js = os.path.join(self.path_work, 'train', 'dictionary_monte_' + str(self.monte) + '_js.txt')
+        self.t5.traincm.setEnabled(True)
+        self.t5.get_paths(train=self.train_js)
 
     def cl_test(self):
-        self.start_an('test')
+        #self.start_an('test')
         self.test_js = os.path.join(self.path_work, 'test', 'dictionary_monte_' + str(self.monte) + '_js.txt')
+        self.t5.testcm.setEnabled(True)
+        self.t5.get_paths(test=self.test_js)
 
     def cl_val(self):
         self.start_an('val')
-        self.val_js = os.path.join(self.path_work, 'val', 'dictionary_monte' + str(self.monte) + '_js.txt')
+        self.val_js = os.path.join(self.path_work, 'val', 'dictionary_monte_' + str(self.monte) + '_js.txt')
+        self.t5.valcm.setEnabled(True)
+        self.t5.get_paths(val=self.val_js)
 
     def start_an(self, data):
         path = os.path.join(self.path_work, data)

@@ -121,7 +121,7 @@ class Classification:
             progress_callback.emit(100)
 
         print('dictionary', len(self.dictionary))
-        with open(os.path.join(self.path, 'dictionary_' + str(monte_c) + '_js.txt'), 'w') as f:
+        with open(os.path.join(self.path, 'dictionary_monte_' + str(monte_c) + '_js.txt'), 'w') as f:
             json.dump(self.dictionary, f, indent=4)
 
     def show_image(self, im):
