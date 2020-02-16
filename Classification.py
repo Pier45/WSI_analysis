@@ -135,7 +135,7 @@ class Classification:
         plt.imshow(self.np_list_image[74, :, :, :])
         plt.show()
 
-    def overlay(self, type_an, unc='Pred_class'):
+    def overlay(self, unc='Pred_class'):
         a = plt.imread(self.path + '/thumbnail/th.png')
         image_base = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
         image_base_H = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
@@ -168,27 +168,37 @@ class Classification:
                 clas = self.dictionary[name_t]["pred_class"]
                 if clas == 'AC':
                     # red
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
-                    image_base_AC[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.5
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 1
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.2
+                    image_base_AC[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 1
+                    image_base_AC[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.2
+
                     n1 += 1
                 elif clas == 'H':
                     # green
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
-                    image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.95
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.23
+                    image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.95
+                    image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.23
                     n2 += 1
                 elif clas == 'AD':
                     # blue
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
-                    image_base_AD[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.5
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.9
+                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
+                    image_base_AD[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.9
+                    image_base_AD[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
                     n3 += 1
 
             elif unc == 'epi':
                 image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["epi"])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] += abs(self.dictionary[name_t]["epi"])
             elif unc == 'ale':
                 image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["ale"])
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] += abs(self.dictionary[name_t]["ale"])
             elif unc == 'tot':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["ale"])
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["epi"])
+                u_tot = self.dictionary[name_t]["ale"]+self.dictionary[name_t]["epi"]
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(u_tot)
+                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] += abs(u_tot)
             else:
                 print(f'Strange command:{unc}')
                 pass
@@ -196,23 +206,34 @@ class Classification:
         if unc == 'Pred_class':
             print('AC --> {:>4}\nH --> {:>4}\nAD --> {:>4}'.format(n1, n2, n3))
             print(n1 + n2 + n3)
-            image_base[:, :, 3] = 0.4
+            image_base[:, :, 3] = 0.3
+
             image_base_AC[:, :, 3] = 0.4
+            rc, cc = np.where(image_base_AC[:, :, 0] < 0.2)
+            image_base_AC[rc, cc, 3] = 0.1
+
             image_base_AD[:, :, 3] = 0.3
+            rd, cd = np.where(image_base_AD[:, :, 2] < 0.2)
+            image_base_AD[rd, cd, 3] = 0.1
+
             image_base_H[:, :, 3] = 0.3
+            rh, ch = np.where(image_base_H[:, :, 1] < 0.2)
+            image_base_H[rh, ch, 3] = 0.1
+
             list_im = [image_base, image_base_AC, image_base_H, image_base_AD]
 
             for im, name in enumerate(res_name, 0):
                 self.new_save(list_im[im], name)
         else:
-            r_h, c_h = np.where(image_base[:, :, 2] > 0.5)
-            image_base[r_h, c_h, 3] = 0.5
-            r_m, c_m = np.where(image_base[:, :, 2] > 0.45)
-            image_base[r_m, c_m, 3] = 0.4
-            r_c, c_c = np.where(image_base[:, :, 2] < 0.45)
-            image_base[r_c, c_c, 3] = 0.25
-            r, c = np.where(image_base[:, :, 2] < 0.2)
-            image_base[r, c, 3] = 0.1
+            if unc == 'tot' or unc == 'ale':
+                r_h, c_h = np.where(image_base[:, :, 2] < 0.4)
+                image_base[r_h, c_h, 2] = 0
+                image_base[r_h, c_h, 3] = 0.1
+                r_m, c_m = np.where((image_base[:, :, 2] < 0.5) & (image_base[:, :, 2] > 0.4))
+                image_base[r_m, c_m, 3] = 0.2
+            else:
+                pass
+
             self.new_save(image_base, res_name)
 
     def new_save(self, image_base, res_name):
@@ -220,10 +241,11 @@ class Classification:
         background = Image.open(self.path + '/thumbnail/th.png')
         foreground = Image.fromarray(np.uint8(image_base*255), mode='RGBA')
         background.paste(foreground, (0, 0), foreground)
+        #background.show()
         background.save(res_name)
 
     def load_dict(self):
-        name_f = os.path.join(self.path, 'dictionary_js.txt')
+        name_f = os.path.join(self.path, 'dictionary_monte_5_js.txt')
         with open(name_f, 'r') as f:
             self.dictionary = json.load(f)
 
@@ -231,11 +253,11 @@ class Classification:
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    sasa = Classification('C:/Users/piero/Test/10002_2/')
+    sasa = Classification('C:/Users/piero/Test/31400_2/', ty='analysis')
     #sasa.show_image()
     #sasa.classify(typean='fast')
     sasa.load_dict()
-    sasa.overlay(type_an='fast', unc='Pred_class')
+    sasa.overlay(unc='epi')
     t1 = time.perf_counter()
 
     s = t1-t

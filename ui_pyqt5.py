@@ -13,7 +13,6 @@ import sys
 from multi_processing_analysis import StartAnalysis
 from progress_bar import Actions
 from Classification import Classification
-from modifyset import Mod
 
 
 class Worker(QRunnable):
@@ -91,7 +90,7 @@ class ImageViewer(QMainWindow):
                                  "1) File         ---> Select svs or select the yellow folder in the toolbar\n\n"
                                  "2) Analysis ---> Stat analysis or select the green arrow in the toolbar ")
 
-        self.imageLabel.setFont(QFont("Akzidenz Grotesk", 15, QFont.Black))
+        self.imageLabel.setFont(QFont("Helvetica", 15, QFont.Black))
         self.setCentralWidget(self.imageLabel)
 
         self.imageLabel.setBackgroundRole(QPalette.Dark)
@@ -109,9 +108,6 @@ class ImageViewer(QMainWindow):
         self.toolbar = QToolBar("My main toolbar")
         self.addToolBar(self.toolbar)
         self.toolbar.setStyleSheet("QToolBar{spacing:15px;}")
-
-        #self.button = QPushButton("Test")
-        #self.scrollArea.setWidget(self.button)
 
         self.createActions()
         self.createMenus()
