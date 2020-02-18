@@ -44,6 +44,7 @@ class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, name, parent=None, width=10, height=8, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
+        self.axes.set_facecolor("#323232")
         self.axes.set_title(name)
         self.axes.set_xlim(0, 1)
         super(MplCanvas, self).__init__(fig)
@@ -142,7 +143,7 @@ class MyTableWidget(QWidget):
         self.train_path = "D:/test/train"
         self.val_path = "D:/test/val"
         self.test_path = ""
-        self.new_path_model = "C:/Users/piero/Documents/GitHub/WSI_analysis/Model_1_85aug.h5"
+        self.new_path_model = "Model_1_85aug.h5"
         self.list_ale, self.list_epi, self.list_tot = [], [], []
         self.epoch = 100
         self.model = 'drop'
@@ -150,7 +151,8 @@ class MyTableWidget(QWidget):
         self.monte = 5
         self.train_js, self.val_js, self.test_js = "new_train_js.txt", "new_val_js.txt", ""
         self.path_work = "D:/test"
-        self.path_tiles_train, self.path_tiles_val, self.selected_th, self.path_save_clean = '', '', '', ''
+        self.path_tiles_train, self.path_tiles_val, self.path_tiles_test = '', '', ''
+        self.selected_th, self.path_save_clean = '', ''
         self.flag, self.aug = 0, 0
         self.layout = QVBoxLayout(self)
 
@@ -606,6 +608,7 @@ class MyTableWidget(QWidget):
             self.path_work = fl
             self.path_tiles_train = os.path.join(fl, 'train')
             self.path_tiles_val = os.path.join(fl, 'val')
+            self.path_tiles_test = os.path.join(fl, 'test')
         else:
             pass
 
@@ -628,21 +631,22 @@ class MyTableWidget(QWidget):
     def draw_hist(self, path_js, name):
         self.obj_clean = Th(path_js, name)
         self.list_ale, self.list_epi, self.list_tot = self.obj_clean.create_list()
-
+        lim = max(self.list_tot)
+        n_bin = round((len(self.list_tot))/100)
         self.hist_tot.axes.clear()
-        self.hist_tot.axes.set_xlim(0, 1)
+        self.hist_tot.axes.set_xlim(0, lim)
         self.hist_tot.axes.set_title('Total uncertainty')
-        self.hist_tot.axes.hist(self.list_tot, 500, alpha=0.70, edgecolor='#003153')
+        self.hist_tot.axes.hist(self.list_tot, bins=n_bin, color='#FFA420')
         self.hist_tot.draw()
         self.hist_ale.axes.clear()
-        self.hist_ale.axes.set_xlim(0, 1)
+        self.hist_ale.axes.set_xlim(0, lim)
         self.hist_ale.axes.set_title('Aleatoric uncertainty')
-        self.hist_ale.axes.hist(self.list_ale, 100, alpha=0.70, edgecolor='#003153')
+        self.hist_ale.axes.hist(self.list_ale, bins=n_bin, color='#FFA420')
         self.hist_ale.draw()
         self.hist_epi.axes.clear()
-        self.hist_epi.axes.set_xlim(0, 1)
+        self.hist_epi.axes.set_xlim(0, lim)
         self.hist_epi.axes.set_title('Epistemic uncertainty')
-        self.hist_epi.axes.hist(self.list_epi, 500, alpha=0.70, edgecolor='#003153')
+        self.hist_epi.axes.hist(self.list_epi, bins=n_bin, color='#FFA420')
         self.hist_epi.draw()
 
     def unlock_an(self):
@@ -865,27 +869,25 @@ class MyTableWidget(QWidget):
         self.threadPool.start(k)
 
     def cl_train(self):
-        self.start_an('train')
-        self.train_js = os.path.join(self.path_work, 'train', 'dictionary_monte_' + str(self.monte) + '_js.txt')
+        self.start_an(self.path_tiles_train)
+        self.train_js = os.path.join(self.path_tiles_train, 'dictionary_monte_' + str(self.monte) + '_js.txt')
         self.t5.traincm.setEnabled(True)
         self.t5.get_paths(train=self.train_js)
 
     def cl_test(self):
-        #self.start_an('test')
-        self.test_js = os.path.join(self.path_work, 'test', 'dictionary_monte_' + str(self.monte) + '_js.txt')
+        self.start_an(self.path_tiles_test)
+        self.test_js = os.path.join(self.path_tiles_test, 'dictionary_monte_' + str(self.monte) + '_js.txt')
         self.t5.testcm.setEnabled(True)
         self.t5.get_paths(test=self.test_js)
 
     def cl_val(self):
-        self.start_an('val')
-        self.val_js = os.path.join(self.path_work, 'val', 'dictionary_monte_' + str(self.monte) + '_js.txt')
+        self.start_an(self.path_tiles_val)
+        self.val_js = os.path.join(self.path_tiles_val, 'dictionary_monte_' + str(self.monte) + '_js.txt')
         self.t5.valcm.setEnabled(True)
         self.t5.get_paths(val=self.val_js)
 
     def start_an(self, data):
-        path = os.path.join(self.path_work, data)
-        self.new_path_model = 'Model_1_85aug.h5'
-        cls = Classification(path, ty='datacleaning')
+        cls = Classification(data, ty='datacleaning')
         worker_cl = WorkerLong(cls.classify, 'datacleaning', int(self.monte), self.new_path_model)
         worker_cl.signals.result.connect(self.print_output)
         worker_cl.signals.progress.connect(self.progress_fn)

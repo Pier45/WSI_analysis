@@ -26,10 +26,10 @@ class TestTab(QWidget):
 
     def initUI(self):
         newfont = QFont("Helvetica", 15, QFont.Bold)
-        self.title_test = QLabel("Confution matrix EXAMPLE")
-        self.title_paz = QLabel("List of patient, doble click to see the patient confution matrix.")
-        self.title_single_paz = QLabel("Confution matrix of a sigle patient")
-        self.title_selection = QLabel("Select the dataset to show the confution matrix:")
+        self.title_test = QLabel("Confusion matrix EXAMPLE")
+        self.title_paz = QLabel("List of patient, double click to see the patient confusion matrix.")
+        self.title_single_paz = QLabel("Confusion matrix of a single patient")
+        self.title_selection = QLabel("Select the data set to show the confusion matrix:")
 
         self.title_paz.setFont(newfont)
         self.title_test.setFont(newfont)
@@ -55,7 +55,6 @@ class TestTab(QWidget):
         self.h_sel.addStretch(1)
 
         cm = self.get_data(self.path)
-        print('opla')
 
         self.createTable(cm)
         self.createTable_sigle(cm)
@@ -98,21 +97,21 @@ class TestTab(QWidget):
     def cm_train(self):
         self.path = self.vet_p[0]
         cm = self.get_data(self.path)
-        self.title_test.setText('Confution matrix TRAIN')
+        self.title_test.setText('Confusion matrix TRAIN')
         self.createTable(cm)
         self.createTable_sigle(cm)
 
     def cm_val(self):
         self.path = self.vet_p[1]
         cm = self.get_data(self.path)
-        self.title_test.setText('Confution matrix VAL')
+        self.title_test.setText('Confusion matrix VAL')
         self.createTable(cm)
         self.createTable_sigle(cm)
 
     def cm_test(self):
         self.path = self.vet_p[2]
         cm = self.get_data(self.path)
-        self.title_test.setText('Confution matrix TEST')
+        self.title_test.setText('Confusion matrix TEST')
         self.createTable(cm)
         self.createTable_sigle(cm)
 
@@ -136,7 +135,6 @@ class TestTab(QWidget):
         with open(path, 'r') as myfile:
             openf = myfile.read()
         dizio = json.loads(openf)
-        print('opla-stram')
 
         return dizio
 
@@ -147,7 +145,7 @@ class TestTab(QWidget):
         pred_class = [dizio[m]['pred_class'] for m in dizio]
         true_class = [dizio[m]['true_class'] for m in dizio]
 
-        cm = confusion_matrix(true_class, pred_class, labels=['AC', 'H', 'AD'])
+        cm = np.round(100*confusion_matrix(true_class, pred_class, labels=['AC', 'H', 'AD'])/len(true_class), 2)
         return cm
 
     def get_data_sigle_sub(self, path, pat):
@@ -163,17 +161,17 @@ class TestTab(QWidget):
 
         self.tabSingle.setRowCount(3)
         self.tabSingle.setColumnCount(3)
-        self.tabSingle.setItem(0, 0, QTableWidgetItem(str(cm[0, 0])))
-        self.tabSingle.setItem(0, 1, QTableWidgetItem(str(cm[0, 1])))
-        self.tabSingle.setItem(0, 2, QTableWidgetItem(str(cm[0, 2])))
+        self.tabSingle.setItem(0, 0, QTableWidgetItem(str(cm[0, 0])+'%'))
+        self.tabSingle.setItem(0, 1, QTableWidgetItem(str(cm[0, 1])+'%'))
+        self.tabSingle.setItem(0, 2, QTableWidgetItem(str(cm[0, 2])+'%'))
 
-        self.tabSingle.setItem(1, 0, QTableWidgetItem(str(cm[1, 0])))
-        self.tabSingle.setItem(1, 1, QTableWidgetItem(str(cm[1, 1])))
-        self.tabSingle.setItem(1, 2, QTableWidgetItem(str(cm[1, 2])))
+        self.tabSingle.setItem(1, 0, QTableWidgetItem(str(cm[1, 0])+'%'))
+        self.tabSingle.setItem(1, 1, QTableWidgetItem(str(cm[1, 1])+'%'))
+        self.tabSingle.setItem(1, 2, QTableWidgetItem(str(cm[1, 2])+'%'))
 
-        self.tabSingle.setItem(2, 0, QTableWidgetItem(str(cm[2, 0])))
-        self.tabSingle.setItem(2, 1, QTableWidgetItem(str(cm[2, 1])))
-        self.tabSingle.setItem(2, 2, QTableWidgetItem(str(cm[2, 2])))
+        self.tabSingle.setItem(2, 0, QTableWidgetItem(str(cm[2, 0])+'%'))
+        self.tabSingle.setItem(2, 1, QTableWidgetItem(str(cm[2, 1])+'%'))
+        self.tabSingle.setItem(2, 2, QTableWidgetItem(str(cm[2, 2])+'%'))
         a = ['AC', 'H', 'AD']
         self.tabSingle.setHorizontalHeaderLabels(a)
         self.tabSingle.setVerticalHeaderLabels(a)
@@ -182,17 +180,17 @@ class TestTab(QWidget):
 
         self.tableWidget.setRowCount(3)
         self.tableWidget.setColumnCount(3)
-        self.tableWidget.setItem(0, 0, QTableWidgetItem(str(cm[0, 0])))
-        self.tableWidget.setItem(0, 1, QTableWidgetItem(str(cm[0, 1])))
-        self.tableWidget.setItem(0, 2, QTableWidgetItem(str(cm[0, 2])))
+        self.tableWidget.setItem(0, 0, QTableWidgetItem(str(cm[0, 0])+'%'))
+        self.tableWidget.setItem(0, 1, QTableWidgetItem(str(cm[0, 1])+'%'))
+        self.tableWidget.setItem(0, 2, QTableWidgetItem(str(cm[0, 2])+'%'))
 
-        self.tableWidget.setItem(1, 0, QTableWidgetItem(str(cm[1, 0])))
-        self.tableWidget.setItem(1, 1, QTableWidgetItem(str(cm[1, 1])))
-        self.tableWidget.setItem(1, 2, QTableWidgetItem(str(cm[1, 2])))
+        self.tableWidget.setItem(1, 0, QTableWidgetItem(str(cm[1, 0])+'%'))
+        self.tableWidget.setItem(1, 1, QTableWidgetItem(str(cm[1, 1])+'%'))
+        self.tableWidget.setItem(1, 2, QTableWidgetItem(str(cm[1, 2])+'%'))
 
-        self.tableWidget.setItem(2, 0, QTableWidgetItem(str(cm[2, 0])))
-        self.tableWidget.setItem(2, 1, QTableWidgetItem(str(cm[2, 1])))
-        self.tableWidget.setItem(2, 2, QTableWidgetItem(str(cm[2, 2])))
+        self.tableWidget.setItem(2, 0, QTableWidgetItem(str(cm[2, 0])+'%'))
+        self.tableWidget.setItem(2, 1, QTableWidgetItem(str(cm[2, 1])+'%'))
+        self.tableWidget.setItem(2, 2, QTableWidgetItem(str(cm[2, 2])+'%'))
         a = ['AC', 'H', 'AD']
         self.tableWidget.setHorizontalHeaderLabels(a)
         self.tableWidget.setVerticalHeaderLabels(a)

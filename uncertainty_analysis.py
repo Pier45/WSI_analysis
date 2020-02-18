@@ -26,17 +26,30 @@ class Th:
     
     def create_list(self):
         self.openf()
+        list_ale, list_epi = [], []
         for i in self.dizio:
-            self.list_ale.append(float(self.dizio[i]['ale']))
-            self.list_epi.append(float(self.dizio[i]['epi']))
-            self.dizio[i]['Unc_tot'] = float(self.dizio[i]['ale']) + float(self.dizio[i]['epi'])
-            self.list_tot.append(self.dizio[i]['Unc_tot'])
-        
+            list_ale.append(float(self.dizio[i]['ale']))
+            list_epi.append(float(self.dizio[i]['epi']))
+
+        out_ep = np.median(list_epi)
+        out_al = np.median(list_epi)
+
+        e = np.asarray(list_epi)
+        e = np.where(e < 1, e, out_ep)
+
+        a = np.asarray(list_ale)
+        a = np.where(a < 1, a, out_al)
+
+        tot = a + e
+            # self.dizio[i]['Unc_tot'] = float(self.dizio[i]['ale']) + float(self.dizio[i]['epi'])
+            # self.list_tot.append(self.dizio[i]['Unc_tot'])
+            # if self.dizio[i]['ale'] > 1:
+            #     k[i] = self.dizio[i]
+        self.list_ale, self.list_epi, self.list_tot = list(a), list(e), list(tot)
         self.tot_n = len(self.list_tot)
 
         #with open('new_val_js.txt', 'w') as f:
         #    json.dump(self.dizio, f, indent=4)
-
         return self.list_ale, self.list_epi, self.list_tot
 
     def otsu(self):
@@ -133,15 +146,26 @@ class Th:
             shutil.copy2(dizio_new[j]['im_path'], destination)
 
     def removed_class(self):
-        cl = {'AC': 0, 'AD': 0, 'H': 0}
+        cl_new = {'AC': 0, 'AD': 0, 'H': 0}
+        cl_otsu = {'AC': 0, 'AD': 0, 'H': 0}
+
         print('REMOVED CLASS')
         for i in self.dizio:
             if self.dizio[i]['Unc_tot'] > self.newth:
-                cl[self.dizio[i]['true_class']] += 1
+                cl_new[self.dizio[i]['true_class']] += 1
+            elif self.dizio[i]['Unc_tot'] > self.thfin:
+                cl_otsu[self.dizio[i]['true_class']] += 1
 
-        with sns.axes_style("darkgrid"):
-            plt.bar(cl.keys(), cl.values())
-            plt.show()
+        print("Cl_Ostu: \n {}\nCl_new: \n{}".format(cl_otsu, cl_new))
+        colors = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99']
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, frameon=False)
+        ax1.pie(cl_otsu.values(), colors=colors, labels=cl_otsu.keys(), autopct='%1.1f%%')
+        ax1.set_title('Otsu')
+        ax2.pie(cl_new.values(), colors=colors, labels=cl_new.keys(), autopct='%1.1f%%')
+        ax2.set_title('New')
+
+        plt.show()
 
     def pl(self):
         figure(figsize=(6, 3), dpi=200)
@@ -159,12 +183,12 @@ class Th:
 
 
 if __name__ == '__main__':
-    t1 = Th('D:/Download/tr_js.txt', 'train')
-    # t1.create_list()
+    t1 = Th('new_train_js.txt', 'train')
+    t1.create_list()
     # t1.otsu()
     # t1.th_managment()
     # t1.removed_class()
     # t1.pl()
     # t = t1.clean_json()
-    t1.clean_json('D:/test/000')
+    #t1.clean_json('D:/test/000')
 
