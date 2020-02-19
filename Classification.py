@@ -16,7 +16,7 @@ class Classification:
         self.dictionary = {}
         self.np_list_image = []
         self.shape = (64, 64, 3)
-        self.select_folder()
+        #self.select_folder()
         self.cl = ['AC', 'H', 'AD']
 
     def analysis_folder(self, sel_folder):
@@ -143,7 +143,7 @@ class Classification:
         image_base_AD = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
 
         print(f'IMAGE SHAPE BASE {image_base.shape}')
-        step = 64    # per casi di rimpicciolimero grandezza tiles diviso quando si vuole es 128 / 4 = 32
+        step = 64/4    # per casi di rimpicciolimero grandezza tiles diviso quando si vuole es 128 / 4 = 32
         res_path = self.path + '/result'
 
         if not os.path.exists(res_path):
@@ -158,15 +158,16 @@ class Classification:
 
         for i, name_t in enumerate(self.dictionary):
 
-            shape_x = int(self.dictionary[name_t]["shape_x"]) #/4
-            shape_y = int(self.dictionary[name_t]["shape_y"]) #/4
+            shape_x = int(self.dictionary[name_t]["shape_x"]/4)
+            shape_y = int(self.dictionary[name_t]["shape_y"]/4)
+            u_tot = self.dictionary[name_t]["ale"]+self.dictionary[name_t]["epi"]
             column = self.dictionary[name_t]["col"]
             row = self.dictionary[name_t]["row"]
-            c0 = column*step
-            r0 = row*step
+            c0 = int(column*step)
+            r0 = int(row*step)
             if unc == 'Pred_class':
                 clas = self.dictionary[name_t]["pred_class"]
-                if clas == 'AC':
+                if clas == 'AC' and u_tot < 0.2:
                     # red
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 1
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.2
@@ -174,14 +175,14 @@ class Classification:
                     image_base_AC[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.2
 
                     n1 += 1
-                elif clas == 'H':
+                elif clas == 'H' and u_tot < 0.2:
                     # green
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.95
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.23
                     image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.95
                     image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.23
                     n2 += 1
-                elif clas == 'AD':
+                elif clas == 'AD' and u_tot < 0.2:
                     # blue
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.9
                     image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
@@ -196,7 +197,6 @@ class Classification:
                 image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["ale"])
                 image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] += abs(self.dictionary[name_t]["ale"])
             elif unc == 'tot':
-                u_tot = self.dictionary[name_t]["ale"]+self.dictionary[name_t]["epi"]
                 image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(u_tot)
                 image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] += abs(u_tot)
             else:
@@ -245,7 +245,7 @@ class Classification:
         background.save(res_name)
 
     def load_dict(self):
-        name_f = os.path.join(self.path, 'dictionary_monte_5_js.txt')
+        name_f = os.path.join(self.path, 'dictionary_monte_50_js.txt')
         with open(name_f, 'r') as f:
             self.dictionary = json.load(f)
 
@@ -253,11 +253,11 @@ class Classification:
 if __name__ == '__main__':
 
     t = time.perf_counter()
-    sasa = Classification('C:/Users/piero/Test/31400_2/', ty='analysis')
+    sasa = Classification('D:/per_anamap_5_2/', ty='analysis')
     #sasa.show_image()
     #sasa.classify(typean='fast')
     sasa.load_dict()
-    sasa.overlay(unc='epi')
+    sasa.overlay(unc='Pred_class')
     t1 = time.perf_counter()
 
     s = t1-t

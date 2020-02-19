@@ -25,7 +25,7 @@ class StartAnalysis:
         self.path_folder = ''
         self.path_th = ''
         self.newshape = (64, 64, 3)
-        self.start_folder = 'C:/Users/piero/Test/'
+        self.start_folder = 'D:/per_ana'
         # script finale
         # self.start_folder = str(os.getcwd()) + '/'
 
