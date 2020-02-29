@@ -277,6 +277,8 @@ class ImageViewer(QMainWindow):
 
             return 'End of First Analysis'
         else:
+            time.sleep(1)
+            progress_callback.emit(100)
             self.pop.hide()
             return 'End of First Analysis, exit code 1, the folder already exist!'
 

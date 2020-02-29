@@ -154,7 +154,7 @@ class TestTab(QWidget):
         pred_class = [dizio[m]['pred_class'] for m in dizio if dizio[m]['name'] == pat]
         true_class = [dizio[m]['true_class'] for m in dizio if dizio[m]['name'] == pat]
 
-        cm = confusion_matrix(true_class, pred_class, labels=['AC', 'H', 'AD'])
+        cm = np.round(100*confusion_matrix(true_class, pred_class, labels=['AC', 'H', 'AD'])/len(true_class), 2)
         return cm
 
     def createTable_sigle(self, cm):
