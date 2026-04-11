@@ -25,12 +25,11 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/multi_processing_analysis.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$USER_HOME$/OneDrive/Politecnico Torino/Tesi/ui_pyqt5.py" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProjectId" id="1UNOXOzkkkQso0bL05PtRYB81Ai" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="D:/Download/Git-2.24.0.2-64-bit.exe" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
