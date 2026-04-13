@@ -1,36 +1,86 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QFont, QIcon
-from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog, QLabel, QPushButton,
-    QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QToolBar,  QDialog, QHBoxLayout, QFrame,
-    QSplitter, QStyleFactory)
-from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
+"""
+Bayesian Analyzer — main application window.
+
+Entry point:
+    python image_viewer.py
+
+Dependencies:
+    PyQt5, multi_processing_analysis.StartAnalysis,
+    progress_bar.Actions, Classification.Classification
+"""
+
+from __future__ import annotations
+
+import logging
 import os
-import ctypes
-import webbrowser
+import sys
 import time
 import traceback
-import sys
+import webbrowser
+from typing import List, Optional, Tuple
+
+from PyQt5.QtCore import QObject, QRunnable, QThreadPool, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QFont, QIcon, QImage, QPainter, QPalette, QPixmap
+from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
+from PyQt5.QtWidgets import (
+    QAction,
+    QApplication,
+    QDialog,
+    QFileDialog,
+    QLabel,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QScrollArea,
+    QSizePolicy,
+    QToolBar,
+)
+
 from multi_processing_analysis import StartAnalysis
 from progress_bar import Actions
-from Classification import Classification
 
 
-class Worker(QRunnable):
-    """Useful to run easy threads"""
-    def __init__(self, fn, *args, **kwargs):
-        super(Worker, self).__init__()
-        # Store constructor arguments (re-used for processing)
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
 
-    @pyqtSlot()
-    def run(self):
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+)
+logger = logging.getLogger(__name__)
 
-        self.fn(*self.args, **self.kwargs)
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+APP_TITLE = "Bayesian Analyzer"
+APP_ICON = "icons/target.ico"
+DEFAULT_MODEL = "Model_1_85aug.h5"
+DEEPZOOM_URL = "http://127.0.0.1:5000/"
+DEEPZOOM_SERVER_SCRIPT = "deepzoom/deepzoom_server.py"
+
+MONTE_CARLO_OPTIONS: Tuple[int, ...] = (5, 25, 50)
+DEFAULT_MONTE_CARLO = 5
+
+ZOOM_IN_FACTOR = 1.25
+ZOOM_OUT_FACTOR = 0.8
+ZOOM_MIN = 0.2
+ZOOM_MAX = 4.0
+
+WELCOME_MESSAGE = (
+    "Steps to start the analysis:\n\n"
+    "1) File         → Select .svs  (or click the folder icon in the toolbar)\n\n"
+    "2) Analysis → Start analysis  (or click the green arrow in the toolbar)"
+)
+
+# ---------------------------------------------------------------------------
+# Thread infrastructure
+# ---------------------------------------------------------------------------
 
 
 class WorkerSignals(QObject):
+    """Signals emitted by :class:`WorkerLong` during its lifecycle."""
 
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
@@ -38,587 +88,821 @@ class WorkerSignals(QObject):
     progress = pyqtSignal(int)
 
 
-class WorkerLong(QRunnable):
-    """Useful to start more complicated threads, it allows to interact with the state of the thread, useful
-    in progress bar and in same case where need to know if the process is ended"""
+class Worker(QRunnable):
+    """
+    Fire-and-forget thread wrapper.
 
-    def __init__(self, fn, *args, **kwargs):
-        super(WorkerLong, self).__init__()
+    Runs *fn* in a thread-pool thread without lifecycle feedback.
+    Use :class:`WorkerLong` when progress / error signals are needed.
+    """
 
-        # Store constructor arguments (re-used for processing)
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
-
-        # Add the callback to our kwargs
-        self.kwargs['progress_callback'] = self.signals.progress
+    def __init__(self, fn, *args, **kwargs) -> None:
+        super().__init__()
+        self._fn = fn
+        self._args = args
+        self._kwargs = kwargs
 
     @pyqtSlot()
-    def run(self):
+    def run(self) -> None:
+        self._fn(*self._args, **self._kwargs)
 
+
+class WorkerLong(QRunnable):
+    """
+    Thread wrapper with full lifecycle signals.
+
+    Injects a ``progress_callback`` keyword argument into *fn* so the
+    worker can emit integer progress values (0–100).
+
+    Signals
+    -------
+    signals.finished  — emitted once the function returns or raises
+    signals.error     — emitted with ``(exc_type, value, traceback_str)``
+    signals.result    — emitted with the function's return value
+    signals.progress  — emitted by the function via ``progress_callback.emit(n)``
+    """
+
+    def __init__(self, fn, *args, **kwargs) -> None:
+        super().__init__()
+        self._fn = fn
+        self._args = args
+        self._kwargs = kwargs
+        self.signals = WorkerSignals()
+        self._kwargs["progress_callback"] = self.signals.progress
+
+    @pyqtSlot()
+    def run(self) -> None:
         try:
-            result = self.fn(*self.args, **self.kwargs)
-        except:
+            result = self._fn(*self._args, **self._kwargs)
+        except Exception:
             traceback.print_exc()
-            exctype, value = sys.exc_info()[:2]
-            self.signals.error.emit((exctype, value, traceback.format_exc()))
+            exc_type, value = sys.exc_info()[:2]
+            self.signals.error.emit((exc_type, value, traceback.format_exc()))
         else:
-            self.signals.result.emit(result)  # Return the result of the processing
+            self.signals.result.emit(result)
         finally:
-            self.signals.finished.emit()  # Done
+            self.signals.finished.emit()
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _get_screen_size() -> Tuple[int, int]:
+    """
+    Return the primary screen dimensions as ``(width, height)``.
+
+    Falls back to a sensible default on non-Windows platforms.
+    """
+    try:
+        import ctypes
+
+        user32 = ctypes.windll.user32  # type: ignore[attr-defined]
+        return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+    except AttributeError:
+        screen = QApplication.primaryScreen()
+        if screen:
+            geo = screen.geometry()
+            return geo.width(), geo.height()
+        return 1920, 1080
+
+
+# ---------------------------------------------------------------------------
+# Main window
+# ---------------------------------------------------------------------------
 
 
 class ImageViewer(QMainWindow):
-    def __init__(self):
-        self.path_work, self.res_path = '', ''
-        self.obj_an, self.fileName = '', ''
-        self.levi, self.ny = 0, 0
-        self.type_an = 'fast'
-        self.model_name = 'Model_1_85aug.h5'
-        self.monte_c = 5
-        self.numx_start, self.numx_stop, self.list_proc, self.start_i, self.stop_i = [], [], [], [], []
-        self.lev_sec = 1
-        user32 = ctypes.windll.user32
-        self.screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+    """
+    Main application window for the Bayesian Analyzer.
 
-        super(ImageViewer, self).__init__()
+    Workflow
+    --------
+    1. User opens an ``.svs`` file → thumbnail is generated and displayed.
+    2. Tiles are created in background threads.
+    3. User starts the analysis → classification runs in a background thread.
+    4. Results and uncertainty maps can be viewed via the View menu / toolbar.
+    """
 
-        self.printer = QPrinter()
-        self.scaleFactor = 0.0
-        self.imageLabel = QLabel("Steps to start the analysis:\n \n"
-                                 "1) File         ---> Select svs or select the yellow folder in the toolbar\n\n"
-                                 "2) Analysis ---> Stat analysis or select the green arrow in the toolbar ")
+    # ------------------------------------------------------------------
+    # Construction
+    # ------------------------------------------------------------------
 
-        self.imageLabel.setFont(QFont("Helvetica", 15, QFont.Black))
-        self.setCentralWidget(self.imageLabel)
+    def __init__(self) -> None:
+        super().__init__()
 
-        self.imageLabel.setBackgroundRole(QPalette.Dark)
-        self.imageLabel.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        self.imageLabel.setScaledContents(True)
+        # --- State ---
+        self._work_dir: str = ""
+        self._result_dir: str = ""
+        self._svs_path: str = ""
 
-        self.scrollArea = QScrollArea()
-        self.scrollArea.setBackgroundRole(QPalette.Dark)
-        self.scrollArea.setWidget(self.imageLabel)
-        self.setCentralWidget(self.scrollArea)
-        self.scrollArea.setAlignment(Qt.AlignCenter)
+        self._analysis_type: str = "fast"
+        self._model_name: str = DEFAULT_MODEL
+        self._monte_carlo_samples: int = DEFAULT_MONTE_CARLO
 
-        self.threadPool = QThreadPool()
+        # Tile-generation metadata (populated by StartAnalysis.tile_gen)
+        self._tile_x_start: List[int] = []
+        self._tile_x_stop: List[int] = []
+        self._process_names: List[str] = []
+        self._tile_start_idx: List[int] = []
+        self._tile_stop_idx: List[int] = []
+        self._tile_rows: int = 0
+        self._svs_level: int = 1
 
-        self.toolbar = QToolBar("My main toolbar")
-        self.addToolBar(self.toolbar)
-        self.toolbar.setStyleSheet("QToolBar{spacing:15px;}")
+        self._screen_size: Tuple[int, int] = _get_screen_size()
+        self._thread_pool = QThreadPool()
 
-        self.createActions()
-        self.createMenus()
+        # --- UI ---
+        self._printer = QPrinter()
+        self._scale_factor: float = 0.0
+        self._progress_dialog: Optional[QDialog] = None
+        self._progress_ui: Optional[Actions] = None
 
-        self.setWindowTitle("Bayesian Analayzer")
-        self.setWindowIcon(QIcon('icons/target.ico'))
+        self._image_label = QLabel(WELCOME_MESSAGE)
+        self._image_label.setFont(QFont("Helvetica", 15, QFont.Black))
+        self._image_label.setBackgroundRole(QPalette.Dark)
+        self._image_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self._image_label.setScaledContents(True)
+
+        self._scroll_area = QScrollArea()
+        self._scroll_area.setBackgroundRole(QPalette.Dark)
+        self._scroll_area.setWidget(self._image_label)
+        self._scroll_area.setAlignment(Qt.AlignCenter)
+        self.setCentralWidget(self._scroll_area)
+
+        self._toolbar = QToolBar("Main toolbar")
+        self._toolbar.setStyleSheet("QToolBar { spacing: 15px; }")
+        self.addToolBar(self._toolbar)
+
+        self._create_actions()
+        self._create_menus()
+
+        self.setWindowTitle(APP_TITLE)
+        self.setWindowIcon(QIcon(APP_ICON))
         self.showMaximized()
 
-    def open(self):
-        """This method is the starting point, here is selected the svs files and is created the thumbnail that is
-        immediately showed to the user"""
+    # ------------------------------------------------------------------
+    # File operations
+    # ------------------------------------------------------------------
 
-        fileName, _ = QFileDialog.getOpenFileName(self, "Open File", "*.svs")
+    def _open_file(self) -> None:
+        """
+        Prompt the user to select an ``.svs`` file, generate a thumbnail,
+        and kick off tile-creation threads.
+        """
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open SVS File", "", "SVS Files (*.svs)")
+        if not file_path:
+            return
 
-        self.fileName = fileName
+        self._svs_path = file_path
+        self._work_dir = self._initialise_analysis(file_path)
+        self._result_dir = os.path.join(self._work_dir, "result", "")
 
-        if fileName:
-            self.path_work = self.first_step(fileName)
-            self.res_path = self.path_work + 'result/'
+        thumbnail_path = os.path.join(self._work_dir, "thumbnail", "th.png")
+        image = QImage(thumbnail_path)
 
-            image = QImage(self.path_work + 'thumbnail/th.png')
-            self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        if image.isNull():
+            QMessageBox.warning(
+                self,
+                APP_TITLE,
+                f"Cannot load image from:\n{thumbnail_path}",
+            )
+            return
 
-            self.scaleFactor = 1
-            self.printAct.setEnabled(True)
-            self.fitToWindowAct.setEnabled(True)
-            self.startAnalysisAct.setEnabled(True)
-            self.start_vis_deepAct.setEnabled(True)
-            self.updateActions()
-            self.thread_manager()
+        self._display_image(image)
+        self._scale_factor = 1.0
 
-            try:
-                image_size = [image.width(), image.height()]
+        self._print_act.setEnabled(True)
+        self._fit_to_window_act.setEnabled(True)
+        self._start_analysis_act.setEnabled(True)
+        self._deep_zoom_act.setEnabled(True)
+        self._update_zoom_actions()
 
-                if image_size[0] > image_size[1]:
-                    p = 0
-                else:
-                    p = 1
+        self._start_tile_threads()
 
-                print(image_size)
-                print(self.screensize[0], self.screensize[1])
+    def _initialise_analysis(self, file_path: str) -> str:
+        """
+        Open the SVS file with :class:`StartAnalysis`, generate the
+        thumbnail and cache tile metadata.
 
-                if not self.fitToWindowAct.isChecked():
-                    self.imageLabel.adjustSize()
+        Returns
+        -------
+        str
+            The working-directory path returned by ``StartAnalysis``.
+        """
+        analysis = (
+            StartAnalysis(lev_sec=self._svs_level)
+            if self._analysis_type == "slow"
+            else StartAnalysis()
+        )
+        analysis.openSvs(file_path)
+        work_dir: str = analysis.get_thumb()
 
-                if self.screensize[p] < image_size[p]:
-                    self.imageLabel.resize((self.screensize[p] / image_size[p] - 0.04) * self.imageLabel.pixmap().size())
+        (
+            self._tile_x_start,
+            self._tile_x_stop,
+            self._process_names,
+            self._tile_start_idx,
+            self._tile_stop_idx,
+            self._tile_rows,
+            self._svs_level,
+        ) = analysis.tile_gen(state=0)
 
-            except():
-                print('No Image')
+        logger.debug(
+            "Tile metadata — x_start=%s x_stop=%s names=%s "
+            "start_idx=%s stop_idx=%s rows=%d level=%d",
+            self._tile_x_start,
+            self._tile_x_stop,
+            self._process_names,
+            self._tile_start_idx,
+            self._tile_stop_idx,
+            self._tile_rows,
+            self._svs_level,
+        )
+        return work_dir
 
-            if image.isNull():
-                QMessageBox.information(self, "Bayesian Analayzer",
-                        "Cannot load %s." % self.fileName)
-                return
+    # ------------------------------------------------------------------
+    # Image display
+    # ------------------------------------------------------------------
 
-    def view(self, name, fold):
-        if fold == 'result':
-            print(self.res_path + name + '.png')
-            view_path = self.res_path + name + '.png'
-        elif fold == 'th':
-            view_path = self.path_work + 'thumbnail/th.png'
-        else:
-            view_path = self.res_path + 'uncertainty/' + name + '.png'
-        print(view_path)
-        image = QImage(view_path)
-        self.imageLabel.setPixmap(QPixmap.fromImage(image))
+    def _display_image(self, image: QImage) -> None:
+        """Render *image* in the central label, scaling to fit the screen if needed."""
+        self._image_label.setPixmap(QPixmap.fromImage(image))
 
-        image_size = [image.width(), image.height()]
+        w, h = image.width(), image.height()
+        longer_axis = 0 if w >= h else 1
+        img_long = w if longer_axis == 0 else h
+        screen_long = self._screen_size[longer_axis]
 
-        if image_size[0] > image_size[1]:
-            p = 0
-        else:
-            p = 1
-        print(image_size)
-        print(self.screensize[0], self.screensize[1])
+        if not self._fit_to_window_act.isChecked():
+            self._image_label.adjustSize()
 
-        if not self.fitToWindowAct.isChecked():
-            self.imageLabel.adjustSize()
+        if screen_long < img_long:
+            ratio = screen_long / img_long - 0.04
+            self._image_label.resize(ratio * self._image_label.pixmap().size())
 
-        if self.screensize[p] < image_size[p]:
-            self.imageLabel.resize((self.screensize[p] / image_size[p]- 0.04) * self.imageLabel.pixmap().size())
+    def _view_result(self, name: str, folder: str) -> None:
+        """
+        Load and display a result image.
 
-    def progress(self, title):
-        """Show the progress bar"""
+        Parameters
+        ----------
+        name:
+            Base file name (without extension).
+        folder:
+            One of ``"result"``, ``"th"`` (thumbnail), or ``"uncertainty"``.
+        """
+        path_map = {
+            "result": os.path.join(self._result_dir, f"{name}.png"),
+            "th": os.path.join(self._work_dir, "thumbnail", "th.png"),
+            "uncertainty": os.path.join(self._result_dir, "uncertainty", f"{name}.png"),
+        }
+        image_path = path_map.get(folder, "")
+        logger.debug("Viewing image: %s", image_path)
 
-        self.pop = QDialog()
-        self.ui = Actions()
-        self.ui.initUI(self.pop, title)
-        self.pop.show()
+        image = QImage(image_path)
+        if image.isNull():
+            QMessageBox.warning(self, APP_TITLE, f"Could not load:\n{image_path}")
+            return
+        self._display_image(image)
 
-    def print_(self):
-        """Print the image visualized"""
+    # ------------------------------------------------------------------
+    # Progress dialog
+    # ------------------------------------------------------------------
 
-        dialog = QPrintDialog(self.printer, self)
-        if dialog.exec_():
-            painter = QPainter(self.printer)
-            rect = painter.viewport()
-            size = self.imageLabel.pixmap().size()
-            size.scale(rect.size(), Qt.KeepAspectRatio)
-            painter.setViewport(rect.x(), rect.y(), size.width(), size.height())
-            painter.setWindow(self.imageLabel.pixmap().rect())
-            painter.drawPixmap(0, 0, self.imageLabel.pixmap())
+    def _show_progress(self, title: str) -> None:
+        """Open the progress dialog with the given *title*."""
+        self._progress_dialog = QDialog(self)
+        self._progress_ui = Actions()
+        self._progress_ui.initUI(self._progress_dialog, title)
+        self._progress_dialog.show()
 
-    def first_step(self, filename):
+    def _hide_progress(self) -> None:
+        """Safely close the progress dialog if it is open."""
+        if self._progress_dialog:
+            self._progress_dialog.hide()
 
-        if self.slowAct.isChecked():
-            obj_an = StartAnalysis(lev_sec=self.lev_sec)
-            obj_an.openSvs(filename)
-        else:
-            obj_an = StartAnalysis()
-            obj_an.openSvs(filename)
+    # ------------------------------------------------------------------
+    # Tile-creation threads
+    # ------------------------------------------------------------------
 
-        ph = obj_an.get_thumb()
-        self.numx_start, self.numx_stop, self.list_proc, self.start_i, self.stop_i, self.ny, self.levi = obj_an.tile_gen(state=0)
-        print(self.numx_start, self.numx_stop, self.list_proc, self.start_i, self.stop_i, self.ny, self.levi)
-        return ph
+    def _folder_exists(self, name: str) -> bool:
+        """Return ``True`` if *name* already exists inside the working directory."""
+        return name in os.listdir(self._work_dir)
 
-    def progress_fn(self, n):
-        print("%d%% done" % n)
+    def _create_tiles(
+        self,
+        tile_args: List,
+        progress_callback,  # injected by WorkerLong
+    ) -> str:
+        """
+        Worker function: create PNG tiles for one process partition.
 
-    def print_output(self, s):
-        print(s)
+        Parameters
+        ----------
+        tile_args:
+            ``[x_start, x_stop, process_name, tile_start, tile_stop, n_rows, level]``
+        progress_callback:
+            Injected by :class:`WorkerLong`; call ``.emit(pct)`` to report progress.
+        """
+        x_start, x_stop, process_name, tile_start, tile_stop, n_rows, level = tile_args
+        logger.debug(
+            "Creating tiles — process=%s x=[%d,%d) start=%d stop=%d",
+            process_name,
+            x_start,
+            x_stop,
+            tile_start,
+            tile_stop,
+        )
 
-    def thread_complete(self):
-        print("THREAD COMPLETE!")
-
-    def thread_cl_complete(self):
-        self.pop.hide()
-        print("THREAD COMPLETE!")
-        self.view('Pred_class', 'result')
-        print("THREAD COMPLETE!")
-
-    def process_to_start(self, vet, progress_callback):
-        n_start, n_stop, name_process, start, stop, ny, levi = vet
-        print(n_start, n_stop, name_process, start, stop, ny, levi)
-
-        if self.slowAct.isChecked():
-            obj_k = StartAnalysis(lev_sec=self.lev_sec)
-            obj_k.openSvs(self.fileName)
-        else:
-            obj_k = StartAnalysis()
-            obj_k.openSvs(self.fileName)
-
-        res = obj_k.tile_gen(state=1)
-        f_manager = self.folder_manage(name_process)
-        flag = False
-
-        if start == 1:
-            flag = True
-
-        if not f_manager:
-            create_fold = str(self.path_work) + str(name_process)
-            os.mkdir(create_fold)
-
-            for x in range(n_start, n_stop):
-                for y in range(0, ny):
-                    im = res.get_tile(levi, (x, y))
-                    nome = create_fold + '/tile_' + str(start) + '_' + str(x) + '_' + str(y) + '.png'
-                    im.save(nome, 'PNG')
-                    start += 1
-                    if flag:
-                        progress_callback.emit(100*(start-1)/stop)
-                        if (start-1) == stop:
-                            time.sleep(1)
-                            self.pop.hide()
-
-            return 'End of First Analysis'
-        else:
+        if self._folder_exists(process_name):
             time.sleep(1)
             progress_callback.emit(100)
-            self.pop.hide()
-            return 'End of First Analysis, exit code 1, the folder already exist!'
+            self._hide_progress()
+            return f"Tile folder '{process_name}' already exists — skipping."
 
-    def folder_manage(self, name_process):
-        """Test if the folder alredy exist, if true return 1 and the thread will stop"""
+        analysis = (
+            StartAnalysis(lev_sec=self._svs_level)
+            if self._analysis_type == "slow"
+            else StartAnalysis()
+        )
+        analysis.openSvs(self._svs_path)
+        tile_source = analysis.tile_gen(state=1)
 
-        fold = os.listdir(self.path_work)
-        flag = 0
-        for k in fold:
-            if k == name_process:
-                print('Folder alredy exist {}'.format(name_process))
-                flag += 1
-            else:
-                pass
+        folder_path = os.path.join(self._work_dir, process_name)
+        os.mkdir(folder_path)
 
-        if flag > 0:
-            return True
+        is_primary = tile_start == 1
+        current_index = tile_start
+
+        for x in range(x_start, x_stop):
+            for y in range(n_rows):
+                tile = tile_source.get_tile(level, (x, y))
+                tile_path = os.path.join(
+                    folder_path,
+                    f"tile_{tile_start}_{x}_{y}.png",
+                )
+                tile.save(tile_path, "PNG")
+                current_index += 1
+
+                if is_primary:
+                    pct = int(100 * (current_index - 1) / tile_stop)
+                    progress_callback.emit(pct)
+                    if current_index - 1 == tile_stop:
+                        time.sleep(1)
+                        self._hide_progress()
+
+        return "Tile creation complete."
+
+    def _start_tile_threads(self) -> None:
+        """Launch one :class:`WorkerLong` per process partition to create tiles."""
+        if os.listdir(self._work_dir) and os.listdir(self._work_dir)[0] == self._process_names[0]:
+            logger.debug("Tiles already present — skipping thread launch.")
+            return
+
+        self._show_progress(title="Tile creation")
+
+        for idx in range(len(self._process_names)):
+            tile_args = [
+                self._tile_x_start[idx],
+                self._tile_x_stop[idx],
+                self._process_names[idx],
+                self._tile_start_idx[idx],
+                self._tile_stop_idx[idx],
+                self._tile_rows,
+                self._svs_level,
+            ]
+            worker = WorkerLong(self._create_tiles, tile_args)
+            worker.signals.result.connect(lambda msg: logger.info("Tile worker result: %s", msg))
+            worker.signals.progress.connect(lambda pct: logger.debug("Tile progress: %d%%", pct))
+            if self._progress_ui:
+                worker.signals.progress.connect(self._progress_ui.onCountChanged)
+            worker.signals.finished.connect(lambda: logger.debug("Tile worker finished."))
+            worker.signals.error.connect(self._on_worker_error)
+            self._thread_pool.start(worker)
+
+    # ------------------------------------------------------------------
+    # Analysis
+    # ------------------------------------------------------------------
+
+    def _start_analysis(self) -> None:
+        """Run the Bayesian classification in a background thread (if not already done)."""
+        if os.path.exists(self._result_dir):
+            logger.info("Analysis results already present — loading existing results.")
+            self._view_result("Pred_class", "result")
         else:
-            return False
+            # Import here to surface the ImportError clearly if the module is missing.
+            from Classification import Classification  # noqa: PLC0415
 
-    def thread_manager(self):
-        """Here are created the threads that create in the specific folders the tile"""
-        if os.listdir(self.path_work)[0] == self.list_proc[0]:
-            pass
-        else:
-            self.progress(title='Tiles creation process')
-            for lp in range(0, len(self.list_proc)):
-                vet = [self.numx_start[lp], self.numx_stop[lp], self.list_proc[lp], self.start_i[lp], self.stop_i[lp], self.ny, self.levi]
-                lp = WorkerLong(self.process_to_start, vet)
+            cls = Classification(self._work_dir, ty="analysis")
+            self._show_progress(title="Analysis")
+            worker = WorkerLong(
+                cls.classify,
+                self._analysis_type,
+                self._monte_carlo_samples,
+                self._model_name,
+            )
+            worker.signals.progress.connect(lambda pct: logger.debug("Analysis: %d%%", pct))
+            if self._progress_ui:
+                worker.signals.progress.connect(self._progress_ui.onCountChanged)
+            worker.signals.finished.connect(self._on_analysis_complete)
+            worker.signals.error.connect(self._on_worker_error)
+            self._thread_pool.start(worker)
 
-                lp.signals.result.connect(self.print_output)
-                lp.signals.progress.connect(self.progress_fn)
-                lp.signals.progress.connect(self.ui.onCountChanged)
-                lp.signals.finished.connect(self.thread_complete)
-                self.threadPool.start(lp)
+        self._enable_view_actions(True)
 
-    def zoomIn(self):
-        self.scaleImage(1.2)
+    def _on_analysis_complete(self) -> None:
+        """Called when the analysis thread finishes successfully."""
+        self._hide_progress()
+        logger.info("Analysis thread complete.")
+        self._view_result("Pred_class", "result")
 
-    def zoomOut(self):
-        self.scaleImage(0.8)
+    def _on_worker_error(self, error_tuple: tuple) -> None:
+        """Display a critical dialog when a background worker raises an exception."""
+        exc_type, value, tb_str = error_tuple
+        logger.error("Worker error: %s\n%s", value, tb_str)
+        QMessageBox.critical(
+            self,
+            "Background thread error",
+            f"{exc_type.__name__}: {value}\n\nSee the console for the full traceback.",
+        )
 
-    def normalSize(self):
-        self.imageLabel.adjustSize()
-        self.scaleFactor = 1.0
+    # ------------------------------------------------------------------
+    # Deep-zoom viewer
+    # ------------------------------------------------------------------
 
-    def fitToWindow(self):
-        fitToWindow = self.fitToWindowAct.isChecked()
-        self.scrollArea.setWidgetResizable(fitToWindow)
+    def _open_deep_zoom(self) -> None:
+        """
+        Start the deepzoom Flask server in a separate thread and open the
+        browser once the server is ready.
 
-        if not fitToWindow:
-            self.normalSize()
+        Spaces in the SVS path are unsupported by the deepzoom server and
+        will cause an error; the user is warned explicitly.
+        """
+        if " " in self._svs_path:
+            QMessageBox.critical(
+                self,
+                APP_TITLE,
+                "The file path contains spaces:\n\n"
+                f"{self._svs_path}\n\n"
+                "The deepzoom viewer requires a path without spaces.\n"
+                "Please move or rename the file and try again.",
+            )
+            return
 
-        self.updateActions()
+        command = f"cmd /k python {DEEPZOOM_SERVER_SCRIPT} {self._svs_path}"
+        self._thread_pool.start(Worker(lambda: os.system(command)))
 
-    def fast(self):
-        self.type_an = 'fast'
-        self.slowAct.setChecked(False)
+        QMessageBox.information(
+            self,
+            APP_TITLE,
+            "Your browser will open with the deepzoom viewer.\n\nPress OK to continue.",
+        )
+        self._thread_pool.start(Worker(self._open_browser))
 
-    def slow(self):
-        self.type_an = 'slow'
-        self.fastAct.setChecked(False)
-        self.open()
-
-    def deep_vis(self):
-        """This method allows to view the svs image at maximum resolution using the browser and a javascript library;
-        it's performed before starting the server a test on the paths in search of spaces, indeed the program does not
-        works if in the path there are with spaces"""
-
-        b = self.fileName
-        if b.find(' ') != -1:
-            print('there is a space in the path', b.find(' '))
-            QMessageBox.critical(self, "About Image Viewer",
-                              "There are same space in the path: \n\n {} \n\n"
-                              "The deepzoom function need no space in the path.\n"
-                              "Please, rename the folder without space and star again the program.".format(b))
-        else:
-            command = 'cmd /k python deepzoom/deepzoom_server.py {}'.format(b)
-            worker = Worker(self.cmd_command, command)
-            self.threadPool.start(worker)
-
-            QMessageBox.information(self, "Bayesian Analayzer",
-                                    "Now your browser will be opened ad a deep zoomable file\n"
-                                    "with a lot of information will be showed. \n \n "
-                                    "Press ok to continue")
-
-            worker2 = Worker(self.open_b)
-            self.threadPool.start(worker2)
-
-    def open_b(self):
-        """Open a new tab in the browser at a specific port"""
-
-        url = "http://127.0.0.1:5000/"
+    def _open_browser(self) -> None:
+        """Open the deepzoom URL in the default browser after a short delay."""
         time.sleep(0.5)
-        webbrowser.open_new_tab(url)
+        webbrowser.open_new_tab(DEEPZOOM_URL)
 
-    def cmd_command(self, command):
-        os.system(command)
+    # ------------------------------------------------------------------
+    # Printing
+    # ------------------------------------------------------------------
 
-    def start_an(self):
-        if not os.path.exists(self.res_path):
-            cls = Classification(self.path_work, ty='analysis')
-            self.progress(title='Analysis')
-            worker_cl = WorkerLong(cls.classify, self.type_an, self.monte_c, self.model_name)
-            worker_cl.signals.progress.connect(self.progress_fn)
-            worker_cl.signals.progress.connect(self.ui.onCountChanged)
-            worker_cl.signals.finished.connect(self.thread_cl_complete)
-            self.threadPool.start(worker_cl)
-        else:
-            self.view('Pred_class', 'result')
-            print('process an already done!!!')
+    def _print_image(self) -> None:
+        """Open the print dialog and print the currently displayed pixmap."""
+        dialog = QPrintDialog(self._printer, self)
+        if dialog.exec_():
+            painter = QPainter(self._printer)
+            rect = painter.viewport()
+            size = self._image_label.pixmap().size()
+            size.scale(rect.size(), Qt.KeepAspectRatio)
+            painter.setViewport(rect.x(), rect.y(), size.width(), size.height())
+            painter.setWindow(self._image_label.pixmap().rect())
+            painter.drawPixmap(0, 0, self._image_label.pixmap())
 
-        self.v_no_overlayAct.setEnabled(True)
-        self.v_all_classAct.setEnabled(True)
+    # ------------------------------------------------------------------
+    # Zoom
+    # ------------------------------------------------------------------
 
-        self.v_acAct.setEnabled(True)
-        self.v_adAct.setEnabled(True)
-        self.v_hAct.setEnabled(True)
+    def _zoom_in(self) -> None:
+        self._scale_image(ZOOM_IN_FACTOR)
 
-        self.v_tot_uAct.setEnabled(True)
-        self.v_a_uAct.setEnabled(True)
-        self.v_e_uAct.setEnabled(True)
+    def _zoom_out(self) -> None:
+        self._scale_image(ZOOM_OUT_FACTOR)
 
-    def v_no_overlay(self):
-        self.view('no_ov', 'th')
+    def _normal_size(self) -> None:
+        self._image_label.adjustSize()
+        self._scale_factor = 1.0
 
-    def v_all_class(self):
-        self.view('Pred_class', 'result')
+    def _fit_to_window(self) -> None:
+        fit = self._fit_to_window_act.isChecked()
+        self._scroll_area.setWidgetResizable(fit)
+        if not fit:
+            self._normal_size()
+        self._update_zoom_actions()
 
-    def v_ac(self):
-        self.view('AC', 'result')
+    def _scale_image(self, factor: float) -> None:
+        self._scale_factor *= factor
+        self._image_label.resize(self._scale_factor * self._image_label.pixmap().size())
+        self._adjust_scroll_bar(self._scroll_area.horizontalScrollBar(), factor)
+        self._adjust_scroll_bar(self._scroll_area.verticalScrollBar(), factor)
+        self._zoom_in_act.setEnabled(self._scale_factor < ZOOM_MAX)
+        self._zoom_out_act.setEnabled(self._scale_factor > ZOOM_MIN)
 
-    def v_ad(self):
-        self.view('AD', 'result')
+    @staticmethod
+    def _adjust_scroll_bar(scroll_bar, factor: float) -> None:
+        scroll_bar.setValue(
+            int(factor * scroll_bar.value() + (factor - 1) * scroll_bar.pageStep() / 2)
+        )
 
-    def v_h(self):
-        self.view('H', 'result')
+    def _update_zoom_actions(self) -> None:
+        enabled = not self._fit_to_window_act.isChecked()
+        self._zoom_in_act.setEnabled(enabled)
+        self._zoom_out_act.setEnabled(enabled)
+        self._normal_size_act.setEnabled(enabled)
 
-    def v_tot_u(self):
-        self.view('tot', 'uncertainty')
+    # ------------------------------------------------------------------
+    # Analysis mode / Monte Carlo settings
+    # ------------------------------------------------------------------
 
-    def v_a_u(self):
-        self.view('ale', 'uncertainty')
+    def _set_fast_mode(self) -> None:
+        self._analysis_type = "fast"
+        self._slow_act.setChecked(False)
 
-    def v_e_u(self):
-        self.view('epi', 'uncertainty')
+    def _set_slow_mode(self) -> None:
+        self._analysis_type = "slow"
+        self._fast_act.setChecked(False)
+        self._open_file()
 
-    def select_model(self):
-        QMessageBox.information(self, "Deepzoom Viewer",
-                             "<p>The model must have tree class for output, AC, AD, H.</p>")
-        self.model_name, _ = QFileDialog.getOpenFileName(self, "Open File", "*.h5")
+    def _set_monte_carlo(self, value: int) -> None:
+        """Set the Monte Carlo sample count and uncheck the other options."""
+        self._monte_carlo_samples = value
+        for action, mc_value in zip(
+            (self._mc5_act, self._mc25_act, self._mc50_act),
+            MONTE_CARLO_OPTIONS,
+        ):
+            action.setChecked(mc_value == value)
+        logger.debug("Monte Carlo samples set to %d", value)
 
-    def five(self):
-        self.tfiveAct.setChecked(False)
-        self.fiftyAct.setChecked(False)
-        self.monte_c = 5
+    def _select_model(self) -> None:
+        QMessageBox.information(
+            self,
+            APP_TITLE,
+            "The selected model must produce three output classes: AC, AD, H.",
+        )
+        model_path, _ = QFileDialog.getOpenFileName(self, "Select Model", "", "H5 Files (*.h5)")
+        if model_path:
+            self._model_name = model_path
+            logger.info("Model changed to: %s", model_path)
 
-    def tfive(self):
-        self.fiveAct.setChecked(False)
-        self.fiftyAct.setChecked(False)
-        self.monte_c = 25
+    # ------------------------------------------------------------------
+    # View shortcuts
+    # ------------------------------------------------------------------
 
-    def fifty(self):
-        self.fiveAct.setChecked(False)
-        self.tfiveAct.setChecked(False)
-        self.monte_c = 50
+    def _enable_view_actions(self, enabled: bool) -> None:
+        for act in (
+            self._v_no_overlay_act,
+            self._v_all_classes_act,
+            self._v_ac_act,
+            self._v_ad_act,
+            self._v_h_act,
+            self._v_total_uncertainty_act,
+            self._v_aleatoric_act,
+            self._v_epistemic_act,
+        ):
+            act.setEnabled(enabled)
 
-    def about(self):
+    # ------------------------------------------------------------------
+    # About dialogs
+    # ------------------------------------------------------------------
 
-        QMessageBox.about(self, "About Image Viewer",
-                          "<p>The <b>Bayesian Analayzer</b> is built for analayze "
-                          "Svs file, tipicaly very heavy files (~1Gb) "
-                          "thanks to a bayesian net. </p>"
-                          "<p>In addition, the program allows to zoom in at maximum resolution "
-                          "by opening a tab in the browser.</p>")
+    def _about(self) -> None:
+        QMessageBox.about(
+            self,
+            f"About {APP_TITLE}",
+            "<p>The <b>Bayesian Analyzer</b> analyzes SVS pathology slides "
+            "(typically ~1 GB) using a Bayesian neural network.</p>"
+            "<p>It also supports deep-zoom visualization by opening a "
+            "browser tab at maximum resolution.</p>",
+        )
 
-    def info_deep(self):
-        QMessageBox.about(self, "Deepzoom Viewer",
-                          "<p>The <b>Deepzoom</b> function allows the user to zoom in "
-                          "Svs file, at maximum resolution.</p>"
-                          "<p>The program will open a tab in your browser at 127.0.0.1:8080. </p>"
-                          "<p>In addition, at the right side, are also showed some info about the svs file "
-                          "instead to the left there could be same additional images, this depends"
-                          "to the selected file.</p>")
+    def _about_deep_zoom(self) -> None:
+        QMessageBox.about(
+            self,
+            "Deepzoom Viewer",
+            "<p>The <b>Deepzoom</b> viewer lets you zoom into SVS files at "
+            "maximum resolution inside your browser.</p>"
+            f"<p>The server opens at <tt>{DEEPZOOM_URL}</tt>.</p>"
+            "<p>The right panel shows metadata about the SVS file; additional "
+            "images may appear on the left depending on the selected file.</p>",
+        )
 
-    def createActions(self):
-        self.openAct = QAction(QIcon('icons/folder.png'), "Select svs", self, shortcut="Ctrl+O",
-                triggered=self.open)
+    # ------------------------------------------------------------------
+    # Action / menu construction
+    # ------------------------------------------------------------------
 
-        self.printAct = QAction("&Print...", self, shortcut="Ctrl+P",
-                enabled=False, triggered=self.print_)
+    def _create_actions(self) -> None:
+        # File
+        self._open_act = QAction(
+            QIcon("icons/folder.png"), "Select SVS", self,
+            shortcut="Ctrl+O", triggered=self._open_file,
+        )
+        self._print_act = QAction(
+            "&Print…", self,
+            shortcut="Ctrl+P", enabled=False, triggered=self._print_image,
+        )
+        self._exit_act = QAction(
+            QIcon("icons/exit.ico"), "E&xit", self,
+            shortcut="Ctrl+Q", triggered=self.close,
+        )
 
-        self.exitAct = QAction(QIcon('icons/exit.ico'), "E&xit", self, shortcut="Ctrl+Q",
-                triggered=self.close)
+        # Zoom
+        self._zoom_in_act = QAction(
+            QIcon("icons/zoomin.ico"), "Zoom &In (25%)", self,
+            shortcut="Ctrl++", enabled=False, triggered=self._zoom_in,
+        )
+        self._zoom_out_act = QAction(
+            QIcon("icons/zoomout.ico"), "Zoom &Out (25%)", self,
+            shortcut="Ctrl+-", enabled=False, triggered=self._zoom_out,
+        )
+        self._normal_size_act = QAction(
+            "&Normal Size", self,
+            shortcut="Ctrl+N", enabled=False, triggered=self._normal_size,
+        )
+        self._fit_to_window_act = QAction(
+            "&Fit to Window", self,
+            shortcut="Ctrl+F", enabled=False,
+            checkable=True, triggered=self._fit_to_window,
+        )
 
-        self.zoomInAct = QAction(QIcon('icons/zoomin.ico'), "Zoom &In (25%)", self, shortcut="Ctrl++",
-                enabled=False, triggered=self.zoomIn)
+        # Analysis
+        self._start_analysis_act = QAction(
+            QIcon("icons/start.ico"), "Start Analysis", self,
+            shortcut="Ctrl+R", enabled=False, triggered=self._start_analysis,
+        )
+        self._fast_act = QAction(
+            "Fast mode", self,
+            checkable=True, checked=True, enabled=True, triggered=self._set_fast_mode,
+        )
+        self._slow_act = QAction(
+            "Slow mode", self,
+            checkable=True, enabled=True, triggered=self._set_slow_mode,
+        )
 
-        self.zoomOutAct = QAction(QIcon('icons/zoomout.ico'),"Zoom &Out (25%)", self, shortcut="Ctrl+-",
-                enabled=False, triggered=self.zoomOut)
+        # Model / Monte Carlo
+        self._select_model_act = QAction(
+            "Change model", self, enabled=True, triggered=self._select_model,
+        )
+        self._mc5_act = QAction(
+            "5", self, checkable=True, checked=True,
+            triggered=lambda: self._set_monte_carlo(5),
+        )
+        self._mc25_act = QAction(
+            "25", self, checkable=True,
+            triggered=lambda: self._set_monte_carlo(25),
+        )
+        self._mc50_act = QAction(
+            "50", self, checkable=True,
+            triggered=lambda: self._set_monte_carlo(50),
+        )
 
-        self.normalSizeAct = QAction("&Normal Size", self, shortcut="Ctrl+S",
-                enabled=False, triggered=self.normalSize)
+        # View results
+        self._v_no_overlay_act = QAction(
+            "No overlay", self, enabled=False,
+            triggered=lambda: self._view_result("no_ov", "th"),
+        )
+        self._v_all_classes_act = QAction(
+            "All classes", self, enabled=False,
+            triggered=lambda: self._view_result("Pred_class", "result"),
+        )
+        self._v_ac_act = QAction(
+            QIcon("icons/AC.ico"), "AC only", self, enabled=False,
+            triggered=lambda: self._view_result("AC", "result"),
+        )
+        self._v_ad_act = QAction(
+            QIcon("icons/AD.ico"), "AD only", self, enabled=False,
+            triggered=lambda: self._view_result("AD", "result"),
+        )
+        self._v_h_act = QAction(
+            QIcon("icons/H.ico"), "H only", self, enabled=False,
+            triggered=lambda: self._view_result("H", "result"),
+        )
+        self._v_total_uncertainty_act = QAction(
+            "Total uncertainty", self, enabled=False,
+            triggered=lambda: self._view_result("tot", "uncertainty"),
+        )
+        self._v_aleatoric_act = QAction(
+            "Aleatoric uncertainty", self, enabled=False,
+            triggered=lambda: self._view_result("ale", "uncertainty"),
+        )
+        self._v_epistemic_act = QAction(
+            "Epistemic uncertainty", self, enabled=False,
+            triggered=lambda: self._view_result("epi", "uncertainty"),
+        )
 
-        self.fitToWindowAct = QAction("&Fit to Window", self, enabled=False,
-                checkable=True, shortcut="Ctrl+F", triggered=self.fitToWindow)
+        # Deep zoom / help
+        self._deep_zoom_act = QAction(
+            QIcon("icons/binocul.ico"), "Deep Zoom Viewer", self,
+            shortcut="Ctrl+D", enabled=False, triggered=self._open_deep_zoom,
+        )
+        self._about_act = QAction("&About", self, triggered=self._about)
+        self._about_qt_act = QAction(
+            "About &Qt", self, triggered=QApplication.instance().aboutQt,
+        )
+        self._info_deep_act = QAction(
+            "&Deepzoom info", self, triggered=self._about_deep_zoom,
+        )
 
-        self.aboutAct = QAction("&About", self, triggered=self.about)
+    def _create_menus(self) -> None:
+        # File menu
+        file_menu = QMenu("&File", self)
+        file_menu.addAction(self._open_act)
+        file_menu.addAction(self._print_act)
+        file_menu.addSeparator()
+        file_menu.addAction(self._exit_act)
 
-        self.aboutQtAct = QAction("About &Qt", self, triggered=QApplication.instance().aboutQt)
+        # Analysis menu
+        analysis_menu = QMenu("&Analysis", self)
+        analysis_menu.addAction(self._fast_act)
+        analysis_menu.addAction(self._slow_act)
+        analysis_menu.addSeparator()
 
-        self.info_deepAct = QAction("&Info about deep viewer", self, triggered=self.info_deep)
+        settings_menu = QMenu("&Settings", self)
+        settings_menu.addAction(self._select_model_act)
 
-        self.v_no_overlayAct = QAction("View whit no overlay", self, enabled=False, triggered=self.v_no_overlay)
-        self.v_all_classAct = QAction("View all classes", self, enabled=False, triggered=self.v_all_class)
+        mc_menu = QMenu("&Monte Carlo Samples", self)
+        mc_menu.addAction(self._mc5_act)
+        mc_menu.addAction(self._mc25_act)
+        mc_menu.addAction(self._mc50_act)
+        settings_menu.addMenu(mc_menu)
 
-        self.v_acAct = QAction(QIcon('icons/AC.ico'), "View only AC", self, enabled=False, triggered=self.v_ac)
-        self.v_adAct = QAction(QIcon('icons/AD.ico'), "View only AD", self, enabled=False, triggered=self.v_ad)
-        self.v_hAct = QAction(QIcon('icons/H.ico'), "View only H", self, enabled=False, triggered=self.v_h)
+        analysis_menu.addMenu(settings_menu)
+        analysis_menu.addSeparator()
+        analysis_menu.addAction(self._start_analysis_act)
 
-        self.v_tot_uAct = QAction("View total uncertainty", self, enabled=False, triggered=self.v_tot_u)
-        self.v_a_uAct = QAction("View only Aleatoric uncertainty", self, enabled=False, triggered=self.v_a_u)
-        self.v_e_uAct = QAction("View only Epistemic uncertainty", self, enabled=False, triggered=self.v_e_u)
+        # View menu
+        view_menu = QMenu("&View", self)
+        view_menu.addAction(self._v_no_overlay_act)
+        view_menu.addAction(self._v_all_classes_act)
+        view_menu.addSeparator()
+        view_menu.addAction(self._v_ac_act)
+        view_menu.addAction(self._v_ad_act)
+        view_menu.addAction(self._v_h_act)
+        view_menu.addSeparator()
+        view_menu.addAction(self._v_total_uncertainty_act)
+        view_menu.addAction(self._v_aleatoric_act)
+        view_menu.addAction(self._v_epistemic_act)
+        view_menu.addSeparator()
+        view_menu.addAction(self._zoom_in_act)
+        view_menu.addAction(self._zoom_out_act)
+        view_menu.addAction(self._normal_size_act)
+        view_menu.addSeparator()
+        view_menu.addAction(self._fit_to_window_act)
 
-        self.start_vis_deepAct = QAction(QIcon('icons/binocul.ico'), "Go to deepzoom visualization", self, enabled=False,
-                                         shortcut="Ctrl+D", triggered=self.deep_vis)
+        # Options menu
+        options_menu = QMenu("&Options", self)
+        options_menu.addAction(self._deep_zoom_act)
+        options_menu.addAction(self._info_deep_act)
 
-        self.startAnalysisAct = QAction(QIcon('icons/start.ico'), 'Start', self, triggered=self.start_an, enabled=False, shortcut="Ctrl+S")
+        # Help menu
+        help_menu = QMenu("&Help", self)
+        help_menu.addAction(self._about_act)
+        help_menu.addAction(self._about_qt_act)
 
-        self.fastAct = QAction('Fast mode', enabled=True, checkable=True, checked=True,  triggered=self.fast)
+        for menu in (file_menu, analysis_menu, view_menu, options_menu, help_menu):
+            self.menuBar().addMenu(menu)
 
-        self.slowAct = QAction('Slow mode', enabled=True, checkable=True, triggered=self.slow)
-
-        self.select_modAct = QAction('Change model', enabled=True, triggered=self.select_model)
-
-        self.fiveAct = QAction('5', enabled=True, checkable=True,checked=True, triggered=self.five)
-        self.tfiveAct = QAction('25', enabled=True, checkable=True, triggered=self.tfive)
-        self.fiftyAct = QAction('50', enabled=True, checkable=True, triggered=self.fifty)
-
-
-    def createMenus(self):
-        self.fileMenu = QMenu("&File", self)
-        self.fileMenu.addAction(self.openAct)
-        self.fileMenu.addAction(self.printAct)
-        self.fileMenu.addSeparator()
-        self.fileMenu.addAction(self.exitAct)
-
-        self.Analyze = QMenu("&Analysis", self)
-        self.Analyze.addAction(self.fastAct)
-        self.Analyze.addAction(self.slowAct)
-        self.Analyze.addSeparator()
-
-        self.modi = QMenu("&Modify Settings", self)
-        self.modi.addAction(self.select_modAct)
-
-        self.monte_n = QMenu("&Select Monte Carlo Sample", self)
-        self.monte_n.addAction(self.fiveAct)
-        self.monte_n.addAction(self.tfiveAct)
-        self.monte_n.addAction(self.fiftyAct)
-
-        self.modi.addAction(self.monte_n.menuAction())
-
-        self.Analyze.addAction(self.modi.menuAction())
-
-        self.Analyze.addSeparator()
-        self.Analyze.addAction(self.startAnalysisAct)
-
-        self.viewMenu = QMenu("&View", self)
-        self.viewMenu.addAction(self.v_no_overlayAct)
-        self.viewMenu.addAction(self.v_all_classAct)
-        self.viewMenu.addSeparator()
-        self.viewMenu.addAction(self.v_acAct)
-        self.viewMenu.addAction(self.v_adAct)
-        self.viewMenu.addAction(self.v_hAct)
-        self.viewMenu.addSeparator()
-        self.viewMenu.addAction(self.v_tot_uAct)
-        self.viewMenu.addAction(self.v_a_uAct)
-        self.viewMenu.addAction(self.v_e_uAct)
-        self.viewMenu.addSeparator()
-        self.viewMenu.addAction(self.zoomInAct)
-        self.viewMenu.addAction(self.zoomOutAct)
-        self.viewMenu.addAction(self.normalSizeAct)
-        self.viewMenu.addSeparator()
-        self.viewMenu.addAction(self.fitToWindowAct)
-
-        self.options = QMenu("&Options", self)
-        self.options.addAction(self.start_vis_deepAct)
-        self.options.addAction(self.info_deepAct)
-
-        self.helpMenu = QMenu("&Help", self)
-        self.helpMenu.addAction(self.aboutAct)
-        self.helpMenu.addAction(self.aboutQtAct)
-
-        # TOOLBAR
-        self.toolbar.addAction(self.openAct)
-        self.toolbar.addAction(self.startAnalysisAct)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.zoomInAct)
-        self.toolbar.addAction(self.zoomOutAct)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.start_vis_deepAct)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.v_acAct)
-        self.toolbar.addAction(self.v_adAct)
-        self.toolbar.addAction(self.v_hAct)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.exitAct)
-
-        self.menuBar().addMenu(self.fileMenu)
-        self.menuBar().addMenu(self.Analyze)
-        self.menuBar().addMenu(self.viewMenu)
-        self.menuBar().addMenu(self.options)
-        self.menuBar().addMenu(self.helpMenu)
-
-    def updateActions(self):
-        self.zoomInAct.setEnabled(not self.fitToWindowAct.isChecked())
-
-        self.zoomOutAct.setEnabled(not self.fitToWindowAct.isChecked())
-        self.normalSizeAct.setEnabled(not self.fitToWindowAct.isChecked())
-
-    def scaleImage(self, factor):
-        self.scaleFactor *= factor
-        self.imageLabel.resize(self.scaleFactor * self.imageLabel.pixmap().size())
-
-        self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
-        self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
-
-        self.zoomInAct.setEnabled(self.scaleFactor < 4.0)
-        self.zoomOutAct.setEnabled(self.scaleFactor > 0.2)
-
-    def adjustScrollBar(self, scrollBar, factor):
-        scrollBar.setValue(int(factor * scrollBar.value()
-                                + ((factor - 1) * scrollBar.pageStep()/2)))
+        # Toolbar
+        for item in (
+            self._open_act,
+            self._start_analysis_act,
+            None,  # separator
+            self._zoom_in_act,
+            self._zoom_out_act,
+            None,
+            self._deep_zoom_act,
+            None,
+            self._v_ac_act,
+            self._v_ad_act,
+            self._v_h_act,
+            None,
+            self._exit_act,
+        ):
+            if item is None:
+                self._toolbar.addSeparator()
+            else:
+                self._toolbar.addAction(item)
 
 
-if __name__ == '__main__':
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
-    import sys
 
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    imageViewer = ImageViewer()
-    imageViewer.show()
+    viewer = ImageViewer()
+    viewer.show()
     sys.exit(app.exec_())

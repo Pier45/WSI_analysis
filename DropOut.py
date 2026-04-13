@@ -1,158 +1,363 @@
-import tensorflow as tf
-import tensorflow.keras.layers as tk_layer
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import glob
+"""
+Bayesian dropout CNN for histological-tile classification (AC / AD / H).
+
+Monte Carlo Dropout is implemented by keeping ``training=True`` in every
+Dropout layer so that dropout is active at *inference* time as well.
+Running the forward pass N times on the same input yields a distribution
+over predictions, from which aleatoric and epistemic uncertainty can be
+estimated.
+
+Usage (standalone):
+    python model_training.py
+"""
+
+from __future__ import annotations
+
+import logging
+import math
 import os
-import json
+from dataclasses import dataclass, field
+from typing import Optional, Tuple
+
+import glob
 import pandas as pd
+import tensorflow as tf
+import tensorflow.keras.layers as kl
+from tensorflow.keras.callbacks import (
+    Callback,
+    EarlyStopping,
+    ModelCheckpoint,
+)
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Architecture constants
+# ---------------------------------------------------------------------------
+
+INPUT_SHAPE: Tuple[int, int, int] = (64, 64, 3)
+N_CLASSES: int = 3
+CLASS_NAMES = ["AC", "H", "AD"]
+
+# Each ConvBlock is described by (n_filters, kernel_size, use_pooling, dropout_rate).
+# Setting use_pooling=False replaces the MaxPooling layer with a stride-1 identity
+# (the old sentinel value of stride=-1).
+@dataclass(frozen=True)
+class ConvBlockConfig:
+    filters: int
+    kernel_size: int
+    use_pooling: bool
+    dropout_rate: float
 
 
-class MyCallback(Callback):
-    def __init__(self, progress, view, tot):
-        self.view = view
-        self.progress = progress
-        self.tot = tot
-        self.logs = {}
+CONV_BLOCKS: Tuple[ConvBlockConfig, ...] = (
+    ConvBlockConfig(filters=16,  kernel_size=6, use_pooling=True,  dropout_rate=0.15),
+    ConvBlockConfig(filters=32,  kernel_size=6, use_pooling=True,  dropout_rate=0.25),
+    ConvBlockConfig(filters=64,  kernel_size=6, use_pooling=True,  dropout_rate=0.25),
+    ConvBlockConfig(filters=128, kernel_size=4, use_pooling=True,  dropout_rate=0.25),
+    ConvBlockConfig(filters=256, kernel_size=4, use_pooling=False, dropout_rate=0.30),
+)
 
-    def on_batch_end(self, batch, logs={}):
-        self.logs = logs
-        self.view.emit('===> Batch: {:5}   Accuracy: {:5.3f}'.format(batch, logs['acc']))
-
-    def on_epoch_end(self, epoch, logs={}):
-        self.view.emit('Epoch:  {:5}   Loss:  {:13.2f}   --   Train acc:  {:5.3f}   '
-                       'Val acc:  {:5.3f}'.format(int(epoch)+1, logs['loss'], logs['acc'], logs['val_acc']))
-        self.progress.emit(100*(int(epoch)+1)/self.tot)
+# ---------------------------------------------------------------------------
+# Keras callback
+# ---------------------------------------------------------------------------
 
 
-class ModelDropOut:
-    def __init__(self, n_model, epochs, path_train, path_val, b_dim, aug=0):
-        self.shape = (64, 64, 3)
-        self.n_classes = 3
-        self.name_model = n_model
-        self.history = n_model[:n_model.index('.h5')] + '.txt'
+class TrainingProgressCallback(Callback):
+    """
+    Emits per-batch and per-epoch training metrics via Qt signals.
+
+    Parameters
+    ----------
+    progress_signal:
+        PyQt signal that accepts an ``int`` (0–100 percentage).
+    view_signal:
+        PyQt signal that accepts a ``str`` status message.
+    total_epochs:
+        Total number of training epochs; used to compute the progress percentage.
+    """
+
+    def __init__(self, progress_signal, view_signal, total_epochs: int) -> None:
+        super().__init__()
+        self._progress = progress_signal
+        self._view = view_signal
+        self._total_epochs = total_epochs
+
+    def on_batch_end(self, batch: int, logs: Optional[dict] = None) -> None:
+        logs = logs or {}
+        acc = logs.get("accuracy", float("nan"))
+        self._view.emit(f"===> Batch: {batch:5d}   Accuracy: {acc:5.3f}")
+
+    def on_epoch_end(self, epoch: int, logs: Optional[dict] = None) -> None:
+        logs = logs or {}
+        loss = logs.get("loss", float("nan"))
+        acc = logs.get("accuracy", float("nan"))
+        val_acc = logs.get("val_accuracy", float("nan"))
+        epoch_number = int(epoch) + 1
+
+        self._view.emit(
+            f"Epoch: {epoch_number:5d}   "
+            f"Loss: {loss:13.2f}   "
+            f"Train acc: {acc:5.3f}   "
+            f"Val acc: {val_acc:5.3f}"
+        )
+        self._progress.emit(int(100 * epoch_number / self._total_epochs))
+
+
+# ---------------------------------------------------------------------------
+# Model
+# ---------------------------------------------------------------------------
+
+
+class BayesianDropoutCNN:
+    """
+    Convolutional neural network with Monte Carlo Dropout for Bayesian
+    uncertainty estimation on 64×64 RGB histological tiles.
+
+    Parameters
+    ----------
+    model_save_path:
+        File path where the trained model will be saved (e.g. ``"model.h5"``).
+    epochs:
+        Number of training epochs.
+    path_train:
+        Root directory of the training set; must contain one sub-folder per class.
+    path_val:
+        Root directory of the validation set; same structure as *path_train*.
+    batch_size:
+        Batch size used for both training and validation generators.
+    augment:
+        Whether to apply data augmentation during training.
+    """
+
+    def __init__(
+        self,
+        model_save_path: str,
+        epochs: int,
+        path_train: str,
+        path_val: str,
+        batch_size: int = 32,
+        augment: bool = False,
+    ) -> None:
+        self.model_save_path = model_save_path
+        self.history_save_path = model_save_path.replace(".h5", "_history.json")
         self.epochs = int(epochs)
-        self.batch_dim_train = int(b_dim)
-        self.batch_dim_val = int(b_dim)
-        self.n_image_train = len(glob.glob(os.path.join(path_train, '*/*.png')))
-        self.n_image_val = len(glob.glob(os.path.join(path_val, '*/*.png')))
-
+        self.batch_size = int(batch_size)
         self.path_train = path_train
         self.path_val = path_val
-        self.aug = aug
+        self.augment = augment
 
-    def load_train(self):
-        if self.aug == 1:
-            train_datagen = ImageDataGenerator(rescale=1. / 255,
-                                               shear_range=0.2,
-                                               zoom_range=0.2,
-                                               brightness_range=(0.5, 1),
-                                               horizontal_flip=True,
-                                               fill_mode="nearest"
-                                               )
-        else:
-            train_datagen = ImageDataGenerator(rescale=1. / 255)
+        self.n_train_images = len(glob.glob(os.path.join(path_train, "*/*.png")))
+        self.n_val_images = len(glob.glob(os.path.join(path_val, "*/*.png")))
+        logger.info(
+            "Dataset — train: %d images, val: %d images",
+            self.n_train_images,
+            self.n_val_images,
+        )
 
-        return train_datagen
+    # ------------------------------------------------------------------
+    # Data generators
+    # ------------------------------------------------------------------
 
-    def flow_directory(self):
-        train_datagen = self.load_train()
+    def _build_train_generator(self) -> ImageDataGenerator:
+        """Return the training :class:`ImageDataGenerator`, with optional augmentation."""
+        if self.augment:
+            return ImageDataGenerator(
+                rescale=1.0 / 255,
+                shear_range=0.2,
+                zoom_range=0.2,
+                brightness_range=(0.5, 1.0),
+                horizontal_flip=True,
+                fill_mode="nearest",
+            )
+        return ImageDataGenerator(rescale=1.0 / 255)
 
-        test_datagen = ImageDataGenerator(rescale=1./255)
+    def _build_data_generators(self):
+        """
+        Create and return ``(train_generator, validation_generator)``.
 
-        train_generator = train_datagen.flow_from_directory(
-            self.path_train,
-            target_size=(64, 64),
-            batch_size=self.batch_dim_train,
-            classes=['AC', 'H', 'AD'])
+        Both generators yield batches of shape ``(batch_size, 64, 64, 3)``
+        with one-hot encoded labels for the three classes.
+        """
+        train_datagen = self._build_train_generator()
+        val_datagen = ImageDataGenerator(rescale=1.0 / 255)
 
-        validation_generator = test_datagen.flow_from_directory(
-            self.path_val,
-            target_size=(64, 64),
-            batch_size=self.batch_dim_val,
-            classes=['AC', 'H', 'AD'])
+        flow_kwargs = dict(
+            target_size=INPUT_SHAPE[:2],
+            batch_size=self.batch_size,
+            classes=CLASS_NAMES,
+        )
 
-        return train_generator, validation_generator
+        train_gen = train_datagen.flow_from_directory(self.path_train, **flow_kwargs)
+        val_gen = val_datagen.flow_from_directory(self.path_val, **flow_kwargs)
+        return train_gen, val_gen
 
-    def costruction_model(self):
-        filters = [16, 32, 64, 128, 256]
-        kernels = [6, 6, 6, 4, 4]
-        strides = [2, 2, 2, 1, -1]
-        drop = [0.15, 0.25, 0.25, 0.25, 0.3]
-        image = tk_layer.Input(shape=self.shape)
+    # ------------------------------------------------------------------
+    # Architecture helpers
+    # ------------------------------------------------------------------
 
-        x = image
-        for i in range(len(kernels)):
-          x = self.middle_layers(x, filters[i], kernels[i], strides[i], drop[i])
+    @staticmethod
+    def _conv_block(x: tf.Tensor, cfg: ConvBlockConfig) -> tf.Tensor:
+        """
+        Build a double-convolution block with BatchNorm, optional pooling,
+        and Monte Carlo Dropout.
 
-        x = tk_layer.Conv2D(filters=1024, kernel_size=3, padding='same', activation = 'relu')(x)
-        x = tk_layer.BatchNormalization()(x)
-        x = tk_layer.Activation('relu')(x)
-        x = tk_layer.MaxPooling2D(pool_size=(2, 2), strides=2)(x)
-        x = tk_layer.Flatten()(x)
-        x = tk_layer.Dense(1024, activation='relu')(x)
-        x = tk_layer.Dropout(0.35)(x, training=True)
-        x = tk_layer.Dense(364, activation='relu')(x)
-        x = tk_layer.Dropout(0.25)(x, training=True)
-        x = tk_layer.Dense(256, activation='relu')(x)
-        out_m = tk_layer.Dense(self.n_classes, activation='softmax')(x)
-        model = tf.keras.Model(inputs=image, outputs=out_m, name='sasa45')
-        return model
+        Note: ``Conv2D`` layers use *no* activation; ``BatchNormalization``
+        is followed by an explicit ``Activation('relu')`` to follow the
+        canonical BN → ReLU ordering.
 
-    def middle_layers(self, x, nfil, kernel, stride, drop):
-        out = tk_layer.Conv2D(filters=nfil, kernel_size=kernel, padding='same', activation = 'relu')(x)
-        out = tk_layer.BatchNormalization()(out)
-        out = tk_layer.Activation('relu')(out)
+        The ``training=True`` flag on ``Dropout`` keeps it active during
+        inference, enabling Monte Carlo sampling.
+        """
+        conv_kwargs = dict(
+            filters=cfg.filters,
+            kernel_size=cfg.kernel_size,
+            padding="same",
+            use_bias=False,  # bias is redundant before BatchNorm
+        )
 
-        out = tk_layer.Conv2D(filters=nfil, kernel_size=kernel, padding='same', activation = 'relu')(out)
-        out = tk_layer.BatchNormalization()(out)
-        out = tk_layer.Activation('relu')(out)
+        for _ in range(2):
+            x = kl.Conv2D(**conv_kwargs)(x)
+            x = kl.BatchNormalization()(x)
+            x = kl.Activation("relu")(x)
 
-        if stride != -1:
-            out = tk_layer.MaxPooling2D(pool_size=(2, 2), strides=stride)(out)
-        out = tk_layer.Dropout(drop)(out, training=True)
+        if cfg.use_pooling:
+            x = kl.MaxPooling2D(pool_size=(2, 2), strides=2)(x)
 
-        return out
+        # training=True → Dropout active at inference time (Monte Carlo Dropout)
+        x = kl.Dropout(cfg.dropout_rate)(x, training=True)
+        return x
 
-    def start_train(self, progress_callback, view):
-        model = self.costruction_model()
-        model.summary()
-        model.compile(loss='categorical_crossentropy', optimizer='Adadelta' ,metrics=['accuracy'])
+    def build_model(self) -> tf.keras.Model:
+        """
+        Construct and return the Bayesian dropout CNN.
 
-        train, val = self.flow_directory()
+        Architecture
+        ------------
+        5 × ConvBlock  →  Conv2D(1024) head  →  Dense(1024 → 364 → 256)  →  Softmax(3)
+        """
+        inputs = kl.Input(shape=INPUT_SHAPE, name="input_tiles")
+        x = inputs
 
-        STEPS_PER_EPOCH_T = self.n_image_train // self.batch_dim_train
-        STEPS_PER_EPOCH_V = self.n_image_val // self.batch_dim_val
-        filepath = "weights.hdf5"
-        checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-        earlyStopping = EarlyStopping(monitor='val_acc', patience=15, verbose=0, mode='max')
-        iups = MyCallback(progress_callback, view, self.epochs)
-        # checkpoint,
-        callbacks_list = [earlyStopping, iups]
+        for block_cfg in CONV_BLOCKS:
+            x = self._conv_block(x, block_cfg)
 
-        history = model.fit_generator(train,
-                                      steps_per_epoch=STEPS_PER_EPOCH_T,
-                                      epochs=self.epochs,
-                                      verbose=1,
-                                      validation_data=val,
-                                      validation_steps=STEPS_PER_EPOCH_V,
-                                      callbacks=callbacks_list
-                                      )
+        # Classification head
+        x = kl.Conv2D(filters=1024, kernel_size=3, padding="same", use_bias=False)(x)
+        x = kl.BatchNormalization()(x)
+        x = kl.Activation("relu")(x)
+        x = kl.MaxPooling2D(pool_size=(2, 2), strides=2)(x)
+        x = kl.Flatten()(x)
 
-        model.save(self.name_model)
+        x = kl.Dense(1024, activation="relu")(x)
+        x = kl.Dropout(0.35)(x, training=True)
+        x = kl.Dense(364, activation="relu")(x)
+        x = kl.Dropout(0.25)(x, training=True)
+        x = kl.Dense(256, activation="relu")(x)
+        x = kl.Dropout(0.20)(x, training=True)
+
+        outputs = kl.Dense(N_CLASSES, activation="softmax", name="class_probabilities")(x)
+
+        return tf.keras.Model(inputs=inputs, outputs=outputs, name="bayesian_dropout_cnn")
+
+    # ------------------------------------------------------------------
+    # Training
+    # ------------------------------------------------------------------
+
+    def train(self, progress_signal=None, view_signal=None) -> tf.keras.callbacks.History:
+        """
+        Build, compile, and train the model.
+
+        Parameters
+        ----------
+        progress_signal:
+            Optional PyQt signal (``int``) for reporting epoch progress.
+        view_signal:
+            Optional PyQt signal (``str``) for streaming log messages to a UI widget.
+
+        Returns
+        -------
+        tf.keras.callbacks.History
+            Keras history object containing per-epoch metrics.
+        """
+        model = self.build_model()
+        model.summary(print_fn=logger.info)
+
+        model.compile(
+            loss="categorical_crossentropy",
+            optimizer=tf.keras.optimizers.Adadelta(),
+            metrics=["accuracy"],
+        )
+
+        train_gen, val_gen = self._build_data_generators()
+
+        steps_per_epoch = math.ceil(self.n_train_images / self.batch_size)
+        validation_steps = math.ceil(self.n_val_images / self.batch_size)
+
+        callbacks = [
+            EarlyStopping(
+                monitor="val_accuracy",
+                patience=15,
+                mode="max",
+                restore_best_weights=True,
+                verbose=1,
+            ),
+            ModelCheckpoint(
+                filepath="weights_best.h5",
+                monitor="val_accuracy",
+                save_best_only=True,
+                mode="max",
+                verbose=1,
+            ),
+        ]
+
+        if progress_signal is not None and view_signal is not None:
+            callbacks.append(
+                TrainingProgressCallback(progress_signal, view_signal, self.epochs)
+            )
+
+        history = model.fit(
+            train_gen,
+            steps_per_epoch=steps_per_epoch,
+            epochs=self.epochs,
+            validation_data=val_gen,
+            validation_steps=validation_steps,
+            callbacks=callbacks,
+            verbose=1,
+        )
+
+        model.save(self.model_save_path)
+        logger.info("Model saved to: %s", self.model_save_path)
 
         hist_df = pd.DataFrame(history.history)
+        with open(self.history_save_path, mode="w") as fp:
+            hist_df.to_json(fp)
+        logger.info("Training history saved to: %s", self.history_save_path)
 
-        # save to json:
-        with open(self.history, mode='w') as f:
-            hist_df.to_json(f)
+        return history
 
 
-if __name__ == '__main__':
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
-    Obj_model = ModelDropOut(epochs=100, path_train='C:/Users/piero/test2', path_val='C:/Users/piero/test2')
-    Model_1, history = Obj_model.start_train()
-
-    #name = 'Model_1_t' + '.h5'
-
-    #Model_1.save(name)
+if __name__ == "__main__":
+    trainer = BayesianDropoutCNN(
+        model_save_path="bayesian_cnn.h5",
+        epochs=100,
+        path_train="data/train",
+        path_val="data/val",
+        batch_size=32,
+        augment=True,
+    )
+    training_history = trainer.train()
+    logger.info("Final val accuracy: %.4f", max(training_history.history["val_accuracy"]))
