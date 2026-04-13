@@ -22,13 +22,16 @@ from typing import Optional, Tuple
 import glob
 import pandas as pd
 import tensorflow as tf
-import tensorflow.keras.layers as kl
 from tensorflow.keras.callbacks import (
     Callback,
     EarlyStopping,
     ModelCheckpoint,
 )
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+# from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
+# from keras.preprocessing.image import ImageDataGenerator
+
+# from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -226,15 +229,15 @@ class BayesianDropoutCNN:
         )
 
         for _ in range(2):
-            x = kl.Conv2D(**conv_kwargs)(x)
-            x = kl.BatchNormalization()(x)
-            x = kl.Activation("relu")(x)
+            x = tf.keras.layers.Conv2D(**conv_kwargs)(x)
+            x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.keras.layers.Activation("relu")(x)
 
         if cfg.use_pooling:
-            x = kl.MaxPooling2D(pool_size=(2, 2), strides=2)(x)
+            x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2)(x)
 
         # training=True → Dropout active at inference time (Monte Carlo Dropout)
-        x = kl.Dropout(cfg.dropout_rate)(x, training=True)
+        x = tf.keras.layers.Dropout(cfg.dropout_rate)(x, training=True)
         return x
 
     def build_model(self) -> tf.keras.Model:
@@ -245,27 +248,27 @@ class BayesianDropoutCNN:
         ------------
         5 × ConvBlock  →  Conv2D(1024) head  →  Dense(1024 → 364 → 256)  →  Softmax(3)
         """
-        inputs = kl.Input(shape=INPUT_SHAPE, name="input_tiles")
+        inputs = tf.keras.layers.Input(shape=INPUT_SHAPE, name="input_tiles")
         x = inputs
 
         for block_cfg in CONV_BLOCKS:
             x = self._conv_block(x, block_cfg)
 
         # Classification head
-        x = kl.Conv2D(filters=1024, kernel_size=3, padding="same", use_bias=False)(x)
-        x = kl.BatchNormalization()(x)
-        x = kl.Activation("relu")(x)
-        x = kl.MaxPooling2D(pool_size=(2, 2), strides=2)(x)
-        x = kl.Flatten()(x)
+        x = tf.keras.layers.Conv2D(filters=1024, kernel_size=3, padding="same", use_bias=False)(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Activation("relu")(x)
+        x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2)(x)
+        x = tf.keras.layers.Flatten()(x)
 
-        x = kl.Dense(1024, activation="relu")(x)
-        x = kl.Dropout(0.35)(x, training=True)
-        x = kl.Dense(364, activation="relu")(x)
-        x = kl.Dropout(0.25)(x, training=True)
-        x = kl.Dense(256, activation="relu")(x)
-        x = kl.Dropout(0.20)(x, training=True)
+        x = tf.keras.layers.Dense(1024, activation="relu")(x)
+        x = tf.keras.layers.Dropout(0.35)(x, training=True)
+        x = tf.keras.layers.Dense(364, activation="relu")(x)
+        x = tf.keras.layers.Dropout(0.25)(x, training=True)
+        x = tf.keras.layers.Dense(256, activation="relu")(x)
+        x = tf.keras.layers.Dropout(0.20)(x, training=True)
 
-        outputs = kl.Dense(N_CLASSES, activation="softmax", name="class_probabilities")(x)
+        outputs = tf.keras.layers.Dense(N_CLASSES, activation="softmax", name="class_probabilities")(x)
 
         return tf.keras.Model(inputs=inputs, outputs=outputs, name="bayesian_dropout_cnn")
 

@@ -7,12 +7,7 @@ import sys
 import os
 import time
 import traceback
-import json
-
 import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-import seaborn as sns
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
@@ -27,7 +22,7 @@ from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QFont, QIcon
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QRunnable, QThreadPool, Qt
 
 from multi_processing_analysis import StartAnalysis
-from DropOut import ModelDropOut
+from DropOut import BayesianDropoutCNN
 # from Kl import ModelKl
 # from Classification import Classification
 # from uncertainty_analysis import Th
@@ -36,10 +31,10 @@ from test_widget import TestTab
 matplotlib.use('Qt5Agg')
 
 # --- Constants ---
-DEFAULT_TRAIN_PATH = "D:/test/train"
-DEFAULT_VAL_PATH = "D:/test/val"
+DEFAULT_TRAIN_PATH = "test/train"
+DEFAULT_VAL_PATH = "test/val"
 DEFAULT_MODEL_PATH = "Model_1_85aug.h5"
-DEFAULT_WORK_PATH = "D:/test"
+DEFAULT_WORK_PATH = "test"
 DEFAULT_EPOCHS = 100
 DEFAULT_BATCH_SIZE = 100
 DEFAULT_MONTE_CARLO_SAMPLES = 5
@@ -732,7 +727,7 @@ class MainTabWidget(QWidget):
         if self.model_type == "drop":
             model_filename = f"ModelDrop-{timestamp}.h5"
             self.model_path = os.path.join(self.work_path, model_filename)
-            model_obj = ModelDropOut(
+            model_obj = BayesianDropoutCNN(
                 n_model=self.model_path, epochs=self.epochs,
                 path_train=self.tiles_train_path, path_val=self.tiles_val_path,
                 b_dim=self.batch_size, aug=aug,
@@ -740,7 +735,7 @@ class MainTabWidget(QWidget):
         else:
             model_filename = f"ModelKl-{timestamp}.h5"
             self.model_path = os.path.join(self.work_path, model_filename)
-            model_obj = ModelKl(
+            model_obj = BayesianDropoutCNN(
                 n_model=self.model_path, epochs=self.epochs,
                 path_train=self.tiles_train_path, path_val=self.tiles_val_path,
                 b_dim=self.batch_size, aug=aug,
