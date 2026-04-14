@@ -23,9 +23,9 @@ from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QRunnable, QThreadPool, 
 
 from multi_processing_analysis import StartAnalysis
 from DropOut import BayesianDropoutCNN
-# from Kl import ModelKl
-# from Classification import Classification
-# from uncertainty_analysis import Th
+from Kl import ModelKl
+from Classification import Classification
+from uncertainty_analysis import Th
 from test_widget import TestTab
 
 matplotlib.use('Qt5Agg')
@@ -144,7 +144,10 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Bayesian Datacleaning")
         self.setWindowIcon(QIcon(APP_ICON_PATH))
-        self.setStyleSheet(open(APP_STYLE_PATH).read())
+        if os.path.exists(APP_STYLE_PATH):
+            self.setStyleSheet(open(APP_STYLE_PATH).read())
+        else:
+            print(f"Warning: style file {APP_STYLE_PATH} not found. Using default style.")
 
         self.central_widget = MainTabWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -611,6 +614,38 @@ class MainTabWidget(QWidget):
             return getattr(self, f"{dataset_name}_path", "")
 
         list_widgets = self.dataset_list_widgets.get(dataset_name, {})
+        known_classes = {k.strip().upper() for k in KNOWN_CLASSES}
+        # try:
+        #     # If the selected directory is itself a class folder (AC/AD/H), use it directly.
+        #     folder_name = os.path.basename(folder).strip().upper()
+        #     if folder_name in known_classes:
+        #         class_dirs = [(folder_name, folder)]
+        #     else:
+        #         class_dirs = []
+        #         for class_name in os.listdir(folder):
+        #             normalized = class_name.strip().upper()
+        #             if normalized in known_classes:
+        #                 class_dirs.append((normalized, os.path.join(folder, class_name)))
+        #             else:
+        #                 print(f"||||| > Ignoro elemento non-class: {repr(class_name)}")
+
+        #     print(f"||||| > dataset_name={dataset_name}, list_widgets_keys={list(list_widgets.keys())}")
+        #     for class_name, class_path in class_dirs:
+        #         if not os.path.isdir(class_path):
+        #             print(f"||||| > Ignoro path non-directory: {repr(class_path)}")
+        #             continue
+        #         files = os.listdir(class_path)
+        #         print(f"||||| > Caricamento {len(files)} immagini per classe {class_name}")
+        #         widget = list_widgets.get(class_name)
+        #         if widget:
+        #             widget.clear()
+        #             print(f"||||| > Popolamento widget per {dataset_name} - files {files}")
+        #             widget.addItems(files)
+        #         else:
+        #             print(f"||||| > Nessun widget trovato per classe {class_name} in {list(list_widgets.keys())}")
+        # except OSError as e:
+        #     print(f"Errore nella lettura della cartella {folder}: {e}")
+
         try:
             for class_name in os.listdir(folder):
                 key = class_name.upper()
@@ -618,6 +653,7 @@ class MainTabWidget(QWidget):
                     continue
                 files = os.listdir(os.path.join(folder, class_name))
                 widget = list_widgets.get(key)
+
                 if widget:
                     widget.addItems(files)
         except OSError as e:
@@ -735,7 +771,7 @@ class MainTabWidget(QWidget):
         else:
             model_filename = f"ModelKl-{timestamp}.h5"
             self.model_path = os.path.join(self.work_path, model_filename)
-            model_obj = BayesianDropoutCNN(
+            model_obj = ModelKl(
                 n_model=self.model_path, epochs=self.epochs,
                 path_train=self.tiles_train_path, path_val=self.tiles_val_path,
                 b_dim=self.batch_size, aug=aug,

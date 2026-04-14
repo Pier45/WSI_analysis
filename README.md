@@ -2,12 +2,18 @@
 
 > **Thesis**: *"Applicazione di reti bayesiane all'analisi automatica di immagini istopatologiche"*  
 > **Author**: Piero Policastro — Politecnico di Torino, Ingegneria Biomedica, A.Y. 2019–2020  
-
+> **Link PDF**: https://webthesis.biblio.polito.it/13803/
 ---
+
 
 ## Overview
 
-This toolkit applies **Bayesian deep learning** to the automatic analysis of colorectal histopathological whole-slide images (WSIs). The key contribution over classical CNNs is the ability to **quantify prediction uncertainty**, enabling the system to signal when a classification is unreliable — a critical property in clinical decision support.
+This toolkit applies **Bayesian deep learning** to the automatic analysis of colorectal histopathological whole-slide images (WSIs).
+
+![Figure 4.3](img/Figure4.3.png)
+
+
+The key contribution over classical CNNs is the ability to **quantify prediction uncertainty**, enabling the system to signal when a classification is unreliable — a critical property in clinical decision support.
 
 Two uncertainty components are estimated via **Monte Carlo Dropout**:
 
@@ -46,6 +52,9 @@ The dataset consists of colorectal tissue WSIs from 27 patients (9 per class) pr
 | `H` | Healthy colorectal tissue |
 
 **Tile extraction** was performed at maximum resolution (level 0) using a 256×256 px sliding window without overlap. Images were then downscaled to 64×64 px for training, which yielded equivalent accuracy at significantly lower computational cost.
+
+![Figure 4.2](img/Figure4.2.png)
+
 
 **Final dataset composition:**
 
@@ -183,6 +192,9 @@ pip install pyqt5 tensorflow openslide-python pillow numpy scipy \
 python ui_pyqt5.py
 ```
 
+![Figure5.1](img/Figure5.1.png)
+
+
 **Workflow:**
 1. **File → Select SVS** — opens a `.svs` file; a thumbnail is generated immediately and tiles are created in the background across all available CPU threads.
 2. **Analysis → Start** (or `Ctrl+R`) — runs the Bayesian classifier. A progress bar tracks epoch completion.
@@ -216,11 +228,15 @@ python ui_pyqt5.py
 }
 ```
 
+![Figure5.23](img/Figure5.2-5.3.png)
+
 ### 2. Data Cleaning & Training GUI
 
 ```bash
 python ui_dataclean.py
 ```
+
+![Figure5.7](img/Figure5.7.png)
 
 The interface is organised in five tabs:
 
@@ -292,3 +308,16 @@ Opens a browser tab at `http://127.0.0.1:5000/` with adaptive-resolution tile st
 ## License
 
 MIT
+
+### General comments to run app on container wsl2
+docker run --rm \
+    -e DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    uiclean
+
+# To pass a data folder to the container
+docker run --rm \
+    -e DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -v "/mnt/c/Users/piero/Documents/Data WSI:/data" \
+    uiclean
