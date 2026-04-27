@@ -22,11 +22,7 @@ from typing import Optional, Tuple
 import glob
 import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.callbacks import (
-    Callback,
-    EarlyStopping,
-    ModelCheckpoint,
-)
+from tensorflow.keras.callbacks import  Callback, EarlyStopping, ModelCheckpoint
 
 # from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 # from keras.preprocessing.image import ImageDataGenerator

@@ -44,7 +44,7 @@ MANUAL_THRESHOLD_MIN = 0.1
 MANUAL_THRESHOLD_MAX = 1.0
 KNOWN_CLASSES = {"ac", "ad", "h"}
 APP_ICON_PATH = "icons/target.ico"
-APP_STYLE_PATH = "stileor.css"
+APP_STYLE_PATH = "styles/stileor.css"
 TUTORIAL_MESSAGE = (
     "The program is divided into tabs; follow the tab sequence to ensure everything works correctly.\n\n"
     "Tab 'Get tiles': select the working folder, then the train/val/test folders "
@@ -615,47 +615,17 @@ class MainTabWidget(QWidget):
 
         list_widgets = self.dataset_list_widgets.get(dataset_name, {})
         known_classes = {k.strip().upper() for k in KNOWN_CLASSES}
-        # try:
-        #     # If the selected directory is itself a class folder (AC/AD/H), use it directly.
-        #     folder_name = os.path.basename(folder).strip().upper()
-        #     if folder_name in known_classes:
-        #         class_dirs = [(folder_name, folder)]
-        #     else:
-        #         class_dirs = []
-        #         for class_name in os.listdir(folder):
-        #             normalized = class_name.strip().upper()
-        #             if normalized in known_classes:
-        #                 class_dirs.append((normalized, os.path.join(folder, class_name)))
-        #             else:
-        #                 print(f"||||| > Ignoro elemento non-class: {repr(class_name)}")
-
-        #     print(f"||||| > dataset_name={dataset_name}, list_widgets_keys={list(list_widgets.keys())}")
-        #     for class_name, class_path in class_dirs:
-        #         if not os.path.isdir(class_path):
-        #             print(f"||||| > Ignoro path non-directory: {repr(class_path)}")
-        #             continue
-        #         files = os.listdir(class_path)
-        #         print(f"||||| > Caricamento {len(files)} immagini per classe {class_name}")
-        #         widget = list_widgets.get(class_name)
-        #         if widget:
-        #             widget.clear()
-        #             print(f"||||| > Popolamento widget per {dataset_name} - files {files}")
-        #             widget.addItems(files)
-        #         else:
-        #             print(f"||||| > Nessun widget trovato per classe {class_name} in {list(list_widgets.keys())}")
-        # except OSError as e:
-        #     print(f"Errore nella lettura della cartella {folder}: {e}")
 
         try:
             for class_name in os.listdir(folder):
                 key = class_name.upper()
                 if key not in {k.upper() for k in KNOWN_CLASSES}:
+                    print(f"||||| > Ignoro elemento non-class: {repr(key)} in {KNOWN_CLASSES} in dataset {class_name}")
                     continue
                 files = os.listdir(os.path.join(folder, class_name))
-                widget = list_widgets.get(key)
-
-                if widget:
-                    widget.addItems(files)
+                # if widget:
+                list_widgets[key].addItems(files) # <--- Qui avviene il popolamento del widget con i nomi dei file BUG
+                print(f"||||| > Popolamento widget per {dataset_name} - classe {class_name} - files {files}")
         except OSError as e:
             print(f"Errore nella lettura della cartella {folder}: {e}")
 
