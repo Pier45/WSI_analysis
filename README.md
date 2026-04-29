@@ -16,10 +16,10 @@ The key contribution over classical CNNs is the ability to **quantify prediction
 
 Two uncertainty components are estimated via **Monte Carlo Dropout**:
 
-| Uncertainty | Source | Meaning |
-|---|---|---|
-| **Aleatoric** | Noise in the data | Irreducible; related to image quality or ambiguous tissue |
-| **Epistemic** | Model limitations | Reducible with more or better training data |
+| | Type | Source | Meaning | Reducible? |
+|---|---|---|---|---|
+| 🎲 | **Aleatoric** | Noise intrinsic to the data *(from Latin **alea**: dice)* | Image artifacts, sensor noise, ambiguous tissue morphology, inter-annotator disagreement | ❌ No — irreducible; inherent to reality |
+| 🧠 | **Epistemic** | Model's lack of knowledge *(from Greek **episteme**: knowledge)* | Rare classes, unseen scanners, out-of-distribution samples | ✅ Yes — reducible with more diverse training data |
 
 The framework implements two distinct Bayesian architectures, exposed through two PyQt5 graphical applications.
 
@@ -315,16 +315,16 @@ docker build -t wsi-analysis .
 docker run --rm \
     -e DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
-    wsi-analysis
-```
+    uiclean
+  ```
 
 **Run with a local data folder mounted:**
 ```bash
 docker run --rm \
     -e DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
-    -v /path/to/your/data:/data \
-    wsi-analysis
+    -v "/mnt/c/Users/piero/Documents/Data WSI:/data" \
+    uiclean
 ```
 
 Replace `/path/to/your/data` with the absolute path to the folder containing your `.svs` files. Inside the container the data will be accessible at `/data`.
