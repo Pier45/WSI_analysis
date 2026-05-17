@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 Model_1_85aug.h5
 .idea/workspace.xml
+
+.vscode/
+
+
