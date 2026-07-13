@@ -1,0 +1,387 @@
+{
+  ".opencode/opencode.json": {
+    "mtime": 1783867042.426147,
+    "ast_hash": "1efe24ecf938911d4f23e4b1c6ec91f7",
+    "semantic_hash": "1efe24ecf938911d4f23e4b1c6ec91f7"
+  },
+  ".opencode/package.json": {
+    "mtime": 1783867055.2495224,
+    "ast_hash": "b597387321616f5d7d7680f907bfaec0",
+    "semantic_hash": "b597387321616f5d7d7680f907bfaec0"
+  },
+  ".opencode/plugins/graphify.js": {
+    "mtime": 1783867319.5288272,
+    "ast_hash": "b33d000860642c6f4907a877e0387a21",
+    "semantic_hash": "b33d000860642c6f4907a877e0387a21"
+  },
+  "archive/dataset_creation.py": {
+    "mtime": 1783853734.5885334,
+    "ast_hash": "524b13f3477616015c11112468f5ebd3",
+    "semantic_hash": "524b13f3477616015c11112468f5ebd3"
+  },
+  "main.py": {
+    "mtime": 1779616935.8475614,
+    "ast_hash": "ca3ced1e352aca5145988c1680a7d9a2",
+    "semantic_hash": "ca3ced1e352aca5145988c1680a7d9a2"
+  },
+  "models/__init__.py": {
+    "mtime": 1783856143.061263,
+    "ast_hash": "367cb3129dbc62e2b7bcf90b26678d0e",
+    "semantic_hash": "367cb3129dbc62e2b7bcf90b26678d0e"
+  },
+  "models/base.py": {
+    "mtime": 1783856141.977127,
+    "ast_hash": "06618d0f20b03bd812eb4c41e81cb169",
+    "semantic_hash": "06618d0f20b03bd812eb4c41e81cb169"
+  },
+  "models/drop_out.py": {
+    "mtime": 1783862403.555944,
+    "ast_hash": "843de95624b40e06d169b0a6701ee242",
+    "semantic_hash": "843de95624b40e06d169b0a6701ee242"
+  },
+  "models/kl.py": {
+    "mtime": 1783862451.5846925,
+    "ast_hash": "25529fb5441b100b10f363e0fc732b86",
+    "semantic_hash": "25529fb5441b100b10f363e0fc732b86"
+  },
+  "multi_processing_analysis.py": {
+    "mtime": 1783855705.0236552,
+    "ast_hash": "2ec68e3ae3666e1d737eb8557fd2962b",
+    "semantic_hash": "2ec68e3ae3666e1d737eb8557fd2962b"
+  },
+  "pyproject.toml": {
+    "mtime": 1783862641.2287712,
+    "ast_hash": "eeece8b6852cb42c9872ddda8eb2918a",
+    "semantic_hash": "eeece8b6852cb42c9872ddda8eb2918a"
+  },
+  "src/__init__.py": {
+    "mtime": 1783862302.00896,
+    "ast_hash": "435fbfc8835c916f2af1d6f070bb49bc",
+    "semantic_hash": "435fbfc8835c916f2af1d6f070bb49bc"
+  },
+  "src/classification.py": {
+    "mtime": 1783862509.5372856,
+    "ast_hash": "fac1259d17cd0ddd0758145e20fcd317",
+    "semantic_hash": "fac1259d17cd0ddd0758145e20fcd317"
+  },
+  "src/config.py": {
+    "mtime": 1783862300.6229906,
+    "ast_hash": "8e66b854b641f9537c8a18d2492d6c32",
+    "semantic_hash": "8e66b854b641f9537c8a18d2492d6c32"
+  },
+  "src/deepzoom/deepzoom_server.py": {
+    "mtime": 1783849981.344455,
+    "ast_hash": "74798349550f65791dcf300038a92022",
+    "semantic_hash": "74798349550f65791dcf300038a92022"
+  },
+  "src/deepzoom/static/jquery.js": {
+    "mtime": 1776168424.3184023,
+    "ast_hash": "30907cfce66ebfcca66785ed6fad9fa5",
+    "semantic_hash": "30907cfce66ebfcca66785ed6fad9fa5"
+  },
+  "src/deepzoom/static/openseadragon-scalebar.js": {
+    "mtime": 1776168424.3184023,
+    "ast_hash": "15f40b841d5e9a92d17fda6f4bdf4707",
+    "semantic_hash": "15f40b841d5e9a92d17fda6f4bdf4707"
+  },
+  "src/deepzoom/static/openseadragon.js": {
+    "mtime": 1776168424.3223982,
+    "ast_hash": "bae637b6aa8abe8119571b2d32dd5488",
+    "semantic_hash": "bae637b6aa8abe8119571b2d32dd5488"
+  },
+  "src/deepzoom/static/overlay.js": {
+    "mtime": 1776168424.3223982,
+    "ast_hash": "1c509dceb3eecb19b2151a3f1af1a87b",
+    "semantic_hash": "1c509dceb3eecb19b2151a3f1af1a87b"
+  },
+  "src/performance_widget.py": {
+    "mtime": 1783864305.488684,
+    "ast_hash": "fd73a67baf991392181f0de634fc3103",
+    "semantic_hash": "fd73a67baf991392181f0de634fc3103"
+  },
+  "src/progress_bar.py": {
+    "mtime": 1776168424.3873994,
+    "ast_hash": "a2dfa4d4b59b0c59f17a6b0e378e67dc",
+    "semantic_hash": "a2dfa4d4b59b0c59f17a6b0e378e67dc"
+  },
+  "src/uncertainty_analysis.py": {
+    "mtime": 1776168424.3923988,
+    "ast_hash": "784b9478ce4e0dccdb189602f2a0679e",
+    "semantic_hash": "784b9478ce4e0dccdb189602f2a0679e"
+  },
+  "ui_dataclean.py": {
+    "mtime": 1783865390.1759942,
+    "ast_hash": "a38d492ac22978d2007c6c6dad5c5956",
+    "semantic_hash": "a38d492ac22978d2007c6c6dad5c5956"
+  },
+  "ui_pyqt5.py": {
+    "mtime": 1783865359.4507072,
+    "ast_hash": "32aa71a2e6f9e3b673863415c0737f61",
+    "semantic_hash": "32aa71a2e6f9e3b673863415c0737f61"
+  },
+  "AGENTS.md": {
+    "mtime": 1783866392.8290725,
+    "ast_hash": "21ceb6533048be51308e69e7b74a35cf",
+    "semantic_hash": "21ceb6533048be51308e69e7b74a35cf"
+  },
+  "README.md": {
+    "mtime": 1777477181.175118,
+    "ast_hash": "41523f7da867d5ddad7dec465cc2f469",
+    "semantic_hash": "41523f7da867d5ddad7dec465cc2f469"
+  },
+  "archive/dictionary_5_js.txt": {
+    "mtime": 1776168424.3263972,
+    "ast_hash": "8ec2b6b2e1edcae34979e5c2bedad1fd",
+    "semantic_hash": "8ec2b6b2e1edcae34979e5c2bedad1fd"
+  },
+  "archive/new_train_js.txt": {
+    "mtime": 1776168424.3613985,
+    "ast_hash": "291a55ddff9a1dd8128dd2c188ed1267",
+    "semantic_hash": "291a55ddff9a1dd8128dd2c188ed1267"
+  },
+  "archive/new_val_js.txt": {
+    "mtime": 1776168424.3864,
+    "ast_hash": "f27a61441c09915d394da624da4970b9",
+    "semantic_hash": "f27a61441c09915d394da624da4970b9"
+  },
+  "archive/original_requirements.txt": {
+    "mtime": 1776168424.3864,
+    "ast_hash": "74226ee5de30a3ea400a99123562b77a",
+    "semantic_hash": "74226ee5de30a3ea400a99123562b77a"
+  },
+  "docker-compose.yaml": {
+    "mtime": 1778509142.9616523,
+    "ast_hash": "8ce0c587fefc25e688dd2a32b0c7a6e8",
+    "semantic_hash": "8ce0c587fefc25e688dd2a32b0c7a6e8"
+  },
+  "docs/BUG_REPORT.md": {
+    "mtime": 1779567291.8128052,
+    "ast_hash": "5bf5f302bb42ad1a0971ec66dc3b9839",
+    "semantic_hash": "5bf5f302bb42ad1a0971ec66dc3b9839"
+  },
+  "docs/PROJECT_MAP.md": {
+    "mtime": 1783852089.2185903,
+    "ast_hash": "32396645fd59876972b4eaf5bea1f66f",
+    "semantic_hash": "32396645fd59876972b4eaf5bea1f66f"
+  },
+  "docs/sasa.txt": {
+    "mtime": 1783708792.4895332,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "src/deepzoom/templates/slide-multipane.html": {
+    "mtime": 1783851257.7621472,
+    "ast_hash": "a8dd7f9e4746565ab0d506ae390b6141",
+    "semantic_hash": "a8dd7f9e4746565ab0d506ae390b6141"
+  },
+  "styles/stile.txt": {
+    "mtime": 1776168424.390398,
+    "ast_hash": "9acb15f14931aad8457105a9ccc5c05d",
+    "semantic_hash": "9acb15f14931aad8457105a9ccc5c05d"
+  },
+  "icons/folder.png": {
+    "mtime": 1776168424.3284006,
+    "ast_hash": "1f23b86bc6f2b7c3004be4ed3b70e3a0",
+    "semantic_hash": "1f23b86bc6f2b7c3004be4ed3b70e3a0"
+  },
+  "img/Figure4.2.png": {
+    "mtime": 1776187461.416729,
+    "ast_hash": "af1041134efb7d979958c272f85d6985",
+    "semantic_hash": "af1041134efb7d979958c272f85d6985"
+  },
+  "img/Figure4.3.png": {
+    "mtime": 1776187272.056543,
+    "ast_hash": "355a5e101bf6491e93f181e33bfd822b",
+    "semantic_hash": "355a5e101bf6491e93f181e33bfd822b"
+  },
+  "img/Figure5.1.png": {
+    "mtime": 1776187006.635192,
+    "ast_hash": "8835512e8eda489d4d5ace134243d669",
+    "semantic_hash": "8835512e8eda489d4d5ace134243d669"
+  },
+  "img/Figure5.2-5.3.png": {
+    "mtime": 1776187698.9834304,
+    "ast_hash": "3c6082f15c81e1527620831dff75df33",
+    "semantic_hash": "3c6082f15c81e1527620831dff75df33"
+  },
+  "img/Figure5.7.png": {
+    "mtime": 1776187676.1826642,
+    "ast_hash": "64e9cc38bc83e1b29c2be44b9c53366b",
+    "semantic_hash": "64e9cc38bc83e1b29c2be44b9c53366b"
+  },
+  "img/checkbox.png": {
+    "mtime": 1776168424.3314,
+    "ast_hash": "185bce64e1336eca31eff5e336f17c63",
+    "semantic_hash": "185bce64e1336eca31eff5e336f17c63"
+  },
+  "img/down_arrow.png": {
+    "mtime": 1776168424.3314,
+    "ast_hash": "4607e9e962cc4ace3cace7a581b28a2a",
+    "semantic_hash": "4607e9e962cc4ace3cace7a581b28a2a"
+  },
+  "img/handle.png": {
+    "mtime": 1776168424.3314,
+    "ast_hash": "786bc3f6f3db01e12160d28c4e1cf6e2",
+    "semantic_hash": "786bc3f6f3db01e12160d28c4e1cf6e2"
+  },
+  "src/deepzoom/static/images/fullpage_grouphover.png": {
+    "mtime": 1776168424.3073983,
+    "ast_hash": "9aa10ee23aba992214e8fa789cffa653",
+    "semantic_hash": "9aa10ee23aba992214e8fa789cffa653"
+  },
+  "src/deepzoom/static/images/fullpage_hover.png": {
+    "mtime": 1776168424.3073983,
+    "ast_hash": "c5e2597856980b455629324d0d8f2e9e",
+    "semantic_hash": "c5e2597856980b455629324d0d8f2e9e"
+  },
+  "src/deepzoom/static/images/fullpage_pressed.png": {
+    "mtime": 1776168424.3083997,
+    "ast_hash": "9f78d0da80ca4db1b2306857eb173008",
+    "semantic_hash": "9f78d0da80ca4db1b2306857eb173008"
+  },
+  "src/deepzoom/static/images/fullpage_rest.png": {
+    "mtime": 1776168424.3083997,
+    "ast_hash": "4edebfcb5daf9efdb2babec52d9737a3",
+    "semantic_hash": "4edebfcb5daf9efdb2babec52d9737a3"
+  },
+  "src/deepzoom/static/images/home_grouphover.png": {
+    "mtime": 1776168424.3083997,
+    "ast_hash": "bac4bf0d44f2a25cd190440de99bc35d",
+    "semantic_hash": "bac4bf0d44f2a25cd190440de99bc35d"
+  },
+  "src/deepzoom/static/images/home_hover.png": {
+    "mtime": 1776168424.309399,
+    "ast_hash": "c86848b6f22384740c60429fa748e98d",
+    "semantic_hash": "c86848b6f22384740c60429fa748e98d"
+  },
+  "src/deepzoom/static/images/home_pressed.png": {
+    "mtime": 1776168424.309399,
+    "ast_hash": "5ff083b4b36edb11d413eb048a75403a",
+    "semantic_hash": "5ff083b4b36edb11d413eb048a75403a"
+  },
+  "src/deepzoom/static/images/home_rest.png": {
+    "mtime": 1776168424.309399,
+    "ast_hash": "a46e0f6c0593361965ef90e791eb96ef",
+    "semantic_hash": "a46e0f6c0593361965ef90e791eb96ef"
+  },
+  "src/deepzoom/static/images/next_grouphover.png": {
+    "mtime": 1776168424.309399,
+    "ast_hash": "6b15985d62c7afc43d23abc0ed976059",
+    "semantic_hash": "6b15985d62c7afc43d23abc0ed976059"
+  },
+  "src/deepzoom/static/images/next_hover.png": {
+    "mtime": 1776168424.3104022,
+    "ast_hash": "d0f73c10b4c67a141d2492f1a6a8d2c0",
+    "semantic_hash": "d0f73c10b4c67a141d2492f1a6a8d2c0"
+  },
+  "src/deepzoom/static/images/next_pressed.png": {
+    "mtime": 1776168424.3104022,
+    "ast_hash": "a7e23ee16c6475d1f04034994f0d5104",
+    "semantic_hash": "a7e23ee16c6475d1f04034994f0d5104"
+  },
+  "src/deepzoom/static/images/next_rest.png": {
+    "mtime": 1776168424.3104022,
+    "ast_hash": "aafcd0668f356286597b5a37f9574240",
+    "semantic_hash": "aafcd0668f356286597b5a37f9574240"
+  },
+  "src/deepzoom/static/images/previous_grouphover.png": {
+    "mtime": 1776168424.3113997,
+    "ast_hash": "118638679f392c1e61f5f37083ecbcd6",
+    "semantic_hash": "118638679f392c1e61f5f37083ecbcd6"
+  },
+  "src/deepzoom/static/images/previous_hover.png": {
+    "mtime": 1776168424.3113997,
+    "ast_hash": "86a558ee008daa1e7210e1587d16c853",
+    "semantic_hash": "86a558ee008daa1e7210e1587d16c853"
+  },
+  "src/deepzoom/static/images/previous_pressed.png": {
+    "mtime": 1776168424.3113997,
+    "ast_hash": "7929e3394bc1a471e32440386355726a",
+    "semantic_hash": "7929e3394bc1a471e32440386355726a"
+  },
+  "src/deepzoom/static/images/previous_rest.png": {
+    "mtime": 1776168424.3113997,
+    "ast_hash": "6daeb34798cdc81c7df0b922414eac5d",
+    "semantic_hash": "6daeb34798cdc81c7df0b922414eac5d"
+  },
+  "src/deepzoom/static/images/rotateleft_grouphover.png": {
+    "mtime": 1776168424.3123982,
+    "ast_hash": "f07369db9257e0d2c797276391c41d1c",
+    "semantic_hash": "f07369db9257e0d2c797276391c41d1c"
+  },
+  "src/deepzoom/static/images/rotateleft_hover.png": {
+    "mtime": 1776168424.3123982,
+    "ast_hash": "a03e4f97d850cce310d53b77ad08d5e3",
+    "semantic_hash": "a03e4f97d850cce310d53b77ad08d5e3"
+  },
+  "src/deepzoom/static/images/rotateleft_pressed.png": {
+    "mtime": 1776168424.3123982,
+    "ast_hash": "6586c9ff0bea11f76b22fd9340dd47f2",
+    "semantic_hash": "6586c9ff0bea11f76b22fd9340dd47f2"
+  },
+  "src/deepzoom/static/images/rotateleft_rest.png": {
+    "mtime": 1776168424.3134015,
+    "ast_hash": "376d83630e44cb89e2eaf2b30ec64a28",
+    "semantic_hash": "376d83630e44cb89e2eaf2b30ec64a28"
+  },
+  "src/deepzoom/static/images/rotateright_grouphover.png": {
+    "mtime": 1776168424.3134015,
+    "ast_hash": "bcbf6aa8e3fdebc2834866aa4441b8ab",
+    "semantic_hash": "bcbf6aa8e3fdebc2834866aa4441b8ab"
+  },
+  "src/deepzoom/static/images/rotateright_hover.png": {
+    "mtime": 1776168424.3134015,
+    "ast_hash": "e852437607e3c581b8281f54ddd94223",
+    "semantic_hash": "e852437607e3c581b8281f54ddd94223"
+  },
+  "src/deepzoom/static/images/rotateright_pressed.png": {
+    "mtime": 1776168424.3143988,
+    "ast_hash": "af7f679687e1260bf0ca8ffc5d6ebc99",
+    "semantic_hash": "af7f679687e1260bf0ca8ffc5d6ebc99"
+  },
+  "src/deepzoom/static/images/rotateright_rest.png": {
+    "mtime": 1776168424.3143988,
+    "ast_hash": "56c0e11f2a3f5ad3d351a526333a7d55",
+    "semantic_hash": "56c0e11f2a3f5ad3d351a526333a7d55"
+  },
+  "src/deepzoom/static/images/zoomin_grouphover.png": {
+    "mtime": 1776168424.3143988,
+    "ast_hash": "79de9da49a854cd712241d19a57a7725",
+    "semantic_hash": "79de9da49a854cd712241d19a57a7725"
+  },
+  "src/deepzoom/static/images/zoomin_hover.png": {
+    "mtime": 1776168424.3153985,
+    "ast_hash": "e91cbe4ae173e1b41af45218269c80b4",
+    "semantic_hash": "e91cbe4ae173e1b41af45218269c80b4"
+  },
+  "src/deepzoom/static/images/zoomin_pressed.png": {
+    "mtime": 1776168424.3153985,
+    "ast_hash": "c4e0407a5fd75c1d6e58a3bff88d54ad",
+    "semantic_hash": "c4e0407a5fd75c1d6e58a3bff88d54ad"
+  },
+  "src/deepzoom/static/images/zoomin_rest.png": {
+    "mtime": 1776168424.3153985,
+    "ast_hash": "8dd68d2e3f1d2a1b6953e36a3d1e34f0",
+    "semantic_hash": "8dd68d2e3f1d2a1b6953e36a3d1e34f0"
+  },
+  "src/deepzoom/static/images/zoomout_grouphover.png": {
+    "mtime": 1776168424.3153985,
+    "ast_hash": "a5fb5ab45cef55ba3f081bb7d52e15c5",
+    "semantic_hash": "a5fb5ab45cef55ba3f081bb7d52e15c5"
+  },
+  "src/deepzoom/static/images/zoomout_hover.png": {
+    "mtime": 1776168424.3163993,
+    "ast_hash": "1bcbe4868ad68aadc9609502848ed6e0",
+    "semantic_hash": "1bcbe4868ad68aadc9609502848ed6e0"
+  },
+  "src/deepzoom/static/images/zoomout_pressed.png": {
+    "mtime": 1776168424.3163993,
+    "ast_hash": "0c465461b5b73c3f3b643b9cc182a602",
+    "semantic_hash": "0c465461b5b73c3f3b643b9cc182a602"
+  },
+  "src/deepzoom/static/images/zoomout_rest.png": {
+    "mtime": 1776168424.3163993,
+    "ast_hash": "6847396f2c3d1e55f77ab58df4e4822c",
+    "semantic_hash": "6847396f2c3d1e55f77ab58df4e4822c"
+  }
+}

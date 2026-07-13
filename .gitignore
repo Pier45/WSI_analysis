@@ -113,6 +113,7 @@ venv.bak/
 # Spyder project settings
 .spyderproject
 .spyproject
+.claude
 
 # Rope project settings
 .ropeproject
@@ -127,9 +128,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-Model_1_85aug.h5
 .idea/workspace.xml
 
+# New
 .vscode/
-
+Model_1_85aug.h5
+.opencode
 

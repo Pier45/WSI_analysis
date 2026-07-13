@@ -9,7 +9,7 @@ import time
 import traceback
 import matplotlib
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 from PyQt5.QtWidgets import (
@@ -18,15 +18,16 @@ from PyQt5.QtWidgets import (
     QListWidget, QLineEdit, QButtonGroup, QMessageBox, QPushButton,
     QTabWidget, QRadioButton, QFrame, QCheckBox
 )
-from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QRunnable, QThreadPool, Qt
 
-from multi_processing_analysis import StartAnalysis
-from DropOut import BayesianDropoutCNN
-from Kl import ModelKl
-from Classification import Classification
-from uncertainty_analysis import Th
-from test_widget import TestTab
+from src.multi_processing_analysis import StartAnalysis
+from models.drop_out import BayesianDropoutCNN
+from models.kl import ModelKl
+from src.classification import Classification
+from src.uncertainty_analysis import Th
+from src.performance_widget import PerformanceTab
+from src.config import CLASS_NAMES
 
 matplotlib.use('Qt5Agg')
 
@@ -234,7 +235,7 @@ class MainTabWidget(QWidget):
         self.tab_training = QWidget()
         self.tab_uncertainty = QWidget()
         self.tab_cleaning = QWidget()
-        self.tab_testing = TestTab(parent=self)
+        self.tab_testing = PerformanceTab(parent=self)
 
         self.tabs.addTab(self.tab_tiles, "Get Tiles")
         self.tabs.addTab(self.tab_training, "Training")
@@ -728,23 +729,22 @@ class MainTabWidget(QWidget):
             "Avvio del training in corso, ulteriori informazioni saranno disponibili a breve..."
         )
         timestamp = time.strftime("%Y_%m%d_%H%M%S")
-        aug = 1 if self.use_augmentation else 0
+        aug = bool(self.use_augmentation)
+
+        model_filename = f"Model{self.model_type.capitalize()}-{timestamp}.h5"
+        self.model_path = os.path.join(self.work_path, model_filename)
 
         if self.model_type == "drop":
-            model_filename = f"ModelDrop-{timestamp}.h5"
-            self.model_path = os.path.join(self.work_path, model_filename)
             model_obj = BayesianDropoutCNN(
-                n_model=self.model_path, epochs=self.epochs,
+                model_save_path=self.model_path, epochs=self.epochs,
                 path_train=self.tiles_train_path, path_val=self.tiles_val_path,
-                b_dim=self.batch_size, aug=aug,
+                batch_size=self.batch_size, augment=aug,
             )
         else:
-            model_filename = f"ModelKl-{timestamp}.h5"
-            self.model_path = os.path.join(self.work_path, model_filename)
             model_obj = ModelKl(
-                n_model=self.model_path, epochs=self.epochs,
+                model_save_path=self.model_path, epochs=self.epochs,
                 path_train=self.tiles_train_path, path_val=self.tiles_val_path,
-                b_dim=self.batch_size, aug=aug,
+                batch_size=self.batch_size, augment=aug,
             )
 
         worker = LongRunningWorker(model_obj.start_train)
@@ -921,7 +921,7 @@ class MainTabWidget(QWidget):
 
     def _create_clean_dataset(self):
         """Crea il dataset pulito copiando le tile nella cartella di destinazione."""
-        for class_name in ("AC", "H", "AD"):
+        for class_name in CLASS_NAMES:
             class_path = os.path.join(self.clean_save_path, class_name)
             os.makedirs(class_path, exist_ok=True)
 

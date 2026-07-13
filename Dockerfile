@@ -1,12 +1,15 @@
 FROM python:3.10-slim AS builder
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir --prefix=/install -r requirements.txt
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev
 
 # ── Runtime image ──────────────────────────────────────────────
 FROM python:3.10-slim
@@ -16,7 +19,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     QT_X11_NO_MITSHM=1 \
     QT_QPA_PLATFORM=xcb \
     QT_DEBUG_PLUGINS=0 \
-    LIBGL_ALWAYS_SOFTWARE=1
+    LIBGL_ALWAYS_SOFTWARE=1 \
+    PATH="/app/.venv/bin:$PATH"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libx11-6 libx11-xcb1 libxcb1 libxcb-util1 \
@@ -32,9 +36,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates x11-utils \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /install /usr/local
-
 WORKDIR /app
+COPY --from=builder /app/.venv /app/.venv
 COPY . .
 
 CMD ["python", "ui_dataclean.py"]

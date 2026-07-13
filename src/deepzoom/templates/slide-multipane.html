@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Deepzoom Slide Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <style type="text/css">
+        :root {
+            --primary-bg: #121212;
+            --secondary-bg: #1e1e1e;
+            --tertiary-bg: #2a2a2a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent-color: #4facfe;
+            --border-color: #333333;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* --- Header --- */
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            min-height: 50px;
+        }
+        
+        #header h2 {
+            margin: 0;
+            font-size: 18px;
+            background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* --- Main Layout --- */
+        #main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar --- */
+        #images {
+            width: 240px;
+            min-width: 240px;
+            background-color: var(--secondary-bg);
+            padding: 15px;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #images h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .current-slide {
+            display: block;
+            padding: 12px 15px;
+            background-color: var(--tertiary-bg);
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .current-slide a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            display: block;
+        }
+        
+        .current-slide.active, .associated-images li.active {
+            box-shadow: 0 0 0 1px var(--accent-color);
+        }
+
+        .associated-images {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .associated-images li {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            background-color: var(--tertiary-bg);
+            transition: all 0.2s ease;
+        }
+
+        .associated-images li:hover {
+            background-color: #383838;
+        }
+
+        .associated-images li a {
+            color: var(--text-primary);
+            text-decoration: none;
+            display: block;
+            font-size: 13px;
+        }
+
+        .notice {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        /* --- Viewer Area --- */
+        #view {
+            flex: 1;
+            background-color: #000;
+            position: relative;
+        }
+
+        /* --- Properties Panel --- */
+        #properties {
+            width: 300px;
+            min-width: 300px;
+            background-color: var(--secondary-bg);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 15px;
+            box-sizing: border-box;
+            transition: transform 0.3s ease, width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
+        }
+        
+        #properties::-webkit-scrollbar {
+            width: 8px;
+        }
+        #properties::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+        }
+        #properties::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        #properties.hidden {
+            width: 0;
+            min-width: 0;
+            padding: 0;
+            border-left: none;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        #properties h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        dl {
+            margin: 0;
+            font-size: 12px;
+        }
+
+        dt {
+            color: var(--text-secondary);
+            margin-top: 10px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        dd {
+            margin-left: 0;
+            margin-top: 4px;
+            word-break: break-word;
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* --- Buttons --- */
+        .toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .toggle-btn:hover {
+            background-color: var(--tertiary-bg);
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div id="header">
+        <h2>Bayesian Analyzer</h2>
+        <div class="header-info">Deep Zoom Pathology Viewer</div>
+    </div>
+
+    <div id="main-content">
+        
+        <div id="images">
+            <h3>Slides</h3>
+            <div class="current-slide active">
+                <a class="load-slide" href="#" data-url="{{ slide_url }}" data-mpp="{{ slide_mpp }}">
+                    <span style="display:block; font-size:10px; color:#888; margin-bottom:3px;">CURRENT SLIDE</span>
+                    Main Slide
+                </a>
+            </div>
+            <h3>Associated Images</h3>
+            {% if associated %}
+                <ul class="associated-images">
+                    {% for name in associated|sort %}
+                        <li>
+                            <a class="load-slide" href="#" data-url="{{ associated[name] }}" data-mpp="0">
+                                {{ name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <span class="associated-images notice">No associated images</span>
+            {% endif %}
+        </div>
+
+        <div id="view"></div>
+
+        <div id="properties">
+            <div class="panel-header">
+                <h3>Slide Properties</h3>
+                <button class="toggle-btn" onclick="toggleProperties()">Hide</button>
+            </div>
+            
+            {% if properties %}
+                <dl>
+                    {% for name in properties %}
+                        <dt>{{ name }}</dt>
+                        <dd>{{ properties[name] }}</dd>
+                    {% endfor %}
+                </dl>
+            {% else %}
+                <span class="notice">No properties available</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="static/jquery.js"></script>
+<script type="text/javascript" src="static/openseadragon.js"></script>
+<script type="text/javascript" src="static/openseadragon-scalebar.js"></script>
+<script type="text/javascript">
+function toggleProperties() {
+    var panel = document.getElementById('properties');
+    var btn = event.target;
+    panel.classList.toggle('hidden');
+    btn.innerText = panel.classList.contains('hidden') ? 'Show' : 'Hide';
+}
+
+$(document).ready(function() {
+    var dzi_data = {{ dzi_data|default('{}')|safe }};
+    var viewer = new OpenSeadragon({
+        id: "view",
+        prefixUrl: "static/images/",
+        timeout: 120000,
+        animationTime: 0.5,
+        blendTime: 0.1,
+        constrainDuringPan: true,
+        maxZoomPixelRatio: 2,
+        minZoomLevel: 1,
+        visibilityRatio: 1,
+        zoomPerScroll: 2,
+    });
+    
+    viewer.addHandler("open", function() {
+        // To improve load times, ignore the lowest-resolution Deep Zoom
+        // levels. This is a hack: we can't configure the minLevel via
+        // OpenSeadragon configuration options when the viewer is created
+        // from DZI XML.
+        if (viewer.source && viewer.source.minLevel !== undefined) {
+            viewer.source.minLevel = 8;
+        }
+    });
+    
+    viewer.scalebar({
+        xOffset: 10,
+        yOffset: 10,
+        barThickness: 3,
+        color: '#FFFFFF',
+        fontColor: '#FFFFFF',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    });
+
+    function open_slide(url, mpp) {
+        var tile_source;
+        if (dzi_data[url]) {
+            // DZI XML provided as template argument
+            tile_source = new OpenSeadragon.DziTileSource(
+                    OpenSeadragon.DziTileSource.prototype.configure(
+                    OpenSeadragon.parseXml(dzi_data[url]), url));
+        } else {
+            // DZI XML fetched from server
+            tile_source = url;
+        }
+        viewer.open(tile_source);
+        viewer.scalebar({
+            pixelsPerMeter: mpp ? (1e6 / mpp) : 0,
+        });
+        
+        // Update active state in sidebar
+        $(".current-slide").removeClass("active");
+        $(".associated-images li").removeClass("active");
+    }
+
+    open_slide("{{ slide_url }}", parseFloat('{{ slide_mpp }}'));
+    
+    $(".load-slide").click(function(ev) {
+        $(".current-slide").removeClass("active");
+        $(".associated-images li").removeClass("active");
+        
+        // Add active state to the parent LI or container
+        var parent_li = $(this).closest('li');
+        var parent_div = $(this).closest('.current-slide');
+        
+        if (parent_li.length) { parent_li.addClass("active"); }
+        if (parent_div.length) { parent_div.addClass("active"); }
+        
+        open_slide($(this).attr('data-url'), parseFloat($(this).attr('data-mpp')));
+        ev.preventDefault();
+    });
+});
+</script>
+</body>
+</html>

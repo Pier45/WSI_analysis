@@ -1,0 +1,48 @@
+[project]
+name = "wsi-analysis"
+version = "0.1.0"
+description = "Whole Slide Image analysis with Bayesian deep learning"
+readme = "README.md"
+requires-python = ">=3.10,<3.12"
+
+dependencies = [
+    # --- TensorFlow stack ---
+    "tensorflow==2.15.0",
+    "tensorflow-probability==0.23.0",
+    # Required on Linux/macOS TF wheels; not needed/available on Windows wheels
+    "tensorflow-io-gcs-filesystem==0.37.1; sys_platform != 'win32'",
+
+    # --- Core scientific stack ---
+    "numpy==1.26.4",
+    "pandas==2.2.0",
+    "Pillow==10.2.0",
+
+    # --- WSI stack ---
+    "openslide-python==1.4.3",
+    "openslide-bin==4.0.0.13",
+
+    # --- GUI ---
+    "PyQt5==5.15.10",
+    "PyQt5-Qt5==5.15.2",
+
+    # --- Visualization ---
+    "matplotlib==3.8.4",
+    "seaborn==0.13.0",
+
+    # --- ML ---
+    "scikit-learn>=1.4.1",
+
+    # --- Web ---
+    "flask>=3.0.0",
+]
+
+# uv-specific configuration
+[tool.uv]
+# Resolve + lock for both native Windows dev and Linux (Docker) deployment.
+# uv will solve dependencies for ALL of these platforms and store every
+# valid resolution in uv.lock, so `uv sync` picks the right one automatically
+# based on whatever machine/container it's run on.
+environments = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'linux'",
+]

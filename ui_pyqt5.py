@@ -2,11 +2,11 @@
 Bayesian Analyzer — main application window.
 
 Entry point:
-    python image_viewer.py
+    python ui_pyqt5.py
 
 Dependencies:
     PyQt5, multi_processing_analysis.StartAnalysis,
-    progress_bar.Actions, Classification.Classification
+    src.progress_bar.Actions, src.classification.Classification
 """
 
 from __future__ import annotations
@@ -36,8 +36,8 @@ from PyQt5.QtWidgets import (
     QToolBar,
 )
 
-from multi_processing_analysis import StartAnalysis
-from progress_bar import Actions
+from src.multi_processing_analysis import StartAnalysis
+from src.progress_bar import Actions
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ APP_TITLE = "Bayesian Analyzer"
 APP_ICON = "icons/target.ico"
 DEFAULT_MODEL = "Model_1_85aug.h5"
 DEEPZOOM_URL = "http://127.0.0.1:5000/"
-DEEPZOOM_SERVER_SCRIPT = "deepzoom/deepzoom_server.py"
+DEEPZOOM_SERVER_SCRIPT = "src/deepzoom/deepzoom_server.py"
 
 MONTE_CARLO_OPTIONS: Tuple[int, ...] = (5, 25, 50)
 DEFAULT_MONTE_CARLO = 5
@@ -493,7 +493,7 @@ class ImageViewer(QMainWindow):
             self._view_result("Pred_class", "result")
         else:
             # Import here to surface the ImportError clearly if the module is missing.
-            from Classification import Classification  # noqa: PLC0415
+            from src.classification import Classification  # noqa: PLC0415
 
             cls = Classification(self._work_dir, ty="analysis")
             self._show_progress(title="Analysis")
@@ -808,9 +808,7 @@ class ImageViewer(QMainWindow):
             shortcut="Ctrl+D", enabled=False, triggered=self._open_deep_zoom,
         )
         self._about_act = QAction("&About", self, triggered=self._about)
-        self._about_qt_act = QAction(
-            "About &Qt", self, triggered=QApplication.instance().aboutQt,
-        )
+
         self._info_deep_act = QAction(
             "&Deepzoom info", self, triggered=self._about_deep_zoom,
         )
@@ -869,7 +867,6 @@ class ImageViewer(QMainWindow):
         # Help menu
         help_menu = QMenu("&Help", self)
         help_menu.addAction(self._about_act)
-        help_menu.addAction(self._about_qt_act)
 
         for menu in (file_menu, analysis_menu, view_menu, options_menu, help_menu):
             self.menuBar().addMenu(menu)
@@ -887,8 +884,6 @@ class ImageViewer(QMainWindow):
             self._v_ac_act,
             self._v_ad_act,
             self._v_h_act,
-            None,
-            self._exit_act,
         ):
             if item is None:
                 self._toolbar.addSeparator()
