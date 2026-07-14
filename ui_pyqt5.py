@@ -55,7 +55,9 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 APP_TITLE = "Bayesian Analyzer"
-APP_ICON = "icons/target.ico"
+# .ico is poorly supported by Qt on Linux/Wayland; prefer a PNG there so the
+# window icon renders correctly instead of the Wayland fallback icon.
+APP_ICON = "icons/target.png" if sys.platform.startswith("linux") else "icons/target.ico"
 DEFAULT_MODEL = "Model_1_85aug.h5"
 DEEPZOOM_URL = "http://127.0.0.1:5000/"
 DEEPZOOM_SERVER_SCRIPT = "src/deepzoom/deepzoom_server.py"
@@ -551,7 +553,12 @@ class ImageViewer(QMainWindow):
             )
             return
 
-        command = f"cmd /k python {DEEPZOOM_SERVER_SCRIPT} {self._svs_path}"
+        import sys
+        quoted_svs = f'"{self._svs_path}"' if sys.platform.startswith("win") else f"'{self._svs_path}'"
+        quoted_script = f'"{DEEPZOOM_SERVER_SCRIPT}"' if sys.platform.startswith("win") else f"'{DEEPZOOM_SERVER_SCRIPT}'"
+        command = f"python {quoted_script} {quoted_svs}"
+        if sys.platform.startswith("win"):
+            command = f"cmd /k {command}"
         self._thread_pool.start(Worker(lambda: os.system(command)))
 
         QMessageBox.information(
@@ -897,7 +904,22 @@ class ImageViewer(QMainWindow):
 
 
 if __name__ == "__main__":
+    # On Linux desktops (GNOME, Unity, etc.) Qt hides the in-window menu bar
+    # by default and routes it to a global/top bar that is often not visible.
+    # Disable the native menu bar so the menus render inside the window on
+    # every platform, matching the Windows/Docker behavior.
+    # Force the xcb QPA platform under Linux/Wayland: native Wayland makes the
+    # mouse cursor fall back to a generic icon unrelated to the system theme,
+    # while xcb (XWayland) honors the user's cursor theme.
+    if sys.platform.startswith("linux"):
+        os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
+        os.environ.setdefault("QT_QPA_PLATFORMPLUGIN_PATH", "")
+        os.environ["QT_LINUX_IN_WINDOW_MENUBAR"] = "1"
+
     app = QApplication(sys.argv)
+    #if sys.platform.startswith("linux"):
+    #    app.setAttribute(Qt.AA_DontUseNativeMenuBar, True)
     viewer = ImageViewer()
+    viewer.menuBar().setNativeMenuBar(False)
     viewer.show()
     sys.exit(app.exec_())
