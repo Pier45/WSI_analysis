@@ -11,6 +11,8 @@ import threading
 import glob
 import time
 
+from src.config import WSI_OUTPUT_DIR
+
 
 class StartAnalysis:
     def __init__(self, tile_size=64, overlap=0, limit_bounds=True, lev_sec=2):
@@ -25,7 +27,6 @@ class StartAnalysis:
         self.path_folder = ''
         self.path_th = ''
         self.newshape = (64, 64, 3)
-        self.start_folder = str(os.getcwd()) + '/data/'
 
     def list_files(self, path_svs, save_path, progress_callback, view):
         list_name = os.listdir(path_svs)
@@ -50,19 +51,27 @@ class StartAnalysis:
             print("Cannot find file '" + file_path + "'")
 
     def base_folder_manager(self):
-        """"Create the folders where put the thumbnail and the tiles of the image. """
+        """Create the folders where the thumbnail and the tiles of the image are
+        stored.
 
-        form = list(self.file_path).index('.')
-        last = len(self.file_path) - 1 - self.file_path[::-1].index('/')
-        file_name = self.file_path[last + 1:form]
-        folder_name = file_name + '_' + str(self.lev_sec)
-        newpath = self.start_folder + folder_name
-        if not os.path.exists(newpath):
-            #os.makedirs(newpath)
-            os.makedirs(newpath+'/thumbnail')
+        By default the output folder is placed next to the input ``.svs``
+        file, i.e. ``<svs_dir>/data/<svs_name>_<lev_sec>/``. If the
+        ``WSI_OUTPUT_DIR`` environment variable is set (see
+        :mod:`src.config`), the output folder is placed under that
+        directory instead — useful for read-only SVS sources and Docker
+        containers that bind-mount a dedicated output volume.
+        """
 
-        self.path_th = newpath+'/thumbnail'
-        self.path_folder = newpath + '/'
+        svs_dir = os.path.dirname(self.file_path)
+        svs_name = os.path.basename(self.file_path)
+        base = svs_name[: svs_name.rindex('.')]
+        folder_name = base + '_' + str(self.lev_sec)
+        root = WSI_OUTPUT_DIR or svs_dir
+        newpath = os.path.join(root, 'data', folder_name)
+        os.makedirs(os.path.join(newpath, 'thumbnail'), exist_ok=True)
+
+        self.path_th = os.path.join(newpath, 'thumbnail')
+        self.path_folder = newpath + os.sep
 
     def get_thumb(self):
         """"Create the thumbnail of the image, ready for the classification phase."""
@@ -155,12 +164,12 @@ class StartAnalysis:
 
         f_manager = self.folder_manage(name_process)
         if not f_manager:
-            create_fold = str(self.path_folder) + str(name_process)
+            create_fold = os.path.join(self.path_folder, name_process)
             os.mkdir(create_fold)
             for x in range(n_start, n_stop):
                 for y in range(0, self.ntiles_y):
                     im = self.generator.get_tile(self.levi, (x, y))
-                    nome = create_fold + '/tile_' + str(start) + '_' + str(x) + '_' + str(y) + '.png'
+                    nome = os.path.join(create_fold, 'tile_' + str(start) + '_' + str(x) + '_' + str(y) + '.png')
                     print(nome)
                     im.save(nome, 'PNG')
                     start += 1

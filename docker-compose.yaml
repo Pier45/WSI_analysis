@@ -1,20 +1,49 @@
 services:
+  # Both GUI services share one built image. `docker compose build` builds it once;
+  # each service just selects which entry point to run.
   wsi-clean:
+    image: wsi-analysis:latest
     build: .
     container_name: ui_clean
     environment:
       - DISPLAY=$DISPLAY
+      # Where per-SVS analysis output (tiles, result overlays, dictionary JSON)
+      # is written inside the container. Leave unset to write next to the .svs
+      # file (i.e. into the bind-mounted /data). Set to /output to use a
+      # dedicated output volume (define it in `volumes` below).
+      - WSI_OUTPUT_DIR=${WSI_OUTPUT_DIR:-}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - /mnt/c/Users/piero/Documents/Data WSI:/data
+      - "${WSI_DATA_DIR:-/mnt/c/Users/piero/Documents/DataWSI}:/data"
+      # Optional dedicated output volume — uncomment if you set WSI_OUTPUT_DIR=/output.
+      # - "${WSI_OUTPUT_HOST_DIR:-./wsi_output}:/output"
 
   wsi-analysis:
+    image: wsi-analysis:latest
     build: .
     container_name: ui_analysis
     environment:
       - DISPLAY=$DISPLAY
+      - WSI_OUTPUT_DIR=${WSI_OUTPUT_DIR:-}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - /mnt/c/Users/piero/Documents/Data WSI:/data
-    
+      - "${WSI_DATA_DIR:-/mnt/c/Users/piero/Documents/DataWSI}:/data"
+      # - "${WSI_OUTPUT_HOST_DIR:-./wsi_output}:/output"
     command: python ui_pyqt5.py
+
+  # Standalone DeepZoom web viewer. Reach it from a Windows browser at
+  # http://localhost:5000/ (the published port is forwarded WSL2 → Windows host).
+  wsi-deepzoom:
+    image: wsi-analysis:latest
+    build: .
+    container_name: wsi_deepzoom
+    environment:
+      - DEEPZOOM_HOST=0.0.0.0
+      - DEEPZOOM_PORT=5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - "${WSI_DATA_DIR:-/mnt/c/Users/piero/Documents/DataWSI}:/data"
+    # Pass the slide path as an argument, e.g.:
+    #   docker compose run --rm wsi-deepzoom /data/10002_AC_2/slide.svs
+    command: python -m src.deepzoom.deepzoom_server

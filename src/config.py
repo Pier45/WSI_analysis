@@ -19,7 +19,8 @@ the previous order.
 
 from __future__ import annotations
 
-from typing import Tuple
+import os
+from typing import Optional, Tuple
 
 # Histological-tile classes (colorectal). Order defines argmax index.
 CLASS_NAMES: Tuple[str, ...] = ("AC", "AD", "H")
@@ -29,3 +30,12 @@ N_CLASSES: int = len(CLASS_NAMES)
 
 # Input tile shape expected by the Bayesian CNNs.
 INPUT_SHAPE: Tuple[int, int, int] = (64, 64, 3)
+
+# Override directory for per-SVS analysis output (tiles, thumbnail, result,
+# uncertainty overlays, dictionary JSON). When unset, output is written next
+# to the input .svs file (``<svs_dir>/data/<svs_name>_<lev_sec>/``). When set
+# (e.g. via the ``WSI_OUTPUT_DIR`` env var), output goes to
+# ``<WSI_OUTPUT_DIR>/data/<svs_name>_<lev_sec>/`` instead — useful for
+# read-only SVS sources and Docker containers where the host bind-mounts a
+# dedicated output volume. ``None`` means "use the SVS file's directory".
+WSI_OUTPUT_DIR: Optional[str] = os.environ.get("WSI_OUTPUT_DIR")

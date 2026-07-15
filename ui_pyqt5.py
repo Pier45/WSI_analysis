@@ -48,6 +48,10 @@ logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
 )
+# Silence PIL's per-chunk PNG stream debug logs ("STREAM b'IHDR' …") that
+# otherwise flood the terminal during overlay generation. PIL attaches a
+# debug logger that propagates up to the root handler configured above.
+logging.getLogger("PIL").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -57,7 +61,13 @@ logger = logging.getLogger(__name__)
 APP_TITLE = "Bayesian Analyzer"
 APP_ICON = "icons/target.ico"
 DEFAULT_MODEL = "Model_1_85aug.h5"
-DEEPZOOM_URL = "http://127.0.0.1:5000/"
+# When the GUI runs natively on Windows, the browser connects to 127.0.0.1:5000.
+# When the GUI runs inside Docker (WSL2), the host browser reaches the published
+# port as localhost — set DEEPZOOM_BROWSER_HOST / DEEPZOOM_BROWSER_PORT env vars
+# in the compose service to point at the published port if you remap it.
+_browser_host = os.environ.get("DEEPZOOM_BROWSER_HOST", "127.0.0.1")
+_browser_port = os.environ.get("DEEPZOOM_BROWSER_PORT", "5000")
+DEEPZOOM_URL = f"http://{_browser_host}:{_browser_port}/"
 DEEPZOOM_SERVER_SCRIPT = "src/deepzoom/deepzoom_server.py"
 
 MONTE_CARLO_OPTIONS: Tuple[int, ...] = (5, 25, 50)
@@ -209,6 +219,11 @@ class ImageViewer(QMainWindow):
         self._tile_stop_idx: List[int] = []
         self._tile_rows: int = 0
         self._svs_level: int = 1
+
+        # Counts outstanding tile-creation workers; drained by
+        # _on_tile_worker_finished so the progress dialog is hidden on the
+        # main thread (never from a worker thread) once the last one is done.
+        self._pending_tile_workers: int = 0
 
         self._screen_size: Tuple[int, int] = _get_screen_size()
         self._thread_pool = QThreadPool()
@@ -417,9 +432,11 @@ class ImageViewer(QMainWindow):
         )
 
         if self._folder_exists(process_name):
-            time.sleep(1)
+            # Existing folder: emit 100 % and exit without touching the GUI
+            # (no _hide_progress() here — that runs on the main thread in
+            # _on_tile_worker_finished once every worker has reported done).
+            time.sleep(0.1)
             progress_callback.emit(100)
-            self._hide_progress()
             return f"Tile folder '{process_name}' already exists — skipping."
 
         analysis = (
@@ -439,9 +456,15 @@ class ImageViewer(QMainWindow):
         for x in range(x_start, x_stop):
             for y in range(n_rows):
                 tile = tile_source.get_tile(level, (x, y))
+                # Use the per-tile running counter (current_index), not the
+                # constant per-partition tile_start, so each PNG gets a
+                # unique filename. Reusing tile_start made every file in a
+                # partition share the same index, which then collided in
+                # Classification.select_folder()'s dict key and left only
+                # one tile per partition in the analysis dictionary.
                 tile_path = os.path.join(
                     folder_path,
-                    f"tile_{tile_start}_{x}_{y}.png",
+                    f"tile_{current_index}_{x}_{y}.png",
                 )
                 tile.save(tile_path, "PNG")
                 current_index += 1
@@ -449,19 +472,32 @@ class ImageViewer(QMainWindow):
                 if is_primary:
                     pct = int(100 * (current_index - 1) / tile_stop)
                     progress_callback.emit(pct)
-                    if current_index - 1 == tile_stop:
-                        time.sleep(1)
-                        self._hide_progress()
 
         return "Tile creation complete."
 
     def _start_tile_threads(self) -> None:
-        """Launch one :class:`WorkerLong` per process partition to create tiles."""
-        if os.listdir(self._work_dir) and os.listdir(self._work_dir)[0] == self._process_names[0]:
-            logger.debug("Tiles already present — skipping thread launch.")
+        """Launch one :class:`WorkerLong` per process partition to create tiles.
+
+        If every expected partition folder already exists on disk (e.g. the
+        user re-opens the same SVS file), tile generation is skipped
+        entirely — no workers are queued and no progress dialog is shown.
+        Otherwise a progress dialog is opened and one worker per partition
+        is started; the dialog is hidden from the main thread (via the
+        ``finished`` signal slot) once the last worker reports done.
+        """
+        existing = set(os.listdir(self._work_dir)) if os.path.isdir(self._work_dir) else set()
+        missing = [name for name in self._process_names if name not in existing]
+        if not missing:
+            logger.info(
+                "All %d tile partitions already present — skipping tile creation.",
+                len(self._process_names),
+            )
             return
 
         self._show_progress(title="Tile creation")
+        # Counter drained by _on_tile_worker_finished; the dialog is hidden
+        # on the main thread when the last worker reports done.
+        self._pending_tile_workers = len(missing)
 
         for idx in range(len(self._process_names)):
             tile_args = [
@@ -478,9 +514,24 @@ class ImageViewer(QMainWindow):
             worker.signals.progress.connect(lambda pct: logger.debug("Tile progress: %d%%", pct))
             if self._progress_ui:
                 worker.signals.progress.connect(self._progress_ui.onCountChanged)
-            worker.signals.finished.connect(lambda: logger.debug("Tile worker finished."))
+            worker.signals.finished.connect(self._on_tile_worker_finished)
             worker.signals.error.connect(self._on_worker_error)
             self._thread_pool.start(worker)
+
+    def _on_tile_worker_finished(self) -> None:
+        """Slot connected to each tile worker's ``finished`` signal.
+
+        Runs on the main thread (Qt marshals cross-thread signals through
+        the event loop), so it is safe to touch the progress dialog here.
+        Hides the dialog once the last pending worker has reported done.
+        """
+        if not getattr(self, "_pending_tile_workers", 0):
+            return
+        self._pending_tile_workers -= 1
+        logger.debug("Tile worker finished — %d remaining.", self._pending_tile_workers)
+        if self._pending_tile_workers <= 0:
+            self._hide_progress()
+            self._pending_tile_workers = 0
 
     # ------------------------------------------------------------------
     # Analysis
@@ -551,8 +602,27 @@ class ImageViewer(QMainWindow):
             )
             return
 
-        command = f"cmd /k python {DEEPZOOM_SERVER_SCRIPT} {self._svs_path}"
-        self._thread_pool.start(Worker(lambda: os.system(command)))
+        # Portable launch: `python -m src.deepzoom.deepzoom_server <slide>`
+        # works on Windows, WSL2, and inside the Docker container.
+        # `subprocess.Popen` inherits os.environ so DEEPZOOM_HOST/PORT are
+        # honored automatically (the server defaults to 127.0.0.1:5000,
+        # which is correct for the GUI's in-process use).
+        import subprocess
+        cmd = [sys.executable, "-m", "src.deepzoom.deepzoom_server", self._svs_path]
+        try:
+            self._deepzoom_proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except FileNotFoundError as exc:
+            QMessageBox.critical(
+                self,
+                APP_TITLE,
+                "Failed to start the DeepZoom server.\n\n"
+                f"{exc}",
+            )
+            return
 
         QMessageBox.information(
             self,

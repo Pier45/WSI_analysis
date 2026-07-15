@@ -143,68 +143,111 @@ Tiles with uncertainty **below** the selected threshold are kept; the rest are d
 
 ## Repository Structure
 
+The codebase is organised into two real Python packages — `models/` (Bayesian model classes) and `src/` (core logic, widgets, config) — each with an `__init__.py` and re-exports. Live code is snake_case; legacy TF1 / Colab experiments live under `archive/`.
+
 ```
 WSI_analysis/
-├── archive/                          # Archived experiments and old model runs
-├── deepzoom/
-│   └── deepzoom_server.py            # Local Flask-based DeepZoom viewer
-├── icons/                            # UI icon assets
-├── img/                              # Images used in README and documentation
-├── styles/
-│   ├── stile.txt                     # Qt stylesheet (plain text)
-│   └── stileor.css                   # Qt stylesheet (CSS)
-├── test/                             # Test scripts and assets
-├── Classification.py                 # Model inference + uncertainty maps
-├── DatasetCreation.py                # TFRecord creation utility
-├── dictionary_5_js.txt               # Example uncertainty dictionary (MC=5)
-├── Dockerfile                        # Container definition
-├── DropOut.py                        # MC-Dropout CNN training class
-├── keras_kl.py                       # Additional Bayesian architecture support
-├── Kl.py                             # KL-divergence Bayesian model training
-├── multi_processing_analysis.py      # Tile extraction from .svs files
-├── new_train_js.txt                  # Example training set JSON
-├── new_val_js.txt                    # Example validation set JSON
-├── progress_bar.py                   # Qt progress dialog helper
-├── requirements.txt                  # Pinned Python dependencies
-├── test_widget.py                    # Confusion matrix widget
-├── ui_dataclean.py                   # Data cleaning & training GUI (entry point 2)
-└── ui_pyqt5.py                       # Main WSI analysis GUI (entry point 1)
+├── archive/                          # Legacy Colab-era code + 14 MB of sample tile dicts
+│   ├── dataset_creation.py            #   TF1 5-class TFRecord pipeline (dead)
+│   ├── dictionary_5_js.txt            #   ~1 MB sample tile dict (MC=5)
+│   ├── new_train_js.txt               #   9.5 MB sample tile dict (train)
+│   ├── new_val_js.txt                 #   4.0 MB sample tile dict (val)
+│   └── original_requirements.txt      #   2019 TF 1.15 requirements
+├── data/                             # Real patient WSI datasets (per-patient subfolders)
+├── docs/                             # BUG_REPORT.md, PROJECT_MAP.md
+├── icons/                            # 12 PyQt5 GUI icon assets (.ico / .png)
+├── img/                              # Thesis figures + stray UI assets
+├── models/                           # ✓ Bayesian model package
+│   ├── __init__.py                    #   re-exports BayesianDropoutCNN, ModelKl, BayesianModel
+│   ├── base.py                        #   BayesianModel Protocol (unified ctor + train() + start_train())
+│   ├── drop_out.py                    #   MC-Dropout CNN — BayesianDropoutCNN
+│   └── kl.py                          #   KL-Flipout CNN — ModelKl (tensorflow_probability)
+├── src/                              # ✓ Core logic package
+│   ├── __init__.py                    #   re-exports CLASS_NAMES, N_CLASSES, INPUT_SHAPE
+│   ├── config.py                      #   single source of truth for class names / shape
+│   ├── classification.py              #   Classification — tile inference + uncertainty maps
+│   ├── multi_processing_analysis.py   #   StartAnalysis — OpenSlide tiling (moved from root)
+│   ├── uncertainty_analysis.py        #   Th — Otsu + New-threshold data cleaning
+│   ├── performance_widget.py          #   PerformanceTab — confusion matrix widget (renamed from test_widget.py)
+│   ├── progress_bar.py                #   Actions — Qt progress helper
+│   ├── qt_workers.py                  #   Worker / WorkerSignals / WorkerLong helpers
+│   └── deepzoom/                      #   Flask DeepZoom sub-app
+│       ├── static/                    #     OpenSeadragon + jQuery
+│       ├── templates/
+│       └── deepzoom_server.py
+├── styles/                           # Qt stylesheets (stile.txt, stileor.css)
+├── test/                             # empty (scratch scripts cleaned out)
+├── ui_dataclean.py                   # Entry point 2 — Data cleaning & training GUI (5 tabs)
+├── ui_pyqt5.py                       # Entry point 1 — Main WSI analysis GUI
+├── pyproject.toml                    # uv / PEP 621 — single source of dependencies
+├── uv.lock                           # uv lockfile (cross-platform: Windows + Linux)
+├── Dockerfile                        # Multi-stage container (python:3.10-slim)
+├── docker-compose.yaml                # 2 services, X11 forwarding for PyQt5 on WSL2
+├── .python-version                   # 3.10 (pyenv / uv)
+└── README.md
 ```
+
+Both entry points must be run with `CWD = repo root` so the `models.` and `src.` imports resolve.
 
 ---
 
 ## Requirements
 
-All dependencies are fully pinned in `requirements.txt`. Install with:
+Dependencies are managed with [**uv**](https://docs.astral.sh/uv/) and pinned in `pyproject.toml`; the lockfile `uv.lock` guarantees reproducible installs across Windows (native dev) and Linux (Docker). `requirements.txt` has been **removed** — `pyproject.toml` is now the single source of truth.
+
+> Python **3.10** (`requires-python = ">=3.10,<3.12"`).
+
+### Install with uv (recommended)
 
 ```bash
-pip install -r requirements.txt
+# 1. Install uv (one-time)
+#    macOS / Linux:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+#    Windows PowerShell:
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# 2. From the repo root, create the venv and install every pinned dep:
+uv sync
 ```
 
-Key packages:
+`uv sync` reads `pyproject.toml` + `uv.lock`, creates `.venv/` with the right Python 3.10, and installs the locked resolution for the current platform. The `[tool.uv] environments` block pins both `win32` and `linux` in `uv.lock`, so the same lockfile works inside the Docker container.
+
+Run any script through the project environment with:
+
+```bash
+uv run python ui_pyqt5.py
+uv run python ui_dataclean.py
+uv run python -m src.deepzoom.deepzoom_server <slide.svs>
+```
+
+### Install with pip (fallback)
+
+```bash
+python -m venv .venv
+# Windows:  .venv\Scripts\activate
+# Linux:    source .venv/bin/activate
+pip install .
+```
+
+### Key packages
 
 | Package | Version | Role |
 |---|---|---|
 | `tensorflow` | 2.15.0 | Model training and inference |
-| `keras` | 2.15.0 | High-level neural network API |
+| `keras` | 2.15.0 | High-level neural network API (bundled with TF 2.15) |
+| `tensorflow-probability` | 0.23.0 | KL-divergence Flipout layers (used by `models/kl.py`) |
 | `numpy` | 1.26.4 | Numerical computation |
 | `PyQt5` | 5.15.10 | GUI framework |
 | `openslide-python` | 1.4.3 | WSI file reading |
 | `openslide-bin` | 4.0.0.13 | OpenSlide native binaries |
-| `scikit-learn` | 1.4.1 | Metrics and data utilities |
+| `scikit-learn` | >=1.4.1 | Metrics and data utilities |
 | `matplotlib` / `seaborn` | 3.8.4 / 0.13.0 | Plotting |
 | `pandas` | 2.2.0 | Data handling |
 | `scipy` | 1.12.0 | Otsu thresholding and signal processing |
+| `flask` | >=3.0.0 | DeepZoom server (`src/deepzoom/deepzoom_server.py`) |
+| `Pillow` | 10.2.0 | Image I/O |
 
-Two optional dependencies are **not** included in `requirements.txt` and must be installed separately if needed:
-
-```bash
-# KL-divergence model (Kl.py) only
-pip install tensorflow-probability
-
-# DeepZoom server (deepzoom/deepzoom_server.py) only
-pip install flask
-```
+> `tensorflow-probability` and `flask` are now first-class dependencies (they were previously optional). The Linux-only `tensorflow-io-gcs-filesystem==0.37.1` is conditionally pinned via a `sys_platform != 'win32'` marker.
 
 ---
 
@@ -213,6 +256,8 @@ pip install flask
 ### 1. WSI Analysis GUI
 
 ```bash
+uv run python ui_pyqt5.py
+# or without uv:
 python ui_pyqt5.py
 ```
 
@@ -256,6 +301,8 @@ python ui_pyqt5.py
 ### 2. Data Cleaning & Training GUI
 
 ```bash
+uv run python ui_dataclean.py
+# or without uv:
 python ui_dataclean.py
 ```
 
@@ -289,15 +336,42 @@ The interface is organised in five tabs:
 }
 ```
 
-### 3. DeepZoom Server (standalone)
+### 3. DeepZoom Server
+
+The Flask DeepZoom viewer can be launched three ways:
+
+**Native (Windows or WSL2):**
 
 ```bash
-python deepzoom/deepzoom_server.py <path/to/slide.svs>
+uv run python -m src.deepzoom.deepzoom_server <path/to/slide.svs>
+# or without uv:
+python -m src.deepzoom.deepzoom_server <path/to/slide.svs>
 ```
 
-Opens a browser tab at `http://127.0.0.1:5000/` with adaptive-resolution tile streaming via **OpenSeadragon**. The right panel shows all Aperio metadata; the left panel shows any associated images embedded in the `.svs` file.
+The server binds to `127.0.0.1:5000` by default. Open `http://127.0.0.1:5000/` in any browser — you get adaptive-resolution tile streaming via **OpenSeadragon**, the right panel shows all Aperio metadata, the left panel any associated images embedded in the `.svs` file.
 
-> ⚠️ The file path must **not contain spaces** (Flask limitation on Windows).
+Override host/port with `--listen` / `--port` flags or `DEEPZOOM_HOST` / `DEEPZOOM_PORT` env vars:
+
+```bash
+DEEPZOOM_HOST=0.0.0.0 DEEPZOOM_PORT=8000 python -m src.deepzoom.deepzoom_server slide.svs
+# → http://localhost:8000/
+```
+
+**From the Bayesian Analyzer GUI (Windows or WSL2):**
+
+`ui_pyqt5.py`'s **Options → Deep Zoom Viewer** (or `Ctrl+D`) starts the server as a subprocess and opens the default browser. The browser-target URL is `http://127.0.0.1:5000/` unless you override it with `DEEPZOOM_BROWSER_HOST` / `DEEPZOOM_BROWSER_PORT` env vars (useful when remapping the Docker published port).
+
+**Standalone Docker container (WSL2):**
+
+A `wsi-deepzoom` service in `docker-compose.yaml` runs the server inside the container with `DEEPZOOM_HOST=0.0.0.0` and publishes port `5000` to the Windows host. From a Windows browser, point at `http://localhost:5000/`:
+
+```bash
+# From inside WSL2, mount the .svs under /data and pass the in-container path
+docker compose run --rm wsi-deepzoom /data/10002_AC_2/slide.svs
+# Then open http://localhost:5000/ in any Windows browser.
+```
+
+> ⚠️ The `.svs` file path must **not contain spaces** (Flask limitation on Windows). For the Docker service this is irrelevant — the in-container path is `/data/…`.
 
 ---
 
@@ -305,29 +379,72 @@ Opens a browser tab at `http://127.0.0.1:5000/` with adaptive-resolution tile st
 
 A `Dockerfile` is included in the repository. The container supports X11 forwarding for the PyQt5 GUI when running under WSL2.
 
-**Build the image:**
+The `Dockerfile` is a multi-stage build: a **builder** stage pulls in `uv` (`ghcr.io/astral-sh/uv`) and runs `uv sync --frozen --no-install-project --no-dev` against `pyproject.toml` / `uv.lock`, so the runtime stage picks up the Linux resolution from the cross-platform lockfile without re-resolving. The runtime stage is `python:3.10-slim` plus the Qt/X11 shared libraries, copies the prebuilt `.venv/` from the builder, and runs as a non-root user (`wsi`, uid 1001).
+
+A BuildKit cache mount (`--mount=type=cache,target=/root/.cache/uv`) keeps the uv wheel cache across rebuilds, so code-only edits no longer trigger the ~1 GB TensorFlow wheel re-download. Layer order also matters: `pyproject.toml` + `uv.lock` are copied **before** the source, so filtering one line of `ui_dataclean.py` invalidates only the final `COPY . .` layer.
+
+### Build (one image, two entry points)
+
 ```bash
-docker build -t wsi-analysis .
+docker compose build
 ```
 
-**Run the container:**
-```bash
-docker run --rm \
-    -e DISPLAY=$DISPLAY \
-    -v /tmp/.X11-unix:/tmp/.X11-unix \
-    uiclean
-  ```
+Both `docker-compose.yaml` services (`wsi-clean`, `wsi-analysis`) reference the same built image (`wsi-analysis:latest`) and only differ in `command:`. Building once via `docker compose build` produces a single image that both services reuse.
 
-**Run with a local data folder mounted:**
+### Run either GUI
+
 ```bash
+# Data cleaning & training GUI (default CMD)
+docker compose up wsi-clean
+
+# Main WSI analysis GUI
+docker compose up wsi-analysis
+```
+
+### Override the mounted data folder
+
+The hardcoded WSL path is now overrideable via the `WSI_DATA_DIR` environment variable (defaults to `/mnt/c/Users/piero/Documents/Data WSI`):
+
+```bash
+WSI_DATA_DIR=/path/to/your/slides docker compose up wsi-clean
+```
+
+Inside the container the data is accessible at `/data`. Replace `/path/to/your/slides` with the absolute path to the folder containing your `.svs` files.
+
+### Where the analysis output goes
+
+When you open an `.svs` file (in either GUI, or via `StartAnalysis` in a headless run), the per-slide analysis folder is created **next to the `.svs` file** as `data/<svs_name>_<level>/`, containing `thumbnail/`, the `p_*` tile subfolders, the `result/` overlays and the `dictionary_monte_*.txt` JSON. Inside the default Docker setup this means the output lands in the bind-mounted `/data` folder, so it's immediately visible on the host — no extra volume needed.
+
+If your `.svs` source is read-only (e.g. a NAS share, a mounted DICOM archive), set `WSI_OUTPUT_DIR` to redirect all output to a different location:
+
+```bash
+# Native (Windows / WSL2)
+WSI_OUTPUT_DIR=/mnt/c/Users/piero/Documents/wsi_output python ui_pyqt5.py
+
+# Docker: uncomment the /output bind-mount in docker-compose.yaml first, then:
+WSI_OUTPUT_DIR=/output docker compose up wsi-analysis
+```
+
+The same directory layout (`data/<svs_name>_<level>/…`) is created under the override path.
+
+### Apple Silicon / ARM hosts
+
+If you build on an ARM host (Apple M1/M2) and want the amd64 TensorFlow wheel, pin the platform explicitly:
+
+```bash
+docker buildx build --platform linux/amd64 -t wsi-analysis .
+```
+
+### Bare `docker run` (fallback, no compose)
+
+```bash
+docker build -t wsi-analysis .
 docker run --rm \
     -e DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v "/mnt/c/Users/piero/Documents/Data WSI:/data" \
-    uiclean
+    wsi-analysis python ui_dataclean.py
 ```
-
-Replace `/path/to/your/data` with the absolute path to the folder containing your `.svs` files. Inside the container the data will be accessible at `/data`.
 
 ---
 
@@ -343,7 +460,7 @@ Replace `/path/to/your/data` with the absolute path to the folder containing you
 ## Notes
 
 - All models expect 64×64 RGB input tiles.
-- The `DropOut.py` architecture is recommended over `Kl.py` for faster training, better convergence, and broader library compatibility.
+- The `models/drop_out.py` (MC-Dropout) architecture is recommended over `models/kl.py` (KL-Flipout) for faster training, better convergence, and broader library compatibility.
 - DeepZoom paths must not contain spaces (Flask limitation on Windows).
 - Developed and tested on Windows (Intel i7-7700, 8 threads); also validated on Google Colab (NVIDIA Tesla K80) and HPC Polito (NVIDIA Tesla V100).
 

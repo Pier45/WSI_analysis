@@ -119,11 +119,11 @@ if __name__ == '__main__':
                 dest='DEEPZOOM_FORMAT',
                 help='image format for tiles [jpeg]')
     parser.add_option('-l', '--listen', metavar='ADDRESS', dest='host',
-                default='127.0.0.1',
-                help='address to listen on [127.0.0.1]')
+                default=None,
+                help='address to listen on [127.0.0.1, or $DEEPZOOM_HOST]')
     parser.add_option('-p', '--port', metavar='PORT', dest='port',
-                type='int', default=5000,
-                help='port to listen on [5000]')
+                type='int', default=None,
+                help='port to listen on [5000, or $DEEPZOOM_PORT]')
     parser.add_option('-Q', '--quality', metavar='QUALITY',
                 dest='DEEPZOOM_TILE_QUALITY', type='int',
                 help='JPEG compression quality [75]')
@@ -140,6 +140,18 @@ if __name__ == '__main__':
         if not k.startswith('_') and getattr(opts, k) is None:
             delattr(opts, k)
     app.config.from_object(opts)
+    # Resolve listen host/port: --listen/--port flags win, then env vars,
+    # then the safe default. The default is 127.0.0.1 for native runs;
+    # inside Docker the compose service sets DEEPZOOM_HOST=0.0.0.0 so the
+    # published port (-p 5000:5000) actually forwards to the Flask process.
+    import os
+    host = getattr(opts, 'host', None) or os.environ.get('DEEPZOOM_HOST', '127.0.0.1')
+    port = getattr(opts, 'port', None)
+    if port is None:
+        try:
+            port = int(os.environ.get('DEEPZOOM_PORT', '5000'))
+        except ValueError:
+            port = 5000
     # Set slide file
     try:
         app.config['DEEPZOOM_SLIDE'] = args[0]
@@ -148,5 +160,5 @@ if __name__ == '__main__':
             parser.error('No slide file specified')
 
     load_slide()
-    
-    app.run(host=opts.host, port=opts.port, threaded=True)
+
+    app.run(host=host, port=port, threaded=True)
