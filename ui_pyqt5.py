@@ -19,7 +19,7 @@ import traceback
 import webbrowser
 from typing import List, Optional, Tuple
 
-from PyQt5.QtCore import QObject, QRunnable, QThreadPool, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject, QRunnable, QThreadPool, Qt, pyqtSignal, QSize, pyqtSlot
 from PyQt5.QtGui import QFont, QIcon, QImage, QPainter, QPalette, QPixmap
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt5.QtWidgets import (
@@ -220,7 +220,13 @@ class ImageViewer(QMainWindow):
         self._tile_start_idx: List[int] = []
         self._tile_stop_idx: List[int] = []
         self._tile_rows: int = 0
+        # OpenSlide-level index (indexes ``slide.level_dimensions``, used as
+        # ``StartAnalysis(lev_sec=...)``). Must stay < ``slide.level_count``.
         self._svs_level: int = 1
+        # DeepZoom level index (``levi`` returned by ``tile_gen(state=0)``),
+        # a separate namespace that grows much larger than ``level_count``.
+        # Passed to ``DeepZoomGenerator.get_tile(level, ...)`` in workers.
+        self._svs_deepzoom_level: int = 0
 
         # Counts outstanding tile-creation workers; drained by
         # _on_tile_worker_finished so the progress dialog is hidden on the
@@ -249,6 +255,9 @@ class ImageViewer(QMainWindow):
         self.setCentralWidget(self._scroll_area)
 
         self._toolbar = QToolBar("Main toolbar")
+        self._toolbar.setIconSize(QSize(64,64))
+
+
         self._toolbar.setStyleSheet("QToolBar { spacing: 15px; }")
         self.addToolBar(self._toolbar)
 
@@ -308,11 +317,16 @@ class ImageViewer(QMainWindow):
         str
             The working-directory path returned by ``StartAnalysis``.
         """
-        analysis = (
-            StartAnalysis(lev_sec=self._svs_level)
-            if self._analysis_type == "slow"
-            else StartAnalysis()
-        )
+        # Fast mode uses the default OpenSlide level (lev_sec=2, more
+        # downsampled). Slow mode uses a finer level (lev_sec=1) for more
+        # detail / more tiles. ``lev_sec`` must index
+        # ``slide.level_dimensions`` (typically ≤ ~8 entries), NOT the
+        # DeepZoom level index ``levi`` returned by ``tile_gen`` (which can
+        # exceed ``level_count`` and caused IndexError in ``get_thumb``).
+        if self._analysis_type == "slow":
+            analysis = StartAnalysis(lev_sec=1)
+        else:
+            analysis = StartAnalysis()
         analysis.openSvs(file_path)
         work_dir: str = analysis.get_thumb()
 
@@ -323,12 +337,17 @@ class ImageViewer(QMainWindow):
             self._tile_start_idx,
             self._tile_stop_idx,
             self._tile_rows,
-            self._svs_level,
+            deepzoom_level,
         ) = analysis.tile_gen(state=0)
+        # Cache the two distinct level namespaces so they are never conflated:
+        #   * ``_svs_level`` -> OpenSlide level (indexes level_dimensions)
+        #   * ``_svs_deepzoom_level`` -> DeepZoom level (passed to get_tile)
+        self._svs_level = analysis.lev_sec
+        self._svs_deepzoom_level = deepzoom_level
 
         logger.debug(
             "Tile metadata — x_start=%s x_stop=%s names=%s "
-            "start_idx=%s stop_idx=%s rows=%d level=%d",
+            "start_idx=%s stop_idx=%s rows=%d openslide_level=%d deepzoom_level=%d",
             self._tile_x_start,
             self._tile_x_stop,
             self._process_names,
@@ -336,6 +355,7 @@ class ImageViewer(QMainWindow):
             self._tile_stop_idx,
             self._tile_rows,
             self._svs_level,
+            self._svs_deepzoom_level,
         )
         return work_dir
 
@@ -419,18 +439,21 @@ class ImageViewer(QMainWindow):
         Parameters
         ----------
         tile_args:
-            ``[x_start, x_stop, process_name, tile_start, tile_stop, n_rows, level]``
+            ``[x_start, x_stop, process_name, tile_start, tile_stop, n_rows,
+            level]`` where ``level`` is the **DeepZoom** level index (returned
+            as ``levi`` by ``tile_gen(state=0)``), NOT the OpenSlide level.
         progress_callback:
             Injected by :class:`WorkerLong`; call ``.emit(pct)`` to report progress.
         """
         x_start, x_stop, process_name, tile_start, tile_stop, n_rows, level = tile_args
         logger.debug(
-            "Creating tiles — process=%s x=[%d,%d) start=%d stop=%d",
+            "Creating tiles — process=%s x=[%d,%d) start=%d stop=%d level=%d",
             process_name,
             x_start,
             x_stop,
             tile_start,
             tile_stop,
+            level,
         )
 
         if self._folder_exists(process_name):
@@ -449,14 +472,30 @@ class ImageViewer(QMainWindow):
         analysis.openSvs(self._svs_path)
         tile_source = analysis.tile_gen(state=1)
 
+        # Guard against stale/corrupted DeepZoom level indices to avoid the
+        # openslide "Invalid address" ValueError. ``level_tiles`` is a tuple
+        # of (nx, ny) per level — clamp ``level`` to the valid range.
+        max_level = len(tile_source.level_tiles) - 1
+        if not (0 <= level <= max_level):
+            logger.warning(
+                "DeepZoom level=%d out of range [0, %d]; clamping to %d.",
+                level, max_level, max_level,
+            )
+            level = max_level
+        tiles_x, tiles_y = tile_source.level_tiles[level]
+        # Clamp per-axis ranges to the generator's actual tile grid for this
+        # level — out-of-range (x, y) is what raises "Invalid address".
+        x_hi = min(x_stop, tiles_x)
+        y_hi = min(n_rows, tiles_y)
+
         folder_path = os.path.join(self._work_dir, process_name)
         os.mkdir(folder_path)
 
         is_primary = tile_start == 1
         current_index = tile_start
 
-        for x in range(x_start, x_stop):
-            for y in range(n_rows):
+        for x in range(x_start, x_hi):
+            for y in range(y_hi):
                 tile = tile_source.get_tile(level, (x, y))
                 # Use the per-tile running counter (current_index), not the
                 # constant per-partition tile_start, so each PNG gets a
@@ -509,7 +548,7 @@ class ImageViewer(QMainWindow):
                 self._tile_start_idx[idx],
                 self._tile_stop_idx[idx],
                 self._tile_rows,
-                self._svs_level,
+                self._svs_deepzoom_level,
             ]
             worker = WorkerLong(self._create_tiles, tile_args)
             worker.signals.result.connect(lambda msg: logger.info("Tile worker result: %s", msg))
@@ -782,114 +821,129 @@ class ImageViewer(QMainWindow):
     # Action / menu construction
     # ------------------------------------------------------------------
 
+    def _make_action(
+        self,
+        text: str,
+        *,
+        icon: Optional[str] = None,
+        shortcut: str = "",
+        enabled: bool = True,
+        checkable: bool = False,
+        checked: bool = False,
+        triggered=None,
+    ) -> QAction:
+        action = QAction(text, self)
+        if icon is not None:
+            action.setIcon(QIcon(icon))
+        if shortcut:
+            action.setShortcut(shortcut)
+        action.setEnabled(enabled)
+        action.setCheckable(checkable)
+        action.setChecked(checked)
+        if triggered is not None:
+            action.triggered.connect(triggered)
+        return action
+
     def _create_actions(self) -> None:
         # File
-        self._open_act = QAction(
-            QIcon("icons/folder.png"), "Select SVS", self,
+        self._open_act = self._make_action(
+            "Select SVS", icon="icons/folder.png",
             shortcut="Ctrl+O", triggered=self._open_file,
         )
-        self._print_act = QAction(
-            "&Print…", self,
-            shortcut="Ctrl+P", enabled=False, triggered=self._print_image,
+        self._print_act = self._make_action(
+            "&Print…", shortcut="Ctrl+P", enabled=False, triggered=self._print_image,
         )
-        self._exit_act = QAction(
-            QIcon("icons/exit.ico"), "E&xit", self,
+        self._exit_act = self._make_action(
+            "E&xit", icon="icons/exit.ico",
             shortcut="Ctrl+Q", triggered=self.close,
         )
 
         # Zoom
-        self._zoom_in_act = QAction(
-            QIcon("icons/zoomin.ico"), "Zoom &In (25%)", self,
+        self._zoom_in_act = self._make_action(
+            "Zoom &In (25%)", icon="icons/zoomin.ico",
             shortcut="Ctrl++", enabled=False, triggered=self._zoom_in,
         )
-        self._zoom_out_act = QAction(
-            QIcon("icons/zoomout.ico"), "Zoom &Out (25%)", self,
+        self._zoom_out_act = self._make_action(
+            "Zoom &Out (25%)", icon="icons/zoomout.ico",
             shortcut="Ctrl+-", enabled=False, triggered=self._zoom_out,
         )
-        self._normal_size_act = QAction(
-            "&Normal Size", self,
-            shortcut="Ctrl+N", enabled=False, triggered=self._normal_size,
+        self._normal_size_act = self._make_action(
+            "&Normal Size", shortcut="Ctrl+N", enabled=False, triggered=self._normal_size,
         )
-        self._fit_to_window_act = QAction(
-            "&Fit to Window", self,
-            shortcut="Ctrl+F", enabled=False,
-            checkable=True, triggered=self._fit_to_window,
+        self._fit_to_window_act = self._make_action(
+            "&Fit to Window", shortcut="Ctrl+F",
+            enabled=False, checkable=True, triggered=self._fit_to_window,
         )
 
         # Analysis
-        self._start_analysis_act = QAction(
-            QIcon("icons/start.ico"), "Start Analysis", self,
+        self._start_analysis_act = self._make_action(
+            "Start Analysis", icon="icons/start.ico",
             shortcut="Ctrl+R", enabled=False, triggered=self._start_analysis,
         )
-        self._fast_act = QAction(
-            "Fast mode", self,
-            checkable=True, checked=True, enabled=True, triggered=self._set_fast_mode,
+        self._fast_act = self._make_action(
+            "Fast mode", checkable=True, checked=True, triggered=self._set_fast_mode,
         )
-        self._slow_act = QAction(
-            "Slow mode", self,
-            checkable=True, enabled=True, triggered=self._set_slow_mode,
+        self._slow_act = self._make_action(
+            "Slow mode", checkable=True, triggered=self._set_slow_mode,
         )
 
         # Model / Monte Carlo
-        self._select_model_act = QAction(
-            "Change model", self, enabled=True, triggered=self._select_model,
+        self._select_model_act = self._make_action(
+            "Change model", triggered=self._select_model,
         )
-        self._mc5_act = QAction(
-            "5", self, checkable=True, checked=True,
+        self._mc5_act = self._make_action(
+            "5", checkable=True, checked=True,
             triggered=lambda: self._set_monte_carlo(5),
         )
-        self._mc25_act = QAction(
-            "25", self, checkable=True,
-            triggered=lambda: self._set_monte_carlo(25),
+        self._mc25_act = self._make_action(
+            "25", checkable=True, triggered=lambda: self._set_monte_carlo(25),
         )
-        self._mc50_act = QAction(
-            "50", self, checkable=True,
-            triggered=lambda: self._set_monte_carlo(50),
+        self._mc50_act = self._make_action(
+            "50", checkable=True, triggered=lambda: self._set_monte_carlo(50),
         )
 
         # View results
-        self._v_no_overlay_act = QAction(
-            "No overlay", self, enabled=False,
+        self._v_no_overlay_act = self._make_action(
+            "No overlay", enabled=False,
             triggered=lambda: self._view_result("no_ov", "th"),
         )
-        self._v_all_classes_act = QAction(
-            "All classes", self, enabled=False,
+        self._v_all_classes_act = self._make_action(
+            "All classes", enabled=False,
             triggered=lambda: self._view_result("Pred_class", "result"),
         )
-        self._v_ac_act = QAction(
-            QIcon("icons/AC.ico"), "AC only", self, enabled=False,
+        self._v_ac_act = self._make_action(
+            "AC only", icon="icons/AC.png", enabled=False,
             triggered=lambda: self._view_result("AC", "result"),
         )
-        self._v_ad_act = QAction(
-            QIcon("icons/AD.ico"), "AD only", self, enabled=False,
+        self._v_ad_act = self._make_action(
+            "AD only", icon="icons/AD.png", enabled=False,
             triggered=lambda: self._view_result("AD", "result"),
         )
-        self._v_h_act = QAction(
-            QIcon("icons/H.ico"), "H only", self, enabled=False,
+        self._v_h_act = self._make_action(
+            "H only", icon="icons/H.png", enabled=False,
             triggered=lambda: self._view_result("H", "result"),
         )
-        self._v_total_uncertainty_act = QAction(
-            "Total uncertainty", self, enabled=False,
+        self._v_total_uncertainty_act = self._make_action(
+            "Total uncertainty", enabled=False,
             triggered=lambda: self._view_result("tot", "uncertainty"),
         )
-        self._v_aleatoric_act = QAction(
-            "Aleatoric uncertainty", self, enabled=False,
+        self._v_aleatoric_act = self._make_action(
+            "Aleatoric uncertainty", enabled=False,
             triggered=lambda: self._view_result("ale", "uncertainty"),
         )
-        self._v_epistemic_act = QAction(
-            "Epistemic uncertainty", self, enabled=False,
+        self._v_epistemic_act = self._make_action(
+            "Epistemic uncertainty", enabled=False,
             triggered=lambda: self._view_result("epi", "uncertainty"),
         )
 
         # Deep zoom / help
-        self._deep_zoom_act = QAction(
-            QIcon("icons/binocul.ico"), "Deep Zoom Viewer", self,
+        self._deep_zoom_act = self._make_action(
+            "Deep Zoom Viewer", icon="icons/binocul.ico",
             shortcut="Ctrl+D", enabled=False, triggered=self._open_deep_zoom,
         )
-        self._about_act = QAction("&About", self, triggered=self._about)
-
-        self._info_deep_act = QAction(
-            "&Deepzoom info", self, triggered=self._about_deep_zoom,
+        self._about_act = self._make_action("&About", triggered=self._about)
+        self._info_deep_act = self._make_action(
+            "&Deepzoom info", triggered=self._about_deep_zoom,
         )
 
     def _create_menus(self) -> None:

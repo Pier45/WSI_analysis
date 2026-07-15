@@ -6,12 +6,15 @@ import PIL
 import sys
 import multiprocessing
 import time
+import logging
 from math import ceil
 import threading
 import glob
 import time
 
 from src.config import WSI_OUTPUT_DIR
+
+logger = logging.getLogger(__name__)
 
 
 class StartAnalysis:
@@ -76,7 +79,15 @@ class StartAnalysis:
     def get_thumb(self):
         """"Create the thumbnail of the image, ready for the classification phase."""
 
-        image = self.slide.get_thumbnail(self.list_levels[self.lev_sec])
+        n_levels = len(self.list_levels)
+        lev = self.lev_sec
+        if not (-n_levels <= lev < n_levels):
+            logger.warning(
+                "lev_sec=%d out of range for level_count=%d; falling back to "
+                "the most detailed level (0).", lev, n_levels,
+            )
+            lev = 0
+        image = self.slide.get_thumbnail(self.list_levels[lev])
         image.save(self.path_th + '/th.png')
         return self.path_folder
 
@@ -94,6 +105,21 @@ class StartAnalysis:
     def tile_gen(self, state=9):
         """Call this function to divide the slice in tiles, it manage the dimension and the edge cuts.
         This function call the method 'manage_process' that create same vectors for the next step, run the theads"""
+
+        # Defensive clamp: small/thumbnail SVS fixtures may have fewer native
+        # OpenSlide levels than the default ``lev_sec`` requested by the
+        # caller (e.g. GetTheta test fixtures have level_count=2 but the app
+        # default is lev_sec=2). Without this, ``self.list_levels[self.lev_sec]``
+        # below raised IndexError. Pick the finest *available* level instead
+        # of failing hard — the rest of the loop merely searches the DeepZoom
+        # grid for a match and falls back to max resolution if none found.
+        n_levels = len(self.list_levels)
+        if not (0 <= self.lev_sec < n_levels):
+            logger.warning(
+                "lev_sec=%d out of range for level_count=%d; clamping to %d.",
+                self.lev_sec, n_levels, n_levels - 1,
+            )
+            self.lev_sec = n_levels - 1
 
         self.generator = DeepZoomGenerator(self.slide, tile_size=self.tile_size, overlap=self.overlap, limit_bounds=self.limit_bounds)
         dim = self.generator.level_dimensions

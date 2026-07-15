@@ -135,3 +135,9 @@ dmypy.json
 Model_1_85aug.h5
 .opencode
 
+.ruff_cache/
+.pytest_cache/
+
+# Local test fixtures — downloaded by CI (see .github/workflows/ci.yml's
+# analysis job) so we don't bloat the repo history with binary .svs slides.
+tests/fixtures/*.svs

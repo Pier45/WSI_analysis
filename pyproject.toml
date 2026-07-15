@@ -36,6 +36,17 @@ dependencies = [
     "flask>=3.0.0",
 ]
 
+[project.optional-dependencies]
+# Test toolchain. Pin pytest (not the heavy app deps — those come from the
+# main [project.dependencies]). Install with:  uv sync --extra test
+test = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-mock>=3.12",
+    "pytest-qt>=4.4",  # only used by tests/gui
+    "ruff>=0.6",
+]
+
 # uv-specific configuration
 [tool.uv]
 # Resolve + lock for both native Windows dev and Linux (Docker) deployment.
@@ -46,3 +57,71 @@ environments = [
     "sys_platform == 'win32'",
     "sys_platform == 'linux'",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-cov>=5.0",
+    "pytest-mock>=3.12",
+    "pytest-qt>=4.4",
+    "ruff>=0.15.21",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+# Discover tests under tests/ but let the per-folder conftest files control
+# which markers run by default (units always; openslide/tf/gui gated).
+testpaths = ["tests"]
+# Run unit tests by default. Select other groups explicitly:
+#   pytest -m openslide      tests/analysis
+#   pytest -m tf             tests/models
+#   pytest -m gui             tests/gui
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "openslide: tests requiring libopenslide + an .svs fixture (deselect with `-m \"not openslide\"`)",
+    "tf: tests requiring TensorFlow (deselect with `-m \"not tf\"`)",
+    "gui: tests requiring a Qt offscreen platform (pytest-qt)",
+    "slow: long-running / full-pipeline tests (deselect from default CI with `-m \"not slow\"`)",
+]
+# Treat warnings as errors so we catch deprecated Qt / numpy usage in CI.
+# The openslide deepzoom module emits a benign PendingDeprecationWarning, so
+# ignore it explicitly rather than chase third-party noise.
+filterwarnings = [
+    "error",
+    "ignore::PendingDeprecationWarning:openslide.*",
+]
+
+[tool.ruff]
+# Same line length as a mortal terminal; matches the rest of the repo.
+line-length = 100
+target-version = "py310"
+# The repo is asnake_case + src/models layout; exclude vendored/legacy dirs.
+extend-exclude = [
+    "archive",        # legacy TF1 / Colab code — frozen, never reformatted
+    ".venv",
+    "graphify-out",
+    "src/deepzoom/static",  # vendored jQuery / OpenSeadragon
+]
+
+[tool.ruff.lint]
+# Reasonable default lint set without being prescriptive. Preserve the
+# repo's existing style (no docstring-everywhere enforcement etc.).
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import ordering)
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade (modernise syntax for py310)
+    "B",   # flake8-bugbear (likely-bug patterns)
+]
+ignore = [
+    "E501",  # line too long — handled by formatter, not lint
+    "B008",  # function call in default arg — needed for Qt fixtures
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately use unused fixtures, long names, and module-level imports
+# guarded by availability. Keep them lenient.
+"tests/**/*.py" = ["E402", "F401", "F811"]
+# ui_*.py entry points use a lot of Qt-overload call sites ruff can't model.
+"ui_*.py" = ["E402"]

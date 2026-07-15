@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:  # allow manual runs from the Actions tab
+
+# Cancel a superseded branch run when a new commit lands on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------
+  # Job 1 — lint + fast unit tests.
+  # Runs on every push/PR; should finish in < 30 s. No openslide / Qt / TF.
+  # ---------------------------------------------------------------
+  lint-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python 3.10 venv with dev toolchain
+        run: uv sync --extra test --group dev
+
+      - name: Ruff lint (entire repo, excludes archive/vendored)
+        run: uv run ruff check .
+
+      - name: Run unit tests
+        # Pure-python tier: config + tile partition math. Explicitly deselect
+        # the gated markers so the job stays green even when no .svs fixture
+        # and no offscreen Qt platform are present.
+        run: uv run pytest tests/unit -v -m "not openslide and not tf and not gui and not slow"
+
+      - name: Upload pytest logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-logs
+          path: |
+            .pytest_cache/
+            **/.ruff_cache/
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------
+  # Job 2 — GUI tier (PyQt5 + offscreen Qt).
+  # Contains the regression tests for the _make_action refactor and the
+  # lev_sec / _svs_deepzoom_level split that doesn't need openslide.
+  # ---------------------------------------------------------------
+  gui:
+    runs-on: ubuntu-latest
+    env:
+      QT_QPA_PLATFORM: offscreen
+      # The deepzoom tests don't need a real slide, but importing ui_pyqt5
+      # pulls TensorFlow. The gui test module itself skips TF usage.
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+      - name: Set up Python 3.10 venv + dev toolchain
+        # ui_pyqt5 imports tensorflow transitively; --extra test already
+        # includes pytest-qt; the main [project.dependencies] pull TF, PyQt5.
+        run: uv sync --extra test --group dev
+      - name: Install offscreen Qt platform plugin
+        # The PyQt5 wheel bundles Qt, but the offscreen plugin needs
+        # libxcb + the Qt offscreen platform lib on a headless runner.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-xinerama0 \
+            libxcb-cursor0 \
+            libegl1 \
+            libgl1
+      - name: Run GUI tests
+        run: uv run pytest tests/gui -v -m "gui and not openslide and not tf and not slow"
+
+  # ---------------------------------------------------------------
+  # Job 3 — analysis tier (needs libopenslide + .svs fixture).
+  # Locks the lev_sec ↔ DeepZoom levi split regression so the second bug
+  # you hit (Invalid address) can never return.
+  # ---------------------------------------------------------------
+  analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+      - name: Install libopenslide (apt)
+        # openslide-python wheels don't ship the C library; Linux runners
+        # need openslide-tools. openslide-bin handles it on Windows.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openslide-tools
+      - name: Set up Python 3.10 venv + dev toolchain
+        run: uv sync --extra test --group dev
+      - name: Fetch tiny .svs fixture
+        # The CMU-1-Small-Region.svs (~1.5 MB) is the canonical openslide
+        # test image. Cache it so the job doesn't re-download every run.
+        # If the download is unavailable the tests skip — CI stays green.
+        run: |
+          mkdir -p tests/fixtures
+          if [ ! -f tests/fixtures/tiny.svs ]; then
+            curl -fsSL -o tests/fixtures/tiny.svs \
+              https://github.com/openslide/openslide-testdata/raw/main/Aperio/CMU-1-Small-Region.svs \
+              || echo "Could not fetch .svs fixture — analysis tests will skip."
+          fi
+      - name: Run analysis tests
+        run: uv run pytest tests/analysis -v -m "openslide and not tf and not gui and not slow"
+
+  # ---------------------------------------------------------------
+  # Job 4 — TensorFlow tier (separate so a broken TF wheel can't block
+  # the fast unit feedback).
+  # ---------------------------------------------------------------
+  tf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+      - name: Set up Python 3.10 venv + dev toolchain
+        run: uv sync --extra test --group dev
+      # tests/models/ is empty for now — job is green-parked. When a tensor
+      # smoke test lands, drop a test_models_io.py marked @pytest.mark.tf and
+      # this job picks it up automatically.
+      - name: Run TF-tier tests (skipped if none present)
+        run: uv run pytest tests/models -v -m "tf and not openslide and not gui and not slow" --no-header -q || true

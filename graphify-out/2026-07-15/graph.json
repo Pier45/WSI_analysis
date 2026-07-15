@@ -190,7 +190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_init",
-      "community": 6,
+      "community": 19,
       "norm_label": "__init__.py"
     },
     {
@@ -200,7 +200,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_init_rationale_1",
-      "community": 6,
+      "community": 19,
       "norm_label": "bayesian uncertainty models package.  re-exports the two model classes for conve"
     },
     {
@@ -210,7 +210,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_base",
-      "community": 6,
+      "community": 19,
       "norm_label": "base.py"
     },
     {
@@ -220,7 +220,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "models_base_bayesianmodel",
-      "community": 6,
+      "community": 19,
       "norm_label": "bayesianmodel"
     },
     {
@@ -230,7 +230,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "protocol",
-      "community": 6,
+      "community": 19,
       "norm_label": "protocol"
     },
     {
@@ -240,7 +240,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "models_base_bayesianmodel_init",
-      "community": 6,
+      "community": 19,
       "norm_label": ".__init__()"
     },
     {
@@ -250,7 +250,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "models_base_bayesianmodel_train",
-      "community": 6,
+      "community": 19,
       "norm_label": ".train()"
     },
     {
@@ -260,7 +260,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "models_base_py_history",
-      "community": 6,
+      "community": 19,
       "norm_label": "history"
     },
     {
@@ -270,7 +270,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "models_base_bayesianmodel_start_train",
-      "community": 6,
+      "community": 19,
       "norm_label": ".start_train()"
     },
     {
@@ -280,7 +280,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_base_rationale_1",
-      "community": 6,
+      "community": 19,
       "norm_label": "shared interface for the bayesian uncertainty models.  both ``bayesiandropoutcnn"
     },
     {
@@ -290,7 +290,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "models_base_rationale_18",
-      "community": 6,
+      "community": 19,
       "norm_label": "construct a model for training and uncertainty estimation.      parameters (cons"
     },
     {
@@ -300,7 +300,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "models_base_rationale_52",
-      "community": 6,
+      "community": 19,
       "norm_label": "build, compile and train the model, returning the keras history."
     },
     {
@@ -310,7 +310,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "models_base_rationale_60",
-      "community": 6,
+      "community": 19,
       "norm_label": "backward-compatible alias for :meth:`train`."
     },
     {
@@ -320,7 +320,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_drop_out",
-      "community": 6,
+      "community": 23,
       "norm_label": "drop_out.py"
     },
     {
@@ -340,7 +340,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "models_drop_out_trainingprogresscallback",
-      "community": 6,
+      "community": 43,
       "norm_label": "trainingprogresscallback"
     },
     {
@@ -350,7 +350,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "models_drop_out_py_callback",
-      "community": 6,
+      "community": 43,
       "norm_label": "callback"
     },
     {
@@ -360,7 +360,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "models_drop_out_trainingprogresscallback_init",
-      "community": 6,
+      "community": 43,
       "norm_label": ".__init__()"
     },
     {
@@ -370,7 +370,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "models_drop_out_trainingprogresscallback_on_batch_end",
-      "community": 6,
+      "community": 43,
       "norm_label": ".on_batch_end()"
     },
     {
@@ -380,7 +380,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "models_drop_out_trainingprogresscallback_on_epoch_end",
-      "community": 6,
+      "community": 43,
       "norm_label": ".on_epoch_end()"
     },
     {
@@ -400,7 +400,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "models_drop_out_bayesiandropoutcnn_init",
-      "community": 6,
+      "community": 43,
       "norm_label": ".__init__()"
     },
     {
@@ -510,7 +510,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_drop_out_rationale_1",
-      "community": 6,
+      "community": 23,
       "norm_label": "bayesian dropout cnn for histological-tile classification (ac / ad / h).  mont"
     },
     {
@@ -520,7 +520,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "models_drop_out_rationale_69",
-      "community": 6,
+      "community": 43,
       "norm_label": "emits per-batch and per-epoch training metrics via qt signals.      parameters"
     },
     {
@@ -590,7 +590,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_kl",
-      "community": 6,
+      "community": 23,
       "norm_label": "kl.py"
     },
     {
@@ -760,7 +760,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "models_kl_rationale_1",
-      "community": 6,
+      "community": 23,
       "norm_label": "variational inference (kl-divergence) bayesian cnn for histological-tile classif"
     },
     {
@@ -853,7 +853,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_init",
-      "community": 6,
+      "community": 23,
       "norm_label": "__init__.py"
     },
     {
@@ -863,7 +863,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_init_rationale_1",
-      "community": 6,
+      "community": 23,
       "norm_label": "source package \u2014 core logic (classification, uncertainty, widgets, config)."
     },
     {
@@ -873,7 +873,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_classification",
-      "community": 6,
+      "community": 23,
       "norm_label": "classification.py"
     },
     {
@@ -1043,7 +1043,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_config",
-      "community": 6,
+      "community": 23,
       "norm_label": "config.py"
     },
     {
@@ -1053,7 +1053,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_config_rationale_1",
-      "community": 6,
+      "community": 23,
       "norm_label": "project-wide configuration constants.  single source of truth for class names,"
     },
     {
@@ -3723,7 +3723,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis",
-      "community": 19,
+      "community": 37,
       "norm_label": "startanalysis"
     },
     {
@@ -3733,7 +3733,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_init",
-      "community": 19,
+      "community": 37,
       "norm_label": ".__init__()"
     },
     {
@@ -3743,7 +3743,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_list_files",
-      "community": 19,
+      "community": 37,
       "norm_label": ".list_files()"
     },
     {
@@ -3753,7 +3753,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_opensvs",
-      "community": 19,
+      "community": 37,
       "norm_label": ".opensvs()"
     },
     {
@@ -3763,7 +3763,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_base_folder_manager",
-      "community": 19,
+      "community": 37,
       "norm_label": ".base_folder_manager()"
     },
     {
@@ -3773,7 +3773,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_get_thumb",
-      "community": 19,
+      "community": 37,
       "norm_label": ".get_thumb()"
     },
     {
@@ -3783,7 +3783,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_get_prop",
-      "community": 19,
+      "community": 37,
       "norm_label": ".get_prop()"
     },
     {
@@ -3793,57 +3793,57 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_tile_gen",
-      "community": 43,
+      "community": 37,
       "norm_label": ".tile_gen()"
     },
     {
       "label": ".folder_manage()",
       "file_type": "code",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L157",
+      "source_location": "L142",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_folder_manage",
-      "community": 59,
+      "community": 37,
       "norm_label": ".folder_manage()"
     },
     {
       "label": ".process_create_dataset()",
       "file_type": "code",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L174",
+      "source_location": "L159",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_process_create_dataset",
-      "community": 19,
+      "community": 37,
       "norm_label": ".process_create_dataset()"
     },
     {
       "label": ".process_to_start()",
       "file_type": "code",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L188",
+      "source_location": "L173",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_process_to_start",
-      "community": 59,
+      "community": 37,
       "norm_label": ".process_to_start()"
     },
     {
       "label": ".manage_process()",
       "file_type": "code",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L206",
+      "source_location": "L191",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_manage_process",
-      "community": 43,
+      "community": 37,
       "norm_label": ".manage_process()"
     },
     {
       "label": ".start_thread()",
       "file_type": "code",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L246",
+      "source_location": "L231",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_startanalysis_start_thread",
-      "community": 43,
+      "community": 37,
       "norm_label": ".start_thread()"
     },
     {
@@ -3853,7 +3853,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_rationale_57",
-      "community": 19,
+      "community": 37,
       "norm_label": "create the folders where the thumbnail and the tiles of the image are         s"
     },
     {
@@ -3863,7 +3863,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_rationale_80",
-      "community": 19,
+      "community": 37,
       "norm_label": "create the thumbnail of the image, ready for the classification phase."
     },
     {
@@ -3873,57 +3873,57 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_rationale_106",
-      "community": 43,
+      "community": 37,
       "norm_label": "call this function to divide the slice in tiles, it manage the dimension and the"
     },
     {
       "label": "Test if the folder alredy exist, if true return 1 and the thread will stop",
       "file_type": "rationale",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L158",
+      "source_location": "L143",
       "_origin": "ast",
-      "id": "src_multi_processing_analysis_rationale_158",
-      "community": 59,
+      "id": "src_multi_processing_analysis_rationale_143",
+      "community": 37,
       "norm_label": "test if the folder alredy exist, if true return 1 and the thread will stop"
     },
     {
       "label": "Divide the wsi in tiles, thanks to get_tile, if the test with fold managere is f",
       "file_type": "rationale",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L175",
+      "source_location": "L160",
       "_origin": "ast",
-      "id": "src_multi_processing_analysis_rationale_175",
-      "community": 19,
+      "id": "src_multi_processing_analysis_rationale_160",
+      "community": 37,
       "norm_label": "divide the wsi in tiles, thanks to get_tile, if the test with fold managere is f"
     },
     {
       "label": "Divide the wsi in tiles, thanks to get_tile, if the test with fold managere is f",
       "file_type": "rationale",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L189",
+      "source_location": "L174",
       "_origin": "ast",
-      "id": "src_multi_processing_analysis_rationale_189",
-      "community": 59,
+      "id": "src_multi_processing_analysis_rationale_174",
+      "community": 37,
       "norm_label": "divide the wsi in tiles, thanks to get_tile, if the test with fold managere is f"
     },
     {
       "label": "Manage the starting and ending point for the reading phase of the SVS file.",
       "file_type": "rationale",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L207",
+      "source_location": "L192",
       "_origin": "ast",
-      "id": "src_multi_processing_analysis_rationale_207",
-      "community": 43,
+      "id": "src_multi_processing_analysis_rationale_192",
+      "community": 37,
       "norm_label": "manage the starting and ending point for the reading phase of the svs file."
     },
     {
       "label": "Start the theads, in this way the process is faster.",
       "file_type": "rationale",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L247",
+      "source_location": "L232",
       "_origin": "ast",
-      "id": "src_multi_processing_analysis_rationale_247",
-      "community": 43,
+      "id": "src_multi_processing_analysis_rationale_232",
+      "community": 37,
       "norm_label": "start the theads, in this way the process is faster."
     },
     {
@@ -3933,7 +3933,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_performance_widget",
-      "community": 8,
+      "community": 23,
       "norm_label": "performance_widget.py"
     },
     {
@@ -4393,7 +4393,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_uncertainty_analysis",
-      "community": 6,
+      "community": 24,
       "norm_label": "uncertainty_analysis.py"
     },
     {
@@ -4503,7 +4503,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_analysis_test_start_analysis",
-      "community": 28,
+      "community": 37,
       "norm_label": "test_start_analysis.py"
     },
     {
@@ -4513,7 +4513,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "tests_analysis_test_start_analysis_test_lev_sec_under_level_count_does_not_raise_in_get_thumb",
-      "community": 28,
+      "community": 37,
       "norm_label": "test_lev_sec_under_level_count_does_not_raise_in_get_thumb()"
     },
     {
@@ -4523,7 +4523,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "tests_analysis_test_start_analysis_test_get_thumb_uses_a_valid_openslide_level",
-      "community": 28,
+      "community": 37,
       "norm_label": "test_get_thumb_uses_a_valid_openslide_level()"
     },
     {
@@ -4533,18 +4533,8 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "tests_analysis_test_start_analysis_test_tile_gen_returns_deepzoom_level_index_not_openslide",
-      "community": 28,
+      "community": 37,
       "norm_label": "test_tile_gen_returns_deepzoom_level_index_not_openslide()"
-    },
-    {
-      "label": "test_openSvs_clamps_out_of_range_lev_sec_instead_of_IndexError()",
-      "file_type": "code",
-      "source_file": "tests/analysis/test_start_analysis.py",
-      "source_location": "L95",
-      "_origin": "ast",
-      "id": "tests_analysis_test_start_analysis_test_opensvs_clamps_out_of_range_lev_sec_instead_of_indexerror",
-      "community": 28,
-      "norm_label": "test_opensvs_clamps_out_of_range_lev_sec_instead_of_indexerror()"
     },
     {
       "label": "Analysis-tier tests for ``StartAnalysis`` that exercise the OpenSlide / DeepZoom",
@@ -4553,7 +4543,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_analysis_test_start_analysis_rationale_1",
-      "community": 28,
+      "community": 37,
       "norm_label": "analysis-tier tests for ``startanalysis`` that exercise the openslide / deepzoom"
     },
     {
@@ -4563,7 +4553,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "tests_analysis_test_start_analysis_rationale_26",
-      "community": 28,
+      "community": 37,
       "norm_label": "regression for the indexerror: tuple index out of range.      original bug: ui_p"
     },
     {
@@ -4573,7 +4563,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "tests_analysis_test_start_analysis_rationale_50",
-      "community": 28,
+      "community": 37,
       "norm_label": "when ``lev_sec`` is in range, the produced thumbnail must come from     ``list_l"
     },
     {
@@ -4583,18 +4573,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "tests_analysis_test_start_analysis_rationale_70",
-      "community": 28,
+      "community": 37,
       "norm_label": "regression for the ``invalid address`` valueerror.      ``tile_gen(state=0)`` re"
-    },
-    {
-      "label": "Regression: a small fixture (``level_count=2``) used to crash hard in     ``tile",
-      "file_type": "rationale",
-      "source_file": "tests/analysis/test_start_analysis.py",
-      "source_location": "L96",
-      "_origin": "ast",
-      "id": "tests_analysis_test_start_analysis_rationale_96",
-      "community": 28,
-      "norm_label": "regression: a small fixture (``level_count=2``) used to crash hard in     ``tile"
     },
     {
       "label": "conftest.py",
@@ -5263,7 +5243,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition",
-      "community": 23,
+      "community": 37,
       "norm_label": "test_tile_partition.py"
     },
     {
@@ -5273,7 +5253,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_analysis",
-      "community": 23,
+      "community": 37,
       "norm_label": "analysis()"
     },
     {
@@ -5283,7 +5263,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_expected_partition",
-      "community": 23,
+      "community": 37,
       "norm_label": "_expected_partition()"
     },
     {
@@ -5293,7 +5273,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_testmanageprocessshape",
-      "community": 23,
+      "community": 37,
       "norm_label": "testmanageprocessshape"
     },
     {
@@ -5303,7 +5283,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_testmanageprocessshape_test_returns_five_lists_of_equal_length",
-      "community": 23,
+      "community": 37,
       "norm_label": ".test_returns_five_lists_of_equal_length()"
     },
     {
@@ -5323,7 +5303,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_testmanageprocessvalues_test_matches_reference_implementation",
-      "community": 23,
+      "community": 37,
       "norm_label": ".test_matches_reference_implementation()"
     },
     {
@@ -5383,7 +5363,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_rationale_1",
-      "community": 23,
+      "community": 37,
       "norm_label": "unit tests for ``startanalysis.manage_process()``.  this method computes the x-a"
     },
     {
@@ -5393,7 +5373,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_rationale_24",
-      "community": 23,
+      "community": 37,
       "norm_label": "a startanalysis with the minimum attributes manage_process touches.      we don'"
     },
     {
@@ -5403,7 +5383,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_rationale_33",
-      "community": 23,
+      "community": 37,
       "norm_label": "reference implementation of manage_process() used as the oracle.      kept indep"
     },
     {
@@ -5413,7 +5393,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "tests_unit_test_tile_partition_rationale_64",
-      "community": 23,
+      "community": 37,
       "norm_label": "return-shape contract: always a 5-tuple of equal-length lists."
     },
     {
@@ -5483,7 +5463,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_dataclean",
-      "community": 6,
+      "community": 23,
       "norm_label": "ui_dataclean.py"
     },
     {
@@ -5573,7 +5553,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "ui_dataclean_workersignals",
-      "community": 6,
+      "community": 22,
       "norm_label": "workersignals"
     },
     {
@@ -5583,7 +5563,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "ui_dataclean_py_qobject",
-      "community": 6,
+      "community": 22,
       "norm_label": "qobject"
     },
     {
@@ -5633,7 +5613,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "ui_dataclean_mainwindow",
-      "community": 15,
+      "community": 28,
       "norm_label": "mainwindow"
     },
     {
@@ -5643,7 +5623,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "ui_dataclean_py_qmainwindow",
-      "community": 15,
+      "community": 28,
       "norm_label": "qmainwindow"
     },
     {
@@ -5653,7 +5633,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "ui_dataclean_mainwindow_init",
-      "community": 15,
+      "community": 28,
       "norm_label": ".__init__()"
     },
     {
@@ -5663,7 +5643,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "ui_dataclean_mainwindow_create_actions",
-      "community": 15,
+      "community": 28,
       "norm_label": "._create_actions()"
     },
     {
@@ -5673,7 +5653,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "ui_dataclean_mainwindow_create_menus",
-      "community": 15,
+      "community": 28,
       "norm_label": "._create_menus()"
     },
     {
@@ -5683,7 +5663,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "ui_dataclean_mainwindow_show_tutorial",
-      "community": 15,
+      "community": 28,
       "norm_label": "._show_tutorial()"
     },
     {
@@ -5963,7 +5943,7 @@
       "source_location": "L757",
       "_origin": "ast",
       "id": "ui_dataclean_maintabwidget_update_training_log",
-      "community": 4,
+      "community": 59,
       "norm_label": "._update_training_log()"
     },
     {
@@ -6163,7 +6143,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_dataclean_rationale_1",
-      "community": 6,
+      "community": 23,
       "norm_label": "bayesian datacleaning application application for cleaning medical image datase"
     },
     {
@@ -6203,7 +6183,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "ui_dataclean_rationale_97",
-      "community": 6,
+      "community": 22,
       "norm_label": "signals emitted by longrunningworker to communicate with the main thread."
     },
     {
@@ -6223,7 +6203,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "ui_dataclean_rationale_142",
-      "community": 15,
+      "community": 28,
       "norm_label": "main application window for bayesian datacleaning."
     },
     {
@@ -6333,7 +6313,7 @@
       "source_location": "L758",
       "_origin": "ast",
       "id": "ui_dataclean_rationale_758",
-      "community": 4,
+      "community": 59,
       "norm_label": "aggiorna il log del training, filtrando le righe di epoca."
     },
     {
@@ -6853,7 +6833,7 @@
       "source_location": "L824",
       "_origin": "ast",
       "id": "ui_pyqt5_imageviewer_make_action",
-      "community": 15,
+      "community": 28,
       "norm_label": "._make_action()"
     },
     {
@@ -6863,7 +6843,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "qaction",
-      "community": 15,
+      "community": 28,
       "norm_label": "qaction"
     },
     {
@@ -14899,7 +14879,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L157",
+      "source_location": "L142",
       "weight": 1.0,
       "source": "src_multi_processing_analysis_startanalysis",
       "target": "src_multi_processing_analysis_startanalysis_folder_manage",
@@ -14949,7 +14929,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L206",
+      "source_location": "L191",
       "weight": 1.0,
       "source": "src_multi_processing_analysis_startanalysis",
       "target": "src_multi_processing_analysis_startanalysis_manage_process",
@@ -14969,7 +14949,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L174",
+      "source_location": "L159",
       "weight": 1.0,
       "source": "src_multi_processing_analysis_startanalysis",
       "target": "src_multi_processing_analysis_startanalysis_process_create_dataset",
@@ -14979,7 +14959,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L188",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "src_multi_processing_analysis_startanalysis",
       "target": "src_multi_processing_analysis_startanalysis_process_to_start",
@@ -14989,7 +14969,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L246",
+      "source_location": "L231",
       "weight": 1.0,
       "source": "src_multi_processing_analysis_startanalysis",
       "target": "src_multi_processing_analysis_startanalysis_start_thread",
@@ -15035,17 +15015,6 @@
       "source_location": "L41",
       "weight": 1.0,
       "source": "tests_analysis_test_start_analysis_test_lev_sec_under_level_count_does_not_raise_in_get_thumb",
-      "target": "src_multi_processing_analysis_startanalysis",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/analysis/test_start_analysis.py",
-      "source_location": "L104",
-      "weight": 1.0,
-      "source": "tests_analysis_test_start_analysis_test_opensvs_clamps_out_of_range_lev_sec_instead_of_indexerror",
       "target": "src_multi_processing_analysis_startanalysis",
       "confidence_score": 1.0
     },
@@ -15357,7 +15326,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L146",
+      "source_location": "L131",
       "weight": 1.0,
       "source": "src_multi_processing_analysis_startanalysis_tile_gen",
       "target": "src_multi_processing_analysis_startanalysis_manage_process",
@@ -15368,7 +15337,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L155",
+      "source_location": "L140",
       "weight": 1.0,
       "source": "src_multi_processing_analysis_startanalysis_tile_gen",
       "target": "src_multi_processing_analysis_startanalysis_start_thread",
@@ -15378,9 +15347,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L158",
+      "source_location": "L143",
       "weight": 1.0,
-      "source": "src_multi_processing_analysis_rationale_158",
+      "source": "src_multi_processing_analysis_rationale_143",
       "target": "src_multi_processing_analysis_startanalysis_folder_manage",
       "confidence_score": 1.0
     },
@@ -15389,7 +15358,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L191",
+      "source_location": "L176",
       "weight": 1.0,
       "source": "src_multi_processing_analysis_startanalysis_process_to_start",
       "target": "src_multi_processing_analysis_startanalysis_folder_manage",
@@ -15399,9 +15368,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L175",
+      "source_location": "L160",
       "weight": 1.0,
-      "source": "src_multi_processing_analysis_rationale_175",
+      "source": "src_multi_processing_analysis_rationale_160",
       "target": "src_multi_processing_analysis_startanalysis_process_create_dataset",
       "confidence_score": 1.0
     },
@@ -15409,9 +15378,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L189",
+      "source_location": "L174",
       "weight": 1.0,
-      "source": "src_multi_processing_analysis_rationale_189",
+      "source": "src_multi_processing_analysis_rationale_174",
       "target": "src_multi_processing_analysis_startanalysis_process_to_start",
       "confidence_score": 1.0
     },
@@ -15419,9 +15388,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L207",
+      "source_location": "L192",
       "weight": 1.0,
-      "source": "src_multi_processing_analysis_rationale_207",
+      "source": "src_multi_processing_analysis_rationale_192",
       "target": "src_multi_processing_analysis_startanalysis_manage_process",
       "confidence_score": 1.0
     },
@@ -15429,9 +15398,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/multi_processing_analysis.py",
-      "source_location": "L247",
+      "source_location": "L232",
       "weight": 1.0,
-      "source": "src_multi_processing_analysis_rationale_247",
+      "source": "src_multi_processing_analysis_rationale_232",
       "target": "src_multi_processing_analysis_startanalysis_start_thread",
       "confidence_score": 1.0
     },
@@ -16613,16 +16582,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/analysis/test_start_analysis.py",
-      "source_location": "L95",
-      "weight": 1.0,
-      "source": "tests_analysis_test_start_analysis",
-      "target": "tests_analysis_test_start_analysis_test_opensvs_clamps_out_of_range_lev_sec_instead_of_indexerror",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/analysis/test_start_analysis.py",
       "source_location": "L69",
       "weight": 1.0,
       "source": "tests_analysis_test_start_analysis",
@@ -16667,16 +16626,6 @@
       "weight": 1.0,
       "source": "tests_analysis_test_start_analysis_rationale_70",
       "target": "tests_analysis_test_start_analysis_test_tile_gen_returns_deepzoom_level_index_not_openslide",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/analysis/test_start_analysis.py",
-      "source_location": "L96",
-      "weight": 1.0,
-      "source": "tests_analysis_test_start_analysis_rationale_96",
-      "target": "tests_analysis_test_start_analysis_test_opensvs_clamps_out_of_range_lev_sec_instead_of_indexerror",
       "confidence_score": 1.0
     },
     {
