@@ -131,7 +131,7 @@ dmypy.json
 .idea/workspace.xml
 
 # New
-.vscode/
+.vscode
 Model_1_85aug.h5
 .opencode
 

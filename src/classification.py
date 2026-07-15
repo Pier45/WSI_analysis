@@ -88,6 +88,12 @@ class Classification:
         """
         Load the model and analyze the tile, the dictionary is updated with the predicted label
         """
+        if not self.dictionary:
+            # ``select_folder`` is not called by ``__init__``; invoke it here
+            # so the tile dict and padded-image list are populated before the
+            # model runs. Skipping this left ``np_list_image`` as a plain list
+            # and crashed on ``np_list_image.shape`` below.
+            self.select_folder()
         self.load_model(model_name=model_n)
         print(self.np_list_image.shape)
         tesu = []
@@ -95,8 +101,12 @@ class Classification:
         mc = monte_c
 
         for i in range(0, mc):
-            if i != 0:
-                progress_callback.emit(100*i/6)
+            # The MC loop covers the first 0–80 % of overall analysis progress
+            # (the remaining 80→100 % is taken by the four overlay() calls
+            # below). Use int(...) so the emitted value is a plain Python int —
+            # passing a float to a pyqtSignal(int) has produced garbage values
+            # on some PyQt5 builds (huge or negative percentages).
+            progress_callback.emit(int(80 * (i + 1) / mc))
 
             tesu.append(self.model.predict(self.np_list_image, batch_size=50))
 
@@ -137,36 +147,54 @@ class Classification:
         plt.imshow(self.np_list_image[74, :, :, :])
         plt.show()
 
-    def overlay(self, unc='Pred_class'):
-        a = plt.imread(self.path + '/thumbnail/th.png')
+    def overlay(self, typean, unc='Pred_class'):
+        a = plt.imread(os.path.join(self.path, 'thumbnail', 'th.png'))
         image_base = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
         image_base_H = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
         image_base_AC = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
         image_base_AD = np.zeros((a.shape[0], a.shape[1], 4), dtype=float)
 
         print(f'IMAGE SHAPE BASE {image_base.shape}')
-        step = 64/4    # per casi di rimpicciolimero grandezza tiles diviso quando si vuole es 128 / 4 = 32
-        res_path = self.path + '/result'
+        # Compute per-tile footprint on the thumbnail so the overlay covers
+        # the whole canvas instead of a small top-right patch. The grid
+        # extents (max col/row + 1) come from the dictionary itself, so we
+        # no longer rely on the hardcoded 64/4 = 16 step that assumed the
+        # tile grid mapped 1:16 onto the thumbnail (true only for a very
+        # specific lev_sec / DeepZoomGenerator combination).
+        if self.dictionary:
+            n_cols = max(v["col"] for v in self.dictionary.values()) + 1
+            n_rows = max(v["row"] for v in self.dictionary.values()) + 1
+        else:
+            n_cols = n_rows = 1
+        step_x = a.shape[1] / n_cols
+        step_y = a.shape[0] / n_rows
+        res_path = os.path.join(self.path, 'result')
 
         if not os.path.exists(res_path):
-            os.makedirs(res_path + '/uncertainty')
+            os.makedirs(os.path.join(res_path, 'uncertainty'))
 
         if unc == 'Pred_class':
-            res_name = [self.path+'result/'+str(unc)+'.png', self.path+'result/AC.png', self.path+'result/H.png', self.path+'result/AD.png']
+            res_name = [os.path.join(res_path, str(unc) + '.png'),
+                        os.path.join(res_path, 'AC.png'),
+                        os.path.join(res_path, 'H.png'),
+                        os.path.join(res_path, 'AD.png')]
         else:
-            res_name = self.path + 'result/uncertainty/' + str(unc) + '.png'
+            res_name = os.path.join(res_path, 'uncertainty', str(unc) + '.png')
 
         n1, n2, n3 = 0, 0, 0
 
         for i, name_t in enumerate(self.dictionary):
 
-            shape_x = int(self.dictionary[name_t]["shape_x"]/4)
-            shape_y = int(self.dictionary[name_t]["shape_y"]/4)
             u_tot = self.dictionary[name_t]["ale"]+self.dictionary[name_t]["epi"]
             column = self.dictionary[name_t]["col"]
             row = self.dictionary[name_t]["row"]
-            c0 = int(column*step)
-            r0 = int(row*step)
+            # Each tile occupies step_x × step_y on the thumbnail canvas.
+            # Border tiles may be smaller than 64px natively, but their grid
+            # cell is still one step × step box — the overlay grid is uniform.
+            shape_y = max(int(round(step_y)), 1)
+            shape_x = max(int(round(step_x)), 1)
+            c0 = int(round(column * step_x))
+            r0 = int(round(row * step_y))
             if unc == 'Pred_class':
                 clas = self.dictionary[name_t]["pred_class"]
                 if clas == 'AC' and u_tot < 0.2:
@@ -240,7 +268,7 @@ class Classification:
 
     def new_save(self, image_base, res_name):
         image_base = np.where(image_base < 1, image_base, 1)
-        background = Image.open(self.path + '/thumbnail/th.png')
+        background = Image.open(os.path.join(self.path, 'thumbnail', 'th.png'))
         foreground = Image.fromarray(np.uint8(image_base*255), mode='RGBA')
         background.paste(foreground, (0, 0), foreground)
         #background.show()

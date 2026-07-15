@@ -1,17 +1,23 @@
+# syntax=docker/dockerfile:1.7
+
+# ── Builder: install deps into a clean venv ────────────────────
 FROM python:3.10-slim AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
 
 WORKDIR /app
 
+# Cache-mount decisive wins: wheels are downloaded ONCE per host, not per build.
+# Layer order: deps before code → code-only edits never invalidate the wheel layer.
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-install-project --no-dev
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
 
-# ── Runtime image ──────────────────────────────────────────────
+# ── Runtime ────────────────────────────────────────────────────
 FROM python:3.10-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -22,6 +28,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     LIBGL_ALWAYS_SOFTWARE=1 \
     PATH="/app/.venv/bin:$PATH"
 
+# Qt/X11 runtime libs — unchanged, but placed in one layer w/ clean cache.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libx11-6 libx11-xcb1 libxcb1 libxcb-util1 \
     libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
@@ -36,8 +43,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates x11-utils \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# Copy the prebuilt venv from builder (only deps, no source).
 COPY --from=builder /app/.venv /app/.venv
+
+WORKDIR /app
+
+# Copy source LAST — code edits never invalidate the .venv layer above.
 COPY . .
 
+# Run as non-root.
+RUN useradd --create-home --uid 1001 wsi && chown -R wsi:wsi /app
+USER wsi
+
+# Default to the dataclean GUI; override per-service in docker-compose.
 CMD ["python", "ui_dataclean.py"]
