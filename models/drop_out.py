@@ -13,13 +13,12 @@ Usage (standalone):
 
 from __future__ import annotations
 
+import glob
 import logging
 import math
 import os
-from dataclasses import dataclass, field
-from typing import Optional, Tuple
+from dataclasses import dataclass
 
-import glob
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback, EarlyStopping, ModelCheckpoint
@@ -39,7 +38,8 @@ logger = logging.getLogger(__name__)
 # Architecture constants — single source of truth in src/config.py
 # ---------------------------------------------------------------------------
 
-from src.config import INPUT_SHAPE, N_CLASSES, CLASS_NAMES  # noqa: E402
+from src.config import CLASS_NAMES, INPUT_SHAPE, N_CLASSES  # noqa: E402
+
 
 # Each ConvBlock is described by (n_filters, kernel_size, use_pooling, dropout_rate).
 # Setting use_pooling=False replaces the MaxPooling layer with a stride-1 identity
@@ -52,7 +52,7 @@ class ConvBlockConfig:
     dropout_rate: float
 
 
-CONV_BLOCKS: Tuple[ConvBlockConfig, ...] = (
+CONV_BLOCKS: tuple[ConvBlockConfig, ...] = (
     ConvBlockConfig(filters=16,  kernel_size=6, use_pooling=True,  dropout_rate=0.15),
     ConvBlockConfig(filters=32,  kernel_size=6, use_pooling=True,  dropout_rate=0.25),
     ConvBlockConfig(filters=64,  kernel_size=6, use_pooling=True,  dropout_rate=0.25),
@@ -85,12 +85,12 @@ class TrainingProgressCallback(Callback):
         self._view = view_signal
         self._total_epochs = total_epochs
 
-    def on_batch_end(self, batch: int, logs: Optional[dict] = None) -> None:
+    def on_batch_end(self, batch: int, logs: dict | None = None) -> None:
         logs = logs or {}
         acc = logs.get("accuracy", float("nan"))
         self._view.emit(f"===> Batch: {batch:5d}   Accuracy: {acc:5.3f}")
 
-    def on_epoch_end(self, epoch: int, logs: Optional[dict] = None) -> None:
+    def on_epoch_end(self, epoch: int, logs: dict | None = None) -> None:
         logs = logs or {}
         loss = logs.get("loss", float("nan"))
         acc = logs.get("accuracy", float("nan"))

@@ -11,6 +11,7 @@ dependencies = [
     "tensorflow-probability==0.23.0",
     # Required on Linux/macOS TF wheels; not needed/available on Windows wheels
     "tensorflow-io-gcs-filesystem==0.37.1; sys_platform != 'win32'",
+    "tensorflow-intel==2.15.0; sys_platform == 'win32'",
 
     # --- Core scientific stack ---
     "numpy==1.26.4",

@@ -1262,6 +1262,39 @@ wheels = [
 ]
 
 [[package]]
+name = "tensorflow-intel"
+version = "2.15.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "absl-py", marker = "sys_platform == 'win32'" },
+    { name = "astunparse", marker = "sys_platform == 'win32'" },
+    { name = "flatbuffers", marker = "sys_platform == 'win32'" },
+    { name = "gast", marker = "sys_platform == 'win32'" },
+    { name = "google-pasta", marker = "sys_platform == 'win32'" },
+    { name = "grpcio", marker = "sys_platform == 'win32'" },
+    { name = "h5py", marker = "sys_platform == 'win32'" },
+    { name = "keras", marker = "sys_platform == 'win32'" },
+    { name = "libclang", marker = "sys_platform == 'win32'" },
+    { name = "ml-dtypes", marker = "sys_platform == 'win32'" },
+    { name = "numpy", marker = "sys_platform == 'win32'" },
+    { name = "opt-einsum", marker = "sys_platform == 'win32'" },
+    { name = "packaging", marker = "sys_platform == 'win32'" },
+    { name = "protobuf", marker = "sys_platform == 'win32'" },
+    { name = "setuptools", marker = "sys_platform == 'win32'" },
+    { name = "six", marker = "sys_platform == 'win32'" },
+    { name = "tensorboard", marker = "sys_platform == 'win32'" },
+    { name = "tensorflow-estimator", marker = "sys_platform == 'win32'" },
+    { name = "tensorflow-io-gcs-filesystem", version = "0.31.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'win32'" },
+    { name = "termcolor", marker = "sys_platform == 'win32'" },
+    { name = "typing-extensions", marker = "sys_platform == 'win32'" },
+    { name = "wrapt", marker = "sys_platform == 'win32'" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/1b/63e20bde0db52c3be7e078b50cf507f4534ad6e47b5e2b01d9ed63bb652f/tensorflow_intel-2.15.0-cp310-cp310-win_amd64.whl", hash = "sha256:66f9078b5a64e9c05e9f7a77fb0fb8d21c5be006da2e5e380b61bea8f10a4774", size = 300872720, upload-time = "2023-11-14T21:35:18.843Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/48/1a5a15517f18eaa4ff8d598b1c000300b20c1bb0e624539d702117a0c369/tensorflow_intel-2.15.0-cp311-cp311-win_amd64.whl", hash = "sha256:4710b0ea84defaafc0d6cc51162ebef8b07da015fc68375661451861c5bf4421", size = 300919984, upload-time = "2023-11-14T21:35:38.922Z" },
+]
+
+[[package]]
 name = "tensorflow-io-gcs-filesystem"
 version = "0.31.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1430,6 +1463,7 @@ dependencies = [
     { name = "scikit-learn", version = "1.9.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform == 'linux') or (python_full_version >= '3.11' and sys_platform == 'win32')" },
     { name = "seaborn", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "tensorflow", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "tensorflow-intel", marker = "sys_platform == 'win32'" },
     { name = "tensorflow-io-gcs-filesystem", version = "0.37.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
     { name = "tensorflow-probability", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
@@ -1471,6 +1505,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.4.1" },
     { name = "seaborn", specifier = "==0.13.0" },
     { name = "tensorflow", specifier = "==2.15.0" },
+    { name = "tensorflow-intel", marker = "sys_platform == 'win32'", specifier = "==2.15.0" },
     { name = "tensorflow-io-gcs-filesystem", marker = "sys_platform != 'win32'", specifier = "==0.37.1" },
     { name = "tensorflow-probability", specifier = "==0.23.0" },
 ]

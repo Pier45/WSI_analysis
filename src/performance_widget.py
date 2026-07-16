@@ -1,9 +1,21 @@
-import sys
-from PyQt5.QtWidgets import (QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QLabel, QListWidget,
-                             QHBoxLayout, QRadioButton, QButtonGroup, QFrame)
-from PyQt5.QtGui import QFont
 import json
+import sys
+
 import numpy as np
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import (
+    QApplication,
+    QButtonGroup,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QRadioButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from sklearn.metrics import confusion_matrix
 
 from src.config import CLASS_NAMES
@@ -11,7 +23,7 @@ from src.config import CLASS_NAMES
 
 class QHLine(QFrame):
     def __init__(self):
-        super(QHLine, self).__init__()
+        super().__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
 
@@ -134,7 +146,7 @@ class PerformanceTab(QWidget):
 
     def load_js(self, path):
 
-        with open(path, 'r') as myfile:
+        with open(path) as myfile:
             openf = myfile.read()
         dizio = json.loads(openf)
 
