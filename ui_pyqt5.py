@@ -17,9 +17,8 @@ import sys
 import time
 import traceback
 import webbrowser
-from typing import List, Optional, Tuple
 
-from PyQt5.QtCore import QObject, QRunnable, QThreadPool, Qt, pyqtSignal, QSize, pyqtSlot
+from PyQt5.QtCore import QObject, QRunnable, QSize, Qt, QThreadPool, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont, QIcon, QImage, QPainter, QPalette, QPixmap
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt5.QtWidgets import (
@@ -38,7 +37,6 @@ from PyQt5.QtWidgets import (
 
 from src.multi_processing_analysis import StartAnalysis
 from src.progress_bar import Actions
-
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -62,7 +60,16 @@ APP_TITLE = "Bayesian Analyzer"
 # .ico is poorly supported by Qt on Linux/Wayland; prefer a PNG there so the
 # window icon renders correctly instead of the Wayland fallback icon.
 APP_ICON = "icons/target.png" if sys.platform.startswith("linux") else "icons/target.ico"
-DEFAULT_MODEL = "Model_1_85aug.h5"
+# Default path used to bootstrap the model selection on first run. The user
+# is prompted to actually pick a ``.h5`` file the first time they click Run;
+# this filename is just a sensible default the QFileDialog will start from.
+DEFAULT_MODEL_FILENAME = "Model_1_85aug.h5"
+# Sentinel meaning "no model selected yet" — ``_start_analysis`` interprets
+# this empty string as "prompt the user to pick a model before running".
+# Keeping it explicit (rather than initialising _model_name to the filename
+# directly) avoids silently running with a stale path that may no longer
+# exist on disk.
+DEFAULT_MODEL = ""
 # When the GUI runs natively on Windows, the browser connects to 127.0.0.1:5000.
 # When the GUI runs inside Docker (WSL2), the host browser reaches the published
 # port as localhost — set DEEPZOOM_BROWSER_HOST / DEEPZOOM_BROWSER_PORT env vars
@@ -72,7 +79,7 @@ _browser_port = os.environ.get("DEEPZOOM_BROWSER_PORT", "5000")
 DEEPZOOM_URL = f"http://{_browser_host}:{_browser_port}/"
 DEEPZOOM_SERVER_SCRIPT = "src/deepzoom/deepzoom_server.py"
 
-MONTE_CARLO_OPTIONS: Tuple[int, ...] = (5, 25, 50)
+MONTE_CARLO_OPTIONS: tuple[int, ...] = (5, 25, 50)
 DEFAULT_MONTE_CARLO = 5
 
 ZOOM_IN_FACTOR = 1.25
@@ -161,7 +168,7 @@ class WorkerLong(QRunnable):
 # ---------------------------------------------------------------------------
 
 
-def _get_screen_size() -> Tuple[int, int]:
+def _get_screen_size() -> tuple[int, int]:
     """
     Return the primary screen dimensions as ``(width, height)``.
 
@@ -214,11 +221,11 @@ class ImageViewer(QMainWindow):
         self._monte_carlo_samples: int = DEFAULT_MONTE_CARLO
 
         # Tile-generation metadata (populated by StartAnalysis.tile_gen)
-        self._tile_x_start: List[int] = []
-        self._tile_x_stop: List[int] = []
-        self._process_names: List[str] = []
-        self._tile_start_idx: List[int] = []
-        self._tile_stop_idx: List[int] = []
+        self._tile_x_start: list[int] = []
+        self._tile_x_stop: list[int] = []
+        self._process_names: list[str] = []
+        self._tile_start_idx: list[int] = []
+        self._tile_stop_idx: list[int] = []
         self._tile_rows: int = 0
         # OpenSlide-level index (indexes ``slide.level_dimensions``, used as
         # ``StartAnalysis(lev_sec=...)``). Must stay < ``slide.level_count``.
@@ -233,14 +240,14 @@ class ImageViewer(QMainWindow):
         # main thread (never from a worker thread) once the last one is done.
         self._pending_tile_workers: int = 0
 
-        self._screen_size: Tuple[int, int] = _get_screen_size()
+        self._screen_size: tuple[int, int] = _get_screen_size()
         self._thread_pool = QThreadPool()
 
         # --- UI ---
         self._printer = QPrinter()
         self._scale_factor: float = 0.0
-        self._progress_dialog: Optional[QDialog] = None
-        self._progress_ui: Optional[Actions] = None
+        self._progress_dialog: QDialog | None = None
+        self._progress_ui: Actions | None = None
 
         self._image_label = QLabel(WELCOME_MESSAGE)
         self._image_label.setFont(QFont("Helvetica", 15, QFont.Black))
@@ -430,7 +437,7 @@ class ImageViewer(QMainWindow):
 
     def _create_tiles(
         self,
-        tile_args: List,
+        tile_args: list,
         progress_callback,  # injected by WorkerLong
     ) -> str:
         """
@@ -580,6 +587,23 @@ class ImageViewer(QMainWindow):
 
     def _start_analysis(self) -> None:
         """Run the Bayesian classification in a background thread (if not already done)."""
+        # First-run gating: the user must select a model before any analysis
+        # can run. ``DEFAULT_MODEL`` is the empty string on purpose so a
+        # brand-new install doesn't silently try to load a non-existent
+        # ``Model_1_85aug.h5`` and crash deep inside the worker thread.
+        if not self._model_name:
+            QMessageBox.information(
+                self,
+                APP_TITLE,
+                "No model has been selected yet. Choose a model file "
+                "(.h5) before running the analysis.",
+            )
+            chosen = self._select_model()
+            if not chosen:
+                # User cancelled the file dialog — abort the run silently.
+                logger.info("Analysis aborted — no model selected.")
+                return
+
         if os.path.exists(self._result_dir):
             logger.info("Analysis results already present — loading existing results.")
             self._view_result("Pred_class", "result")
@@ -757,23 +781,38 @@ class ImageViewer(QMainWindow):
     def _set_monte_carlo(self, value: int) -> None:
         """Set the Monte Carlo sample count and uncheck the other options."""
         self._monte_carlo_samples = value
-        for action, mc_value in zip(
-            (self._mc5_act, self._mc25_act, self._mc50_act),
-            MONTE_CARLO_OPTIONS,
-        ):
+        for action, mc_value in zip((self._mc5_act, self._mc25_act, self._mc50_act), MONTE_CARLO_OPTIONS):
             action.setChecked(mc_value == value)
         logger.debug("Monte Carlo samples set to %d", value)
 
-    def _select_model(self) -> None:
+    def _select_model(self) -> Optional[str]:
+        """Prompt the user to pick a ``.h5`` model file and cache the path.
+
+        Returns
+        -------
+        Optional[str]
+            The chosen path (also stored in ``self._model_name``), or
+            ``None`` if the user cancelled. Returning the value lets callers
+            like ``_start_analysis`` decide whether to abort the run instead
+            of failing later inside the worker thread.
+        """
         QMessageBox.information(
             self,
             APP_TITLE,
             "The selected model must produce three output classes: AC, AD, H.",
         )
-        model_path, _ = QFileDialog.getOpenFileName(self, "Select Model", "", "H5 Files (*.h5)")
+        # Seed the dialog with the default filename (and the directory of any
+        # previously selected model) so the user lands on a sensible path
+        # rather than the FS root on every first run.
+        start_dir = os.path.dirname(self._model_name) if self._model_name else ""
+        suggested = os.path.join(start_dir, DEFAULT_MODEL_FILENAME) if start_dir else DEFAULT_MODEL_FILENAME
+        model_path, _ = QFileDialog.getOpenFileName(self, "Select Model", suggested, "H5 Files (*.h5)")
         if model_path:
             self._model_name = model_path
             logger.info("Model changed to: %s", model_path)
+            return model_path
+        logger.info("Model selection cancelled by user.")
+        return None
 
     # ------------------------------------------------------------------
     # View shortcuts
@@ -825,7 +864,7 @@ class ImageViewer(QMainWindow):
         self,
         text: str,
         *,
-        icon: Optional[str] = None,
+        icon: str | None = None,
         shortcut: str = "",
         enabled: bool = True,
         checkable: bool = False,

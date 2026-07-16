@@ -16,12 +16,11 @@ Usage (standalone):
 
 from __future__ import annotations
 
+import glob
 import logging
 import math
 import os
-from typing import Optional, Tuple
 
-import glob
 import pandas as pd
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -42,7 +41,7 @@ logger = logging.getLogger(__name__)
 # Architecture constants — single source of truth in src/config.py
 # ---------------------------------------------------------------------------
 
-from src.config import INPUT_SHAPE, N_CLASSES, CLASS_NAMES  # noqa: E402
+from src.config import CLASS_NAMES, INPUT_SHAPE, N_CLASSES  # noqa: E402
 
 
 class TrainingProgressCallback(Callback):
@@ -65,12 +64,12 @@ class TrainingProgressCallback(Callback):
         self._view = view_signal
         self._total_epochs = total_epochs
 
-    def on_batch_end(self, batch: int, logs: Optional[dict] = None) -> None:
+    def on_batch_end(self, batch: int, logs: dict | None = None) -> None:
         logs = logs or {}
         acc = logs.get("accuracy", float("nan"))
         self._view.emit(f"===> Batch: {batch:5d}   Accuracy: {acc:5.3f}")
 
-    def on_epoch_end(self, epoch: int, logs: Optional[dict] = None) -> None:
+    def on_epoch_end(self, epoch: int, logs: dict | None = None) -> None:
         logs = logs or {}
         loss = logs.get("loss", float("nan"))
         acc = logs.get("accuracy", float("nan"))
@@ -179,7 +178,7 @@ class ModelKl:
 
     def bayesian_vgg(
         self,
-        input_shape: Tuple[int, int, int],
+        input_shape: tuple[int, int, int],
         num_classes: int = N_CLASSES,
         kernel_posterior_scale_mean: float = -9.0,
         kernel_posterior_scale_stddev: float = 0.1,

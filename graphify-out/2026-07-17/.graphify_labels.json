@@ -80,9 +80,5 @@
   "78": "MainWindow",
   "79": "TrainingProgressCallback",
   "80": "._tile_dataset",
-  "81": "._update_training_log",
-  "82": "BayesianModel",
-  "83": "TrainingProgressCallback",
-  "84": "._select_dataset_folder",
-  "85": "._create_clean_dataset"
+  "81": "._update_training_log"
 }

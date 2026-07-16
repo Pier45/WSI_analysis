@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import (QApplication, QDialog, QProgressBar, QPushButton)
 import sys
+
+from PyQt5.QtWidgets import QApplication, QProgressBar
 
 
 class Actions:

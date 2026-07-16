@@ -26,10 +26,10 @@ from __future__ import annotations
 import inspect
 import sys
 import traceback
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
-from PyQt5.QtCore import QObject, QRunnable, pyqtSlot, pyqtSignal
-
+from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 # ---------------------------------------------------------------------------
 # Signals

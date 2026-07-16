@@ -1,16 +1,13 @@
-import numpy as np
+import glob
+import logging
+import multiprocessing
+import os
+import threading
+import time
+from math import ceil
+
 import openslide
 from openslide.deepzoom import DeepZoomGenerator
-import os
-import PIL
-import sys
-import multiprocessing
-import time
-import logging
-from math import ceil
-import threading
-import glob
-import time
 
 from src.config import WSI_OUTPUT_DIR
 
@@ -135,7 +132,7 @@ class StartAnalysis:
 
         try:
             numx, numy = ntile[self.levi]
-            print('{}---{}'.format(numx, numy))
+            print(f'{numx}---{numy}')
         except IndexError:
             numx, numy = ntile[-1]
             self.levi = len(ntile)-1
@@ -161,7 +158,7 @@ class StartAnalysis:
         flag = 0
         for k in fold:
             if k == name_process:
-                print('Folder alredy exist {}'.format(name_process))
+                print(f'Folder alredy exist {name_process}')
                 flag += 1
             else:
                 pass
@@ -218,10 +215,10 @@ class StartAnalysis:
             step_x = ceil(numtotx / n_core)
             images_per_process = numtoty*step_x
 
-        print('Number cores:                          {:>5}'.format(n_core))
-        print('Total number of training images:       {:>5}'.format(num_train_images))
-        print('Number of training images for process: {:>5}'.format(images_per_process))
-        print('Step on x for 1 process:               {:>5}'.format(step_x))
+        print(f'Number cores:                          {n_core:>5}')
+        print(f'Total number of training images:       {num_train_images:>5}')
+        print(f'Number of training images for process: {images_per_process:>5}')
+        print(f'Step on x for 1 process:               {step_x:>5}')
 
         start_index, end_index, numx_start, numx_stop, list_proc = [], [], [], [], []
 

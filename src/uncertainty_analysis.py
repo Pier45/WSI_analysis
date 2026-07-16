@@ -1,10 +1,11 @@
 import json
-import numpy as np
+import os
+import shutil
+
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 from matplotlib.pyplot import figure
-import shutil
-import os
 
 
 class Th:
@@ -20,10 +21,10 @@ class Th:
         self.d_th = {'otsu': 0.0, 'new': 0.0, 'manual': 0.0}
 
     def openf(self):
-        with open(self.path, 'r') as myfile:
+        with open(self.path) as myfile:
             openf = myfile.read()
         self.dizio = json.loads(openf)
-    
+
     def create_list(self):
         self.openf()
         list_ale, list_epi = [], []
@@ -88,16 +89,16 @@ class Th:
 
     def th_managment(self, manual_th=0):
         minimo = round(self.tot_n * 0.6)
-        
+
         his, bi = np.histogram(self.list_tot, np.arange(0, 1, 0.01))
         pos = np.where(bi == self.thfin)
         print('POS', pos)
         number_new_dataset = np.sum(his[:pos[0][0]])
 
         print('---------', his[:pos[0][0]])
-        print('Total number tiles:         {}\n'
-              '60% of dataset:             {}\n'
-              'Elemets UncT < Otsu Th:     {}'.format(self.tot_n, minimo, number_new_dataset))
+        print(f'Total number tiles:         {self.tot_n}\n'
+              f'60% of dataset:             {minimo}\n'
+              f'Elemets UncT < Otsu Th:     {number_new_dataset}')
 
         if manual_th == 0:
             if minimo > number_new_dataset:
@@ -120,9 +121,9 @@ class Th:
             pos1 = np.where(bi == self.newth)
             number_new_dataset1 = np.sum(his[:pos1[0][0]])
 
-        print('Elements new dataset:       {}\n'
-              'Otsu Th:    {}\n'
-              'New Th:     {}'.format(number_new_dataset1, self.thfin, self.newth))
+        print(f'Elements new dataset:       {number_new_dataset1}\n'
+              f'Otsu Th:    {self.thfin}\n'
+              f'New Th:     {self.newth}')
         return self.newth, self.thfin, number_new_dataset1, number_new_dataset
 
     def clean_js(self, selected_th, conclusive_path, progress_callback, view):
@@ -156,7 +157,7 @@ class Th:
             elif self.dizio[i]['Unc_tot'] > self.thfin:
                 cl_otsu[self.dizio[i]['true_class']] += 1
 
-        print("Cl_Ostu: \n {}\nCl_new: \n{}".format(cl_otsu, cl_new))
+        print(f"Cl_Ostu: \n {cl_otsu}\nCl_new: \n{cl_new}")
         colors = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99']
 
         fig, (ax1, ax2) = plt.subplots(1, 2, frameon=False)

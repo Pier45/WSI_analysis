@@ -8,7 +8,7 @@ branching on kwargs.
 
 from __future__ import annotations
 
-from typing import Optional, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from tensorflow.keras.callbacks import History
 
@@ -46,16 +46,16 @@ class BayesianModel(Protocol):
 
     def train(
         self,
-        progress_signal: Optional[object] = None,
-        view_signal: Optional[object] = None,
+        progress_signal: object | None = None,
+        view_signal: object | None = None,
     ) -> History:
         """Build, compile and train the model, returning the Keras history."""
         ...
 
     def start_train(
         self,
-        progress_callback: Optional[object] = None,
-        view: Optional[object] = None,
+        progress_callback: object | None = None,
+        view: object | None = None,
     ) -> History:
         """Backward-compatible alias for :meth:`train`."""
         ...

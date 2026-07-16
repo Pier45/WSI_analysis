@@ -3,31 +3,46 @@ Bayesian Datacleaning Application
 Application for cleaning medical image datasets via Bayesian uncertainty analysis.
 """
 
-import sys
 import os
+import sys
 import time
 import traceback
-import matplotlib
 
+import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-
-from PyQt5.QtWidgets import (
-    QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QApplication,
-    QLabel, QScrollArea, QMenu, QAction, QFileDialog, QProgressBar,
-    QListWidget, QLineEdit, QButtonGroup, QMessageBox, QPushButton,
-    QTabWidget, QRadioButton, QFrame, QCheckBox
-)
+from PyQt5.QtCore import QObject, QRunnable, Qt, QThreadPool, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QRunnable, QThreadPool, Qt
+from PyQt5.QtWidgets import (
+    QAction,
+    QApplication,
+    QButtonGroup,
+    QCheckBox,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
-from src.multi_processing_analysis import StartAnalysis
 from models.drop_out import BayesianDropoutCNN
 from models.kl import ModelKl
 from src.classification import Classification
-from src.uncertainty_analysis import Th
-from src.performance_widget import PerformanceTab
 from src.config import CLASS_NAMES
+from src.multi_processing_analysis import StartAnalysis
+from src.performance_widget import PerformanceTab
+from src.uncertainty_analysis import Th
 
 matplotlib.use('Qt5Agg')
 
