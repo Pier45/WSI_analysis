@@ -781,10 +781,7 @@ class ImageViewer(QMainWindow):
     def _set_monte_carlo(self, value: int) -> None:
         """Set the Monte Carlo sample count and uncheck the other options."""
         self._monte_carlo_samples = value
-        for action, mc_value in zip(
-            (self._mc5_act, self._mc25_act, self._mc50_act),
-            MONTE_CARLO_OPTIONS,
-        ):
+        for action, mc_value in zip((self._mc5_act, self._mc25_act, self._mc50_act), MONTE_CARLO_OPTIONS):
             action.setChecked(mc_value == value)
         logger.debug("Monte Carlo samples set to %d", value)
 

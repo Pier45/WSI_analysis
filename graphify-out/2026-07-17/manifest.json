@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "ui_pyqt5.py": {
-    "mtime": 1784279465.656886,
-    "ast_hash": "527a73933bfce0ad127bbfa4e032808c",
+    "mtime": 1784232699.58275,
+    "ast_hash": "b03891ab09190844ea9ea9912fdb3f9b",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1784281307.253953,
-    "ast_hash": "fc2cbcebab3d611a913ce7a62bc9047a",
+    "mtime": 1784155303.0447001,
+    "ast_hash": "e4efbac47a1155d52238f1307c1a129f",
     "semantic_hash": ""
   },
   "archive/dictionary_5_js.txt": {
@@ -135,9 +135,9 @@
     "semantic_hash": "5bf5f302bb42ad1a0971ec66dc3b9839"
   },
   "docs/PROJECT_MAP.md": {
-    "mtime": 1784280123.205426,
-    "ast_hash": "e4e400250c3a1f482982a171d5a9a109",
-    "semantic_hash": ""
+    "mtime": 1784056022.12245,
+    "ast_hash": "6d382074822e3230f2d05f63761212a4",
+    "semantic_hash": "6d382074822e3230f2d05f63761212a4"
   },
   "docs/sasa.txt": {
     "mtime": 1784056022.12245,

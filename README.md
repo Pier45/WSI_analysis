@@ -155,7 +155,7 @@ WSI_analysis/
 │   └── original_requirements.txt      #   2019 TF 1.15 requirements
 ├── data/                             # Real patient WSI datasets (per-patient subfolders)
 ├── docs/                             # BUG_REPORT.md, PROJECT_MAP.md
-├── icons/                            # 12 PyQt5 GUI icon assets (.ico / .png)
+├── icons/                             # 14 PyQt5 GUI icon assets (.ico + Linux .png variants)
 ├── img/                              # Thesis figures + stray UI assets
 ├── models/                           # ✓ Bayesian model package
 │   ├── __init__.py                    #   re-exports BayesianDropoutCNN, ModelKl, BayesianModel
@@ -170,16 +170,22 @@ WSI_analysis/
 │   ├── uncertainty_analysis.py        #   Th — Otsu + New-threshold data cleaning
 │   ├── performance_widget.py          #   PerformanceTab — confusion matrix widget (renamed from test_widget.py)
 │   ├── progress_bar.py                #   Actions — Qt progress helper
-│   ├── qt_workers.py                  #   Worker / WorkerSignals / WorkerLong helpers
+│   ├── qt_workers.py                  #   shared WorkerSignals/Worker/WorkerLong (extracted from the two GUIs)
 │   └── deepzoom/                      #   Flask DeepZoom sub-app
 │       ├── static/                    #     OpenSeadragon + jQuery
 │       ├── templates/
 │       └── deepzoom_server.py
 ├── styles/                           # Qt stylesheets (stile.txt, stileor.css)
-├── test/                             # empty (scratch scripts cleaned out)
+├── tests/                            # ✓ pytest suite (unit + openslide-m + gui markers)
+│   ├── conftest.py                    #   root fixtures + marker gating
+│   ├── analysis/test_start_analysis.py  # OpenSlide regressions (-m openslide)
+│   ├── gui/test_actions_factory.py      # pytest-qt actions contract (-m gui)
+│   └── unit/                          #   default — runs in CI
+│       ├── test_config.py            #     CLASS_NAMES / N_CLASSES / INPUT_SHAPE guards
+│       └── test_tile_partition.py    #     StartAnalysis.manage_process shape + value regression
 ├── ui_dataclean.py                   # Entry point 2 — Data cleaning & training GUI (5 tabs)
-├── ui_pyqt5.py                       # Entry point 1 — Main WSI analysis GUI
-├── pyproject.toml                    # uv / PEP 621 — single source of dependencies
+├── ui_pyqt5.py                       # Entry point 1 — Main WSI analysis GUI (cross-platform: Win + Linux/KDE/Wayland)
+├── pyproject.toml                    # uv / PEP 621 — deps + [tool.pytest] + [tool.ruff] + [dependency-groups].dev
 ├── uv.lock                           # uv lockfile (cross-platform: Windows + Linux)
 ├── Dockerfile                        # Multi-stage container (python:3.10-slim)
 ├── docker-compose.yaml                # 2 services, X11 forwarding for PyQt5 on WSL2
@@ -263,11 +269,16 @@ python ui_pyqt5.py
 
 ![Figure5.1](img/Figure5.1.png)
 
+> **Linux (KDE Plasma / GNOME / Wayland)**: `ui_pyqt5.py` automatically applies three platform fixes on `sys.platform.startswith("linux")`:
+> - `setNativeMenuBar(False)` + `Qt.AA_DontUseNativeMenuBar` so the top bar (File / Analysis / View / Options / Help) renders inside the window instead of being routed to an invisible global menu.
+> - `APP_ICON = "icons/target.png"` (the `.ico` form isn't readable by Qt under Wayland; a `.png` version is shipped).
+> - `QT_QPA_PLATFORM=xcb` exported, so Qt runs under XWayland and picks up the system cursor theme (otherwise a generic cursor is shown).
+
 **Workflow:**
 1. **File → Select SVS** — opens a `.svs` file; a thumbnail is generated immediately and tiles are extracted in the background using all available CPU threads.
 2. **Analysis → Start** (or `Ctrl+R`) — runs the Bayesian classifier. A progress bar tracks completion.
 3. **View** menu — inspect results per class (`AC` / `AD` / `H`) or view uncertainty maps (total / aleatoric / epistemic).
-4. **Options → Deep Zoom Viewer** (or `Ctrl+D`) — launches a local Flask server and opens the slide at full resolution in the browser via OpenSeadragon.
+4. **Options → Deep Zoom Viewer** (or `Ctrl+D`) — launches a local Flask server and opens the slide at full resolution in the browser via OpenSeadragon. The launcher is cross-platform: on Windows it shells out through `cmd /k`, on Linux it invokes `python` directly with the script/`.svs` paths quoted so spaces in paths are tolerated (except Flask's no-spaces-in-`.svs`-path limitation, still enforced).
 
 **Output files** (saved under `result/` in the working directory):
 
@@ -375,6 +386,45 @@ docker compose run --rm wsi-deepzoom /data/10002_AC_2/slide.svs
 
 ---
 
+## Testing
+
+The project now ships a real pytest suite under `tests/`. pytest, pytest-cov, pytest-mock, pytest-qt, and ruff are declared as an optional test extra and a `dev` dependency group in `pyproject.toml`:
+
+```bash
+# install the test toolchain (one of):
+uv sync --extra test        # extra
+uv sync --group dev         # dev group
+
+# default run: fast unit tests only (no OpenSlide/TensorFlow/Qt fixture)
+uv run pytest
+
+# opt-in marker groups — see pyproject.toml [tool.pytest.ini_options].markers
+uv run pytest -m openslide   # StartAnalysis regressions (needs libopenslide + an .svs fixture)
+uv run pytest -m tf          # TensorFlow-dependent tests
+uv run pytest -m gui         # pytest-qt; set QT_QPA_PLATFORM=offscreen
+uv run pytest -m "not slow"   # exclude slow tests from CI
+```
+
+| Sub-tree | Marker | Purpose |
+|---|---|---|
+| `tests/unit/test_config.py` | (default) | Guards `CLASS_NAMES` / `N_CLASSES` / `INPUT_SHAPE` against silent drift. |
+| `tests/unit/test_tile_partition.py` | (default) | `StartAnalysis.manage_process()` return-shape contract (5-tuple of equal-length lists) + reference-implementation value regression. Catches the `IndexError: tuple index out of range` bug. |
+| `tests/analysis/test_start_analysis.py` | `openslide` | OpenSlide / DeepZoomGenerator regressions: `lev_sec` clamped when out of range (no `IndexError`); `get_thumb` selects a valid OpenSlide level; `tile_gen` returns a DeepZoom (not OpenSlide) level index; `Invalid address` `tileGen(state=0)` crash fixed. |
+| `tests/gui/test_actions_factory.py` | `gui` | Contract test on `ImageViewer._create_actions` — every action has non-empty text, a non-null `triggered` slot, and a unique object name; uses the `_make_action` factory consistently. Uses pytest-qt + `QT_QPA_PLATFORM=offscreen`. |
+
+`pyproject.toml` configures `--strict-markers --strict-config` and treats warnings as errors (with the openslide `PendingDeprecationWarning` ignored), so a typo in a new test marker fails CI rather than silently passing.
+
+Lint:
+
+```bash
+uv run ruff check .         # uses [tool.ruff] config (line-length 100, py310 target, archive/.venv/graphify-out excluded)
+uv run ruff format --check .
+```
+
+> Ruff is configured but not wired to pre-commit or CI yet — invoke it manually (or set it up).
+
+---
+
 ## Docker
 
 A `Dockerfile` is included in the repository. The container supports X11 forwarding for the PyQt5 GUI when running under WSL2.
@@ -461,8 +511,12 @@ docker run --rm \
 
 - All models expect 64×64 RGB input tiles.
 - The `models/drop_out.py` (MC-Dropout) architecture is recommended over `models/kl.py` (KL-Flipout) for faster training, better convergence, and broader library compatibility.
-- DeepZoom paths must not contain spaces (Flask limitation on Windows).
-- Developed and tested on Windows (Intel i7-7700, 8 threads); also validated on Google Colab (NVIDIA Tesla K80) and HPC Polito (NVIDIA Tesla V100).
+- DeepZoom paths must not contain spaces (Flask limitation on Windows). On Linux the path is still quoted so spaces in the parent directories are tolerated.
+- Developed and tested on Windows (Intel i7-7700, 8 threads); also validated on Linux (KDE Plasma / XWayland). The Qt GUI now runs correctly on:
+  - Windows (native menubar + `.ico` app icon + native cursor)
+  - Docker / WSL2 (in-window menubar, system-theme cursor via the X11 forward)
+  - Linux native — GNOME, KDE, Wayland (in-window menubar, `.png` app icon, XWayland cursor theme)
+- Also validated on Google Colab (NVIDIA Tesla K80) and HPC Polito (NVIDIA Tesla V100).
 
 ---
 

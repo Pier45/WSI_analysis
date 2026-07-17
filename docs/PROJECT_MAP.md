@@ -24,14 +24,14 @@
 WSI_analysis/
 ├── .git/                  # version control (LFS enabled, see §7)
 ├── .venv/                 # ⚠ 1.79 GB, in .gitignore but physically sits at root
-├── .vscode/               # settings.json — tracked (minor smell)
+├── .vscode/               # ⚠ now UNTRACKED (removed from git in v8.5.0, kept on disk)
 ├── .opencode/             # opencode config + graphify plugin
 ├── archive/               # ⚠ legacy Colab-era code + 14 MB of sample data blobs
 ├── data/                  # patient WSI datasets (e.g. 10002_AC_2/)
 ├── docs/                  # BUG_REPORT.md, PROJECT_MAP.md, sasa.txt
-├── graphify-out/          # knowledge-graph outputs (graph.html, graph.json, …)
-├── icons/                 # 12 PyQt5 GUI icon assets (.ico / .png)
-├── img/                    # 6 PNG thesis figures + 3 stray UI assets
+├── graphify-out/          # knowledge-graph outputs (graph.html, graph.json, …) — refreshed 2026-07-17
+├── icons/                 # 14 PyQt5 GUI icon assets (.ico + Linux .png variants)
+├── img/                   # 6 PNG thesis figures + 3 stray UI assets
 ├── models/                # ✓ package — Bayesian model classes (drop_out, kl, base)
 ├── src/                   # ✓ package — core logic (classification, config, widgets, …)
 │   ├── __init__.py        # re-exports CLASS_NAMES, N_CLASSES, INPUT_SHAPE
@@ -41,24 +41,34 @@ WSI_analysis/
 │   ├── uncertainty_analysis.py
 │   ├── performance_widget.py         # renamed from test_widget.py
 │   ├── progress_bar.py
+│   ├── qt_workers.py                 # ✓ shared WorkerSignals/Worker/WorkerLong (refactored out of the two GUIs)
 │   └── deepzoom/          # Flask DeepZoom viewer (cleanest sub-package)
 │       ├── static/        # OpenSeadragon + jQuery (~1 MB)
 │       ├── templates/
 │       └── deepzoom_server.py
 ├── styles/                # ⚠ near-duplicate Qt stylesheets (stile.txt, stileor.css)
-├── test/                  # ⚠ now empty (scratch scripts were cleaned out)
-├── __pycache__/            # byte-compiled artifacts
+├── tests/                 # ✓ NEW real test suite (pytest — see §4)
+│   ├── conftest.py        #   root fixtures + marker gating
+│   ├── analysis/          #   `pytest -m openslide` — StartAnalysis regressions (IndexError, Invalid address)
+│   │   └── test_start_analysis.py
+│   ├── gui/               #   `pytest -m gui` — pytest-qt, actions factory contract tests
+│   │   ├── conftest.py
+│   │   └── test_actions_factory.py
+│   └── unit/              #   runs by default — pure-Python, no heavy deps
+│       ├── test_config.py            # CLASS_NAMES / N_CLASSES / INPUT_SHAPE guards
+│       └── test_tile_partition.py    # StartAnalysis.manage_process shape + value regression
+├── __pycache__/           # byte-compiled artifacts
 │
 ├── README.md              # 14,344 B — thorough documentation
 ├── AGENTS.md              # graphify skill invocation rules
 ├── LICENSE                # MIT, Copyright (c) 2026 Piero Policastro
-├── pyproject.toml         # uv project, minimal (only source of deps now)
+├── pyproject.toml         # uv project — deps + [tool.pytest] + [tool.ruff] + [dependency-groups]
 ├── uv.lock                # 190 KB lockfile
 ├── .python-version        # 3.10
 ├── Dockerfile             # multi-stage, python:3.10-slim
 ├── docker-compose.yaml    # 2 services, hardcoded personal WSL path
 ├── .gitignore / .gitattributes
-└── main.py                # ⚠ 4-line `uv init` stub (dead)
+└── main.py               # ⚠ 4-line `uv init` stub (dead)
 ```
 
 ### Folder status grid
@@ -66,17 +76,18 @@ WSI_analysis/
 | Folder | Status | Notes |
 |---|---|---|
 | `.venv/` | ⚠ Local smell | 1.79 GB at repo root; pollutes every glob/search unless explicitly excluded. Not tracked. |
-| `.vscode/` | ⚠ Should be ignored | Tracked despite being listed in `.gitignore` (malformed entry on lines 133–136). |
+| `.vscode/` | ✅ **NOW UNTRACKED** | Removed from git in v8.5.0 (`git rm -r --cached`); `.gitignore` now excludes it. Folder kept on disk. |
 | `archive/` | ⚠ Misnamed | "Archived experiments" now holds the dead `dataset_creation.py` + 14 MB of sample JSON tile dictionaries moved out of the live tree — useful for reproducibility but pollutes recursive search. |
 | `data/` | ✓ Real patient data | WSI datasets (per-patient sub-folders like `10002_AC_2/`). |
 | `models/` | ✓ Package | `__init__.py` re-exports the model classes. Clean. |
-| `src/` | ✓ Package | `__init__.py` re-exports `CLASS_NAMES`, `N_CLASSES`, `INPUT_SHAPE`. Contains the real logic. |
+| `src/` | ✓ Package | `__init__.py` re-exports `CLASS_NAMES`, `N_CLASSES`, `INPUT_SHAPE`. Contains the real logic. Now also hosts shared `qt_workers.py`. |
 | `src/deepzoom/` | ✓ Clean | Self-contained Flask sub-app — no changes needed. |
-| `icons/` | ✓ Fine | 12 PyQt5 GUI icon assets. |
+| `icons/` | ✓ Fine | 14 PyQt5 GUI icon assets — added `.png` variants of `target.ico` (Wayland can't load `.ico` reliably; `target.png` is used on Linux). |
 | `img/` | ⚠ 3 stray files | `checkbox.png`, `down_arrow.png`, `handle.png` appear unused by the live UI. |
 | `styles/` | ⚠ Duplication | `stile.txt` (11.7 KB) and `stileor.css` (11.6 KB) are near-byte-identical; only `.css` is loaded by the app. |
-| `test/` | ⚠ Empty now | Scratch scripts were cleaned out but the folder still exists. |
-| `graphify-out/` | ✓ Generated | Knowledge-graph outputs from this session's `/graphify` run. |
+| `test/` | ✅ **REMOVED** | Empty `test/` folder deleted; the real test tree now lives under `tests/` (plural). |
+| `tests/` | ✓ NEW | Real pytest test suite — see §4 for marker gating. |
+| `graphify-out/` | ✓ Generated | Knowledge-graph outputs refreshed on 2026-07-17 (809 nodes / 1230 edges / 82 communities). |
 
 ---
 
@@ -156,8 +167,8 @@ A single `TrainingProgressCallback(Callback)` in each model file emits per-batch
 
 | File | Lines | Bytes | Responsibility |
 |---|---:|---:|---|
-| `ui_pyqt5.py` | 914 | 32,300 | **Entry point 1.** `ImageViewer(QMainWindow)` — open `.svs`, background tiling, Bayesian inference, overlays, launch DeepZoom. Inline import of `Classification` is now `from src.classification import Classification`. |
-| `ui_dataclean.py` | 967 | 38,100 | **Entry point 2.** `MainWindow`/`MainTabWidget` with 5 tabs. Imports are now package-qualified: `from models.drop_out import BayesianDropoutCNN`, `from models.kl import ModelKl`, `from src.classification import Classification`, `from src.uncertainty_analysis import Th`, `from src.performance_widget import PerformanceTab`, `from src.config import CLASS_NAMES`. Constructor calls to models use the unified signature `(model_save_path, epochs, path_train, path_val, batch_size, augment)`. |
+| `ui_pyqt5.py` | 1093 | 38,400 | **Entry point 1.** `ImageViewer(QMainWindow)` — open `.svs`, background tiling, Bayesian inference, overlays, launch DeepZoom. Cross-platform DeepZoom launcher (no more Windows-only `cmd /k`). Linux-specific: `APP_ICON` picks `icons/target.png`, `setNativeMenuBar(False)` so the top menu bar renders on GNOME/KDE/Wayland, and `QT_QPA_PLATFORM=xcb` is exported so XWayland honours the system cursor theme. Inline import of `Classification` is now `from src.classification import Classification`. |
+| `ui_dataclean.py` | 982 | 38,500 | **Entry point 2.** `MainWindow`/`MainTabWidget` with 5 tabs. Imports are now package-qualified: `from models.drop_out import BayesianDropoutCNN`, `from models.kl import ModelKl`, `from src.classification import Classification`, `from src.uncertainty_analysis import Th`, `from src.performance_widget import PerformanceTab`, `from src.config import CLASS_NAMES`. Constructor calls to models use the unified signature `(model_save_path, epochs, path_train, path_val, batch_size, augment)`. |
 | `main.py` | 4 | 90 | ⚠ Vestigial `print("Hello from wsi-analysis!")` stub — dead `uv init` scaffolding. |
 
 ### Module interaction diagram (post-refactor)
@@ -222,28 +233,49 @@ A single `TrainingProgressCallback(Callback)` in each model file emits per-batch
 
 | File | Status |
 |---|---|
-| `pyproject.toml` | ⚠ Still minimal — only `[project]` name/version/deps and a `[tool.uv]` stub. No `[tool.pytest]`, `[tool.ruff]`/black, `[tool.mypy]`, no `[project.scripts]`, no `[build-system]`. The two real entry points are not declared as scripts. |
-| `uv.lock` | ✓ Present (190 KB). Standard for uv. |
-| `requirements.txt` | ✅ **DELETED** — was a duplicate source of pinned deps that had already drifted from `pyproject.toml` (missing `tensorflow-probability`, listed `flask` as optional despite it being in `pyproject.toml`). README's install instructions should be updated to `uv sync` instead of `pip install -r requirements.txt`. |
+| `pyproject.toml` | ✅ Now carries the full toolchain config: `[project]` name/version/deps, `[project.optional-dependencies].test` (pytest stack + ruff), `[tool.uv] environments` (Win + Linux cross-platform locking), `[dependency-groups].dev`, `[tool.pytest.ini_options]` (testpaths=tests, strict markers/strict config, `openslide`/`tf`/`gui`/`slow` markers, warnings-as-errors with openslide PendingDeprecation ignored), `[tool.ruff]` (line-length 100, py310, excludes `archive`/.venv/graphify-out/deepzoom static), `[tool.ruff.lint]` (E/F/I/W/UP/B, ignores E501/B008, per-file leniency for `tests/**` and `ui_*.py`). Still missing: `[project.scripts]`, `[build-system]` — `models/`/`src/` are importable as **namespace packages** only when `CWD = repo root`; not pip-installable. |
+| `uv.lock` | ✓ Present (190 KB). Cross-platform resolution for `win32` + `linux`. |
+| `requirements.txt` | ✅ **DELETED** long ago — `pyproject.toml` is the single source of truth. |
 | `archive/original_requirements.txt` | Ancient requirements file (TF 1.15, 2019). |
 | `Dockerfile` | Multi-stage, `python:3.10-slim`, installs Qt X11 libs for WSL2 GUI forwarding. `CMD ["python", "ui_dataclean.py"]` — only launches entry point 2, not parametrised. |
 | `docker-compose.yaml` | ⚠ Two services (`wsi-clean`, `wsi-analysis`) both `build: .` (same image), differing only by `command:`; mounts `/mnt/c/Users/piero/Documents/Data WSI:/data` — hardcoded to the author's personal WSL path. Not portable. |
 | `.python-version` | 3.10 — standard (pyenv/uv). |
-| `.vscode/settings.json` | Sets the Python env manager. Tracked (not ignored). Minor smell. |
+| `.vscode/settings.json` | ✅ **Now gitignored and untracked** (v8.5.0). Kept locally for the author's editor only. |
 | `LICENSE` | MIT — present and standard. |
-| `src/config.py` | ✓ NEW — single source of truth for `CLASS_NAMES = ('AC','AD','H')`, `N_CLASSES`, `INPUT_SHAPE`. Imported by `models/drop_out.py`, `models/kl.py`, `src/classification.py`, `src/performance_widget.py`, `ui_dataclean.py`. |
-| `models/base.py` | ✓ NEW — `BayesianModel` Protocol formalising the shared constructor + `train()` interface. |
+| `src/config.py` | ✓ `CLASS_NAMES = ('AC','AD','H')`, `N_CLASSES`, `INPUT_SHAPE`. Imported by `models/drop_out.py`, `models/kl.py`, `src/classification.py`, `src/performance_widget.py`, `ui_dataclean.py`, `tests/unit/test_config.py`. |
+| `models/base.py` | ✓ `BayesianModel` Protocol formalising the shared constructor + `train()` interface. |
+| `src/qt_workers.py` | ✓ Present (157 lines) — shared `WorkerSignals`/`Worker`/`WorkerLong` moved out of the two GUIs. (The two `ui_*.py` still keep their own copies in the short term, see §5 smell #9.) |
 
-### Missing / non-standard for a project this size
+### Test suite (`tests/`) — NEW since v8.0.55
 
-- ❌ No `setup.py` / `setup.cfg` / build backend — `models/` and `src/` are importable as **namespace packages** when `CWD = repo root`, but there's no installation story.
+Run with `uv sync --extra test` then `uv run pytest` (or `uv run --group dev pytest`). pytest is configured in `pyproject.toml`:
+
+```bash
+uv run pytest                       # default: unit tests only
+uv run pytest -m openslide          # StartAnalysis regression tests (libopenslide + svs fixture)
+uv run pytest -m tf                 # TensorFlow-dependent tests
+uv run pytest -m gui                 # pytest-qt, needs QT_QPA_PLATFORM=offscreen
+uv run pytest -m "not slow"          # exclude slow tests from CI
+```
+
+| Sub-tree | Marker | What it tests |
+|---|---|---|
+| `tests/unit/test_config.py` | (default) | `CLASS_NAMES`/`N_CLASSES`/`INPUT_SHAPE` values are stable and as documented. |
+| `tests/unit/test_tile_partition.py` | (default) | `StartAnalysis.manage_process()` return-shape contract (always 5-tuple of equal-length lists) + reference-implementation value regression. Catches the `IndexError: tuple index out of range` regression seen in `tests/analysis`. |
+| `tests/analysis/test_start_analysis.py` | `openslide` | OpenSlide / DeepZoomGenerator regressions: `lev_sec` out-of-range no longer raises `IndexError`; `get_thumb` selects a valid OpenSlide level; `tile_gen` returns a DeepZoom (not OpenSlide) level index; `Invalid address` `tileGen(state=0)` crash fixed. |
+| `tests/gui/test_actions_factory.py` | `gui` | `_make_action` factory contract: every action created by `ImageViewer._create_actions` has a non-empty text, non-null `triggered` slot, and a unique object name; `_create_actions` uses the factory consistently. Uses pytest-qt + `QT_QPA_PLATFORM=offscreen`. |
+
+`tests/conftest.py` and `tests/gui/conftest.py` own marker gating and fixtures (`qapp`, `svs_path`, `analysis`). Strict markers (`--strict-markers --strict-config`) guard against typos in new markers.
+
+### Still missing / non-standard
+
+- ❌ No `setup.py` / `setup.cfg` / `[build-system]` / `[project.scripts]` — `models/` and `src/` are importable as **namespace packages** when `CWD = repo root`, but there's no installation story. The two GUI entry points are not declared as console scripts.
 - ❌ No `Makefile` / task runner.
 - ❌ No `.github/` — no CI, no PR/issue templates, no CODEOWNERS, no dependabot.
 - ❌ No `.env` / `.env.example` — runtime config still lives as hardcoded module constants in `ui_dataclean.py` and `ui_pyqt5.py` headers.
-- ❌ No `pytest.ini` / `tox.ini` / `conftest.py` / `mypy.ini` / `ruff`/`black` config.
-- ❌ No pre-commit config.
+- ❌ No pre-commit config (ruff is configured but only runs when invoked manually; a `pre-commit` hook isn't wired up).
 
-**Summary:** the package layout is now real; dependency management uses uv/PEP 621 as the **single** source of truth (the duplicate `requirements.txt` was deleted); config is partially centralised (`src/config.py` for class names); there is **still zero CI**.
+**Summary:** the dependency / tool / test / lint config is now first-class in `pyproject.toml`; the project has a real pytest test suite under `tests/`; `.vscode` is finally gitignored and untracked. Still **no CI**, no `[project.scripts]`, no build backend.
 
 ---
 
@@ -285,13 +317,13 @@ The 20 smells from the original audit have been re-evaluated against the current
 
 ## 6. Bug status
 
-All bugs originally documented in `BUG_REPORT.md` are now closed. The in-repo bug list file is stale and should be updated.
+All bugs originally documented in `BUG_REPORT.md` were closed before v8.0.55. Since the last project-map refresh three **new** platform-compatibility bugs were found and fixed during the v8.2.0 / v8.5.0 Linux/KDE work, and one pre-existing Linux crash was already fixed by `tests/analysis/`.
 
 | Bug | Was | Now | Detail |
 |---|---|---|---|
 | `DropOut.py` constructor param-name mismatch vs `ui_dataclean.py` caller | 🐛 Open | ✅ Fixed | `models/drop_out.py` now uses `(model_save_path, epochs, path_train, path_val, batch_size, augment)`. Caller in `ui_dataclean.py:736-741` was updated to the unified signature. |
 | `DropOut.py` `ModelCheckpoint` saves to hardcoded relative `weights_best.h5` | 🐛 Open | ✅ Fixed | `models/drop_out.py` now derives `checkpoint_path = self.model_save_path.replace(".h5", "_best.h5")`. Same fix in `models/kl.py`. |
-| `CLASS_NAMES` order mismatch (`["AC","H","AD"]` vs alphabetical) | 🐛 Latent | ✅ Fixed | Canonical order `('AC','AD','H')` lives in `src/config.py` and is imported everywhere. No `['AC','H','AD']` literals remain in the active codebase. (Pre-existing `.h5` checkpoints encode the old order — re-train before trusting indices.) |
+| `CLASS_NAMES` order mismatch (`["AC","H","AD"]` vs alphabetical) | 🐛 Latent | ✅ Fixed | Canonical order `('AC','AD','H')` lives in `src/config.py` and is imported everywhere. No `['AC','H','AD']` literals remain in the active codebase. (Pre-existing `.h5` checkpoints encode the old order — re-train before trusting indices.) Covered by `tests/unit/test_config.py`. |
 | `DropOut.py` docstring still references `model_training.py` | 🐛 Open | ✅ Fixed | `models/drop_out.py` docstring now reads `python -m models.drop_out`. |
 | Bug-1 "ImageDataGenerator not imported" | ✓ Fixed | ✅ | Import present at `models/drop_out.py:26`. |
 | `tfp` import commented out in `Kl.py` (was a `NameError` waiting to fire) | 🐛 Open | ✅ Fixed | `models/kl.py:6` imports `tensorflow_probability as tfp`. |
@@ -299,6 +331,12 @@ All bugs originally documented in `BUG_REPORT.md` are now closed. The in-repo bu
 | `Kl.py` `model.fit_generator` deprecated | 🐛 Open | ✅ Fixed | `models/kl.py` now uses `model.fit`. |
 | `Kl.py` `__main__` block broken (no ctor args, no return) | 🐛 Open | ✅ Fixed | `models/kl.py` `__main__` constructs with real kwargs and `start_train` returns `History`. |
 | `uncertainty_analysis.py` line-35 `out_al = np.median(list_epi)` copy-paste | 🐛 Open | ✅ Fixed | `src/uncertainty_analysis.py:35` now reads `out_al = np.median(list_ale)`. The aleatoric outlier-replacement value is now correctly computed from `list_ale` (aleatoric) instead of `list_epi` (epistemic). |
+| DeepZoom launcher used Windows-only `cmd /k` → `sh: cmd: comando non trovato` on Linux | 🐛 New (v8.2.0) | ✅ Fixed | `ui_pyqt5.py:_launch_deepzoom` now builds `python <script> <svs>` directly on Linux (path-quoted for spaces) and only prepends `cmd /k` under Windows. |
+| App menu bar invisible on Linux (GNOME/Unity/KDE/Wayland) | 🐛 New (v8.2.0) | ✅ Fixed | `ui_pyqt5.py` `__main__` now sets `AA_DontUseNativeMenuBar` and `viewer.menuBar().setNativeMenuBar(False)` on Linux, so the File/Analysis/View/Options/Help bar renders inside the window. |
+| Wrong Wayland window icon (shown the default Wayland placeholder instead of `target.ico`) | 🐛 New (v8.5.0) | ✅ Fixed | `.ico` files don't load under Qt/Wayland; converted `target.ico` → `target.png` with ImageMagick and `APP_ICON` now picks `icons/target.png` on Linux (`sys.platform.startswith("linux")`). |
+| Generic Wayland mouse cursor instead of the KDE/Plasma theme cursor | 🐛 New (v8.5.0) | ✅ Fixed | `ui_pyqt5.py` `__main__` exports `QT_QPA_PLATFORM=xcb` so Qt runs under XWayland, which honours the user's cursor theme. |
+| `StartAnalysis.get_thumb` raised `IndexError: tuple index out of range` when `lev_sec` was out of range | 🐛 Latent | ✅ Fixed | Now clamps `lev_sec` against `level_count`. Regression captured in `tests/analysis/test_start_analysis.py::test_openSvs_clamps_out_of_range_lev_sec_instead_of_IndexError` and `tests/unit/test_tile_partition.py`. |
+| `tileGen(state=0)` could hit `Invalid address` ValueError | 🐛 Latent | ✅ Fixed | Regression captured in `tests/analysis/test_start_analysis.py`. |
 
 ---
 
@@ -308,14 +346,14 @@ All bugs originally documented in `BUG_REPORT.md` are now closed. The in-repo bu
 |---|---|
 | Current branch | `master` (single local branch). |
 | Remote | `origin = https://github.com/Pier45/WSI_analysis.git`. |
-| `.gitignore` | Present, fairly complete. Stock "kitchen sink" ignore template with Django/Scrapy/Spyder entries that are irrelevant here. Has a malformed-looking trailing block around the `.vscode/` entry on lines 133–136. Redundantly lists `.python-version` (line 88) even though `.python-version` IS tracked. `.opencode/` is not yet ignored. |
+| `.gitignore` | Present, fairly complete. `.vscode/` is now correctly ignored and untracked (since v8.5.0). Redundantly lists `.python-version` (line 88) even though `.python-version` IS tracked. `.opencode/` is not yet ignored. |
 | `.gitattributes` | LF normalisation + suppresses JS/TS from linguist stats. `[lfs]` section in `.git/config` indicates LFS was initialised but `.gitattributes` defines **no LFS filter patterns** — multi-MB `.txt` data blobs in `archive/` are committed as normal blobs, not via LFS. |
 | `LICENSE` | MIT, Copyright (c) 2026 Piero Policastro — present and tracked. |
 | `AGENTS.md` | present — graphify-skill invocation rules. |
 | `.github/` | ❌ No directory — no CI workflows, no issue/PR templates, no CODEOWNERS, no dependabot.yml. |
 | Pre-commit / signed commits | ❌ None. Git hooks are all `.sample` defaults. |
-| CI | ❌ None. |
-| Tests | ❌ None — `test/` was emptied but no real test harness exists (no `pytest.ini`, no `conftest.py`, no `assert`s). |
+| CI | ❌ None — but the `tests/` suite is CI-ready: `pytest` is configured with strict markers/strict config and markers gate heavy deps (`openslide`, `tf`, `gui`) so a default CI run is just the fast `unit/*` tests. |
+| Tests | ✅ Real `tests/` suite now exists (see §4). Fast-Lane unit + pytest-qt offscreen GUI tests. |
 
 ---
 
@@ -323,7 +361,7 @@ All bugs originally documented in `BUG_REPORT.md` are now closed. The in-repo bu
 
 ```
 WSI_analysis/
-├── ui_pyqt5.py                    # entry point 1 ("Bayesian Analyzer" GUI)
+├── ui_pyqt5.py                    # entry point 1 ("Bayesian Analyzer" GUI) — cross-platform DeepZoom launch + Linux/KDE fixes
 ├── ui_dataclean.py                # entry point 2 (5-tab GUI — package-qualified imports)
 ├── main.py                        # ⚠ dead 4-line uv init stub
 │
@@ -337,12 +375,22 @@ WSI_analysis/
 │   ├── __init__.py                # re-exports CLASS_NAMES, N_CLASSES, INPUT_SHAPE
 │   ├── config.py                  # single source of truth for class order / shape
 │   ├── classification.py          # Classification — uses CLASS_NAMES from config
-│   ├── multi_processing_analysis.py  # StartAnalysis OpenSlide tiling
+│   ├── multi_processing_analysis.py  # StartAnalysis OpenSlide tiling (lev_sec clamped, IndexedError fixed)
 │   ├── uncertainty_analysis.py    # Th thresholding class (line-35 bug fixed)
 │   ├── performance_widget.py      # PerformanceTab confusion-matrix widget (renamed from test_widget.py)
 │   ├── progress_bar.py            # Actions Qt helper (14 lines)
+│   ├── qt_workers.py              # shared WorkerSignals/Worker/WorkerLong (NEW — extracted from the two GUIs)
 │   └── deepzoom/deepzoom_server.py  # clean Flask sub-app
 │
+├── tests/                         # ✓ NEW real pytest suite (v8.0.55+)
+│   ├── conftest.py                #   root fixtures + marker gating
+│   ├── analysis/test_start_analysis.py   # -m openslide — OpenSlide regressions
+│   ├── gui/test_actions_factory.py       # -m gui — pytest-qt, action contract tests
+│   └── unit/                            # default — runs in CI
+│       ├── test_config.py               # CLASS_NAMES / N_CLASSES / INPUT_SHAPE guards
+│       └── test_tile_partition.py        # manage_process shape + value regression
+│
+├── icons/                         # 14 PyQt5 GUI icons (.ico + Linux .png variants — target.png for Wayland)
 ├── archive/                       # legacy + sample data (out of the live tree)
 │   ├── dataset_creation.py         # TF1 Colab-era 5-class pipeline
 │   ├── dictionary_5_js.txt         # ~1 MB sample tile dict (MC=5)
@@ -352,15 +400,14 @@ WSI_analysis/
 │
 ├── data/                          # real patient WSI datasets
 ├── docs/                          # PROJECT_MAP.md, BUG_REPORT.md, sasa.txt
-├── icons/                         # 12 PyQt5 GUI icons
 ├── img/                           # 6 thesis figures + 3 stray UI assets
 ├── styles/                        # stile.txt + stileor.css (near-duplicate)
-├── graphify-out/                  # graphify outputs (graph.html, graph.json, GRAPH_REPORT.md)
+├── graphify-out/                  # graphify outputs (refreshed 2026-07-17: 809 nodes / 1230 edges / 82 communities)
 │
-├── pyproject.toml                 # minimal; no [project.scripts], no build backend (only deps source now)
-├── uv.lock                        # lockfile (190 KB)
+├── pyproject.toml                 # full toolchain: deps + [tool.uv] + [dependency-groups].dev + [tool.pytest] + [tool.ruff]
+├── uv.lock                        # lockfile (190 KB, win32 + linux resolutions)
 ├── Dockerfile                     # multi-stage, only launches ui_dataclean.py
 ├── docker-compose.yaml            # 2 services, hardcoded personal WSL path
-├── .gitignore                     # stock template, partially malformed near .vscode/
+├── .gitignore                     # now correctly ignores .vscode/
 └── .gitattributes                 # has [lfs] in .git/config but no LFS filter patterns
 ```
