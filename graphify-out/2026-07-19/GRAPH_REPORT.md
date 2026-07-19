@@ -1,16 +1,16 @@
-# Graph Report - WSI_analysis  (2026-07-19)
+# Graph Report - WSI_analysis  (2026-07-17)
 
 ## Corpus Check
-- 44 files · ~1,347,702 words
+- 31 files · ~1,345,854 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 850 nodes · 1279 edges · 78 communities (52 shown, 26 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 60 edges (avg confidence: 0.65)
+- 811 nodes · 1232 edges · 86 communities (53 shown, 33 thin omitted)
+- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 90 edges (avg confidence: 0.59)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2722607b`
+- Built from commit: `49398992`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -64,6 +64,7 @@
 - Bug Report Doc
 - WSI Analysis Package
 - ._start_analysis
+- ._draw_histograms
 - ._select_dataset_folder
 - Sample Tile Dictionary (Train)
 - ._tile_dataset
@@ -92,30 +93,37 @@
 - test_actions_factory.py
 - ui_dataclean.py
 - MainWindow
+- TrainingProgressCallback
+- ._tile_dataset
+- ._update_training_log
+- BayesianModel
+- TrainingProgressCallback
+- ._select_dataset_folder
+- ._create_clean_dataset
 
 ## God Nodes (most connected - your core abstractions)
-1. `ImageViewer` - 45 edges
-2. `StartAnalysis` - 32 edges
-3. `CleaningTab` - 21 edges
-4. `Classification` - 20 edges
-5. `TrainingTab` - 18 edges
-6. `PerformanceTab` - 18 edges
-7. `GetTilesTab` - 17 edges
-8. `DataCleanState` - 16 edges
-9. `MainTabWidget` - 15 edges
-10. `UncertaintyTab` - 15 edges
+1. `MainTabWidget` - 54 edges
+2. `ImageViewer` - 45 edges
+3. `StartAnalysis` - 38 edges
+4. `Classification` - 26 edges
+5. `PerformanceTab` - 25 edges
+6. `BayesianDropoutCNN` - 19 edges
+7. `ModelKl` - 19 edges
+8. `Th` - 19 edges
+9. `getMouseAbsolute()` - 15 edges
+10. `LongRunningWorker` - 15 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `DataCleanState` --uses--> `Th`  [INFERRED]
-  gui/dataclean/state.py → src/uncertainty_analysis.py
-- `CleaningTab` --uses--> `Th`  [INFERRED]
-  gui/dataclean/tabs/tab_cleaning.py → src/uncertainty_analysis.py
-- `TestingTab` --uses--> `PerformanceTab`  [INFERRED]
-  gui/dataclean/tabs/tab_testing.py → src/performance_widget.py
-- `GetTilesTab` --uses--> `StartAnalysis`  [INFERRED]
-  gui/dataclean/tabs/tab_tiles.py → src/multi_processing_analysis.py
-- `TrainingTab` --uses--> `BayesianDropoutCNN`  [INFERRED]
-  gui/dataclean/tabs/tab_training.py → models/drop_out.py
+- `HorizontalLine` --uses--> `BayesianDropoutCNN`  [INFERRED]
+  ui_dataclean.py → models/drop_out.py
+- `LongRunningWorker` --uses--> `BayesianDropoutCNN`  [INFERRED]
+  ui_dataclean.py → models/drop_out.py
+- `MainTabWidget` --uses--> `BayesianDropoutCNN`  [INFERRED]
+  ui_dataclean.py → models/drop_out.py
+- `MainWindow` --uses--> `BayesianDropoutCNN`  [INFERRED]
+  ui_dataclean.py → models/drop_out.py
+- `MatplotlibCanvas` --uses--> `BayesianDropoutCNN`  [INFERRED]
+  ui_dataclean.py → models/drop_out.py
 
 ## Import Cycles
 - None detected.
@@ -128,7 +136,7 @@
 - **Uncertainty quantification conceptualisation and its concrete output** —  [INFERRED 0.85]
 - **Three-Class Tile Set (AC/AD/H)** — icons_ac, icons_ad, icons_h [EXTRACTED 1.00]
 
-## Communities (78 total, 26 thin omitted)
+## Communities (86 total, 33 thin omitted)
 
 ### Community 0 - "OpenSeadragon Viewer"
 Cohesion: 0.03
@@ -139,24 +147,20 @@ Cohesion: 0.13
 Nodes (6): ImageViewer, QMainWindow, Main application window for the Bayesian Analyzer.      Workflow     --------, Display a critical dialog when a background worker raises an exception., Open the deepzoom URL in the default browser after a short delay., Open the print dialog and print the currently displayed pixmap.
 
 ### Community 2 - "Multi-Process Analysis"
-Cohesion: 0.14
-Nodes (11): Actions, QObject, QRunnable, Bayesian Analyzer — main application window.  Entry point:     python ui_pyqt5.p, Signals emitted by :class:`WorkerLong` during its lifecycle., Fire-and-forget thread wrapper.      Runs *fn* in a thread-pool thread without l, Thread wrapper with full lifecycle signals.      Injects a ``progress_callback``, Start the deepzoom Flask server in a separate thread and open the         browse (+3 more)
+Cohesion: 0.11
+Nodes (13): Actions, _get_screen_size(), QObject, QRunnable, Bayesian Analyzer — main application window.  Entry point:     python ui_pyqt5.p, Signals emitted by :class:`WorkerLong` during its lifecycle., Fire-and-forget thread wrapper.      Runs *fn* in a thread-pool thread without l, Thread wrapper with full lifecycle signals.      Injects a ``progress_callback`` (+5 more)
 
 ### Community 3 - "jQuery Library"
 Cohesion: 0.05
 Nodes (4): NOTE: This can be skipped if there are no unmatched elements (i.e., `matchedCoun, TODO: Now that all calls to _data and _removeData have been replaced, TODO: identify versions, TODO: identify versions
-
-### Community 4 - "DataClean Tab Widget"
-Cohesion: 0.13
-Nodes (7): CleaningTab, QWidget, Load uncertainty values from the JSON, refresh the histograms., After the histograms are loaded, enable the auto/manual radios., Compute Otsu + new thresholds and draw vertical lines on the total histogram., Copy the surviving tiles into the chosen folder under per-class subdirs., Tab 4 — histograms, threshold selection, clean-dataset export.
 
 ### Community 5 - "Archive & Config"
 Cohesion: 0.50
 Nodes (5): Hardcoded WSL Path in Compose, Docker Compose (wsi-clean, wsi-analysis services), Bayesian Analyzer GUI (ui_pyqt5), Dataclean Tool GUI (ui_dataclean, 5 tabs), Qt Stylesheet (stile.txt)
 
 ### Community 6 - "Bayesian Dropout CNN"
-Cohesion: 0.07
-Nodes (24): BayesianModel, History, Shared interface for the Bayesian uncertainty models.  Both ``BayesianDropoutCNN, Construct a model for training and uncertainty estimation.      Parameters (cons, Build, compile and train the model, returning the Keras history., Backward-compatible alias for :meth:`train`., BayesianDropoutCNN, ConvBlockConfig (+16 more)
+Cohesion: 0.16
+Nodes (12): BayesianDropoutCNN, ConvBlockConfig, History, ImageDataGenerator, Model, Convolutional neural network with Monte Carlo Dropout for Bayesian     uncertain, Return the training :class:`ImageDataGenerator`, with optional augmentation., Create and return ``(train_generator, validation_generator)``.          Both gen (+4 more)
 
 ### Community 7 - "OpenSeadragon Mouse Events"
 Cohesion: 0.14
@@ -167,8 +171,8 @@ Cohesion: 0.16
 Nodes (9): ndarray, QTableWidget, PerformanceTab, QFrame, QWidget, QHLine, Populate the single-patient confusion-matrix table., Populate the aggregate confusion-matrix table. (+1 more)
 
 ### Community 9 - "KL Bayesian VGG Model"
-Cohesion: 0.07
-Nodes (18): QWidget, Instantiate the chosen model and run it inside a WorkerLong., Append epoch rows to the training log label.          The Keras ``TrainingProgre, Tab 2 — pick dropout vs KL, set epochs / batch size, run training., TrainingTab, ModelKl, Callback, History (+10 more)
+Cohesion: 0.18
+Nodes (10): ModelKl, History, ImageDataGenerator, Model, Return the training :class:`ImageDataGenerator`, with optional augmentation., Create and return ``(train_generator, validation_generator)``.          Both gen, Constructs a Flipout Bayesian VGG-style model.          Args:             input_, Network block for VGG. (+2 more)
 
 ### Community 10 - "OpenSeadragon Controls Autohide"
 Cohesion: 0.12
@@ -180,23 +184,23 @@ Nodes (18): blendTile(), compareTiles(), drawDebugInfo(), drawTiles(), getTile()
 
 ### Community 12 - "Qt Workers"
 Cohesion: 0.15
-Nodes (11): Any, _accepts_kwarg(), QObject, QRunnable, Thread wrapper with full lifecycle signals.      Injects a ``progress_callback``, Signals emitted by :class:`WorkerLong` during its lifecycle.      ``intermediate, True iff *fn* accepts a keyword argument named *name*.      Returns True when *f, Fire-and-forget thread wrapper.      Runs *fn* in a thread-pool thread without l (+3 more)
+Nodes (12): Any, _accepts_kwarg(), QObject, QRunnable, Shared Qt thread-pool plumbing for the two GUI entry points.  Both ``ui_pyqt5.py, Thread wrapper with full lifecycle signals.      Injects a ``progress_callback``, Signals emitted by :class:`WorkerLong` during its lifecycle.      ``intermediate, True iff *fn* accepts a keyword argument named *name*.      Returns True when *f (+4 more)
 
 ### Community 13 - "DataClean UI Builders"
-Cohesion: 0.18
-Nodes (6): GetTilesTab, QWidget, Open a folder dialog and populate the QListWidgets with files in         each pe, Launch per-dataset tiling workers (one worker per class sub-folder)., Tab 1 — pick source folders and launch per-dataset tiling workers., QHBoxLayout
+Cohesion: 0.17
+Nodes (7): QHBoxLayout, QWidget, Builds the 'Get Tiles' tab for dataset folder selection and tiling., Builds the 'Training' tab for model configuration and launch., Builds the 'Uncertainty analysis' tab for MC Dropout classification., Costruisce il tab 'Data cleaning' con istogrammi e selezione soglia., Crea una riga orizzontale con etichetta e pulsante.
 
 ### Community 14 - "OpenSeadragon Touch Events"
 Cohesion: 0.15
 Nodes (17): abortTouchContacts(), getCaptureEventParams(), getCenterPoint(), getStandardizedButton(), handleMouseUp(), handleTouchEnd(), onMouseUp(), onMouseUpCaptured() (+9 more)
 
 ### Community 15 - "Classification Module"
-Cohesion: 0.11
-Nodes (10): QWidget, Spin up a :class:`WorkerLong` running MC classification., Tab 3 — run Monte-Carlo classification on a chosen dataset., UncertaintyTab, Classification, GREAT NOTE: LIST ARE index-1 for the 0 index, Analyze the selected folder, finding all the png files, Create the dict with the key the number of the tile, to each key correspond anot (+2 more)
+Cohesion: 0.17
+Nodes (6): Classification, GREAT NOTE: LIST ARE index-1 for the 0 index, Analyze the selected folder, finding all the png files, Create the dict with the key the number of the tile, to each key correspond anot, This method read the image, modify it as numpy array and at the end control if s, Load the model and analyze the tile, the dictionary is updated with the predicte
 
 ### Community 16 - "DataClean Long-Running Workers"
-Cohesion: 0.16
-Nodes (10): User-tunable defaults and paths for the Datacleaning application.  These were or, MainTabWidget — coordinator of the 5 Datacleaning tabs.  Holds the shared :class, Main window of the Datacleaning application.  Owns the menu bar (File / About) a, DataCleanState, Shared mutable state for the Datacleaning tabs.  The original ``MainTabWidget``, Mutable shared state across the five Datacleaning tabs.      Attributes are inte, Data cleaning tab — uncertainty histograms + manual / auto thresholding.  Picks, Get-Tiles tab — dataset folder selection and tile extraction.  The user selects (+2 more)
+Cohesion: 0.33
+Nodes (4): LongRunningWorker, QRunnable, Generic worker for long-running operations on background threads.      Accepts a, Avvia il training del modello selezionato in un thread separato.
 
 ### Community 17 - "jQuery Ajax & Animation"
 Cohesion: 0.25
@@ -219,12 +223,16 @@ Cohesion: 0.27
 Nodes (7): BytesIO, index(), load_slide(), PILBytesIO, Classic PIL doesn't understand io.UnsupportedOperation., slugify(), tile()
 
 ### Community 22 - "DataClean Matplotlib Canvas"
-Cohesion: 0.19
-Nodes (9): FigureCanvasQTAgg, HorizontalLine, MatplotlibCanvas, QFrame, Reusable Qt widgets used across the Datacleaning tabs., Decorative horizontal separator., Decorative vertical separator., Matplotlib canvas for rendering inline histograms. (+1 more)
+Cohesion: 0.18
+Nodes (8): HorizontalLine, QFrame, QObject, Signals emitted by LongRunningWorker to communicate with the main thread., Decorative horizontal separator., Decorative vertical separator., VerticalLine, WorkerSignals
 
 ### Community 23 - "Config & Init"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (7): analysis(), _expected_partition(), Unit tests for ``StartAnalysis.manage_process()``.  This method computes the x-a, A StartAnalysis with the minimum attributes manage_process touches.      We don', Reference implementation of manage_process() used as the oracle.      Kept indep, Return-shape contract: always a 5-tuple of equal-length lists., TestManageProcessShape
+
+### Community 24 - "Uncertainty Analysis TH"
+Cohesion: 0.15
+Nodes (4): FigureCanvasQTAgg, Th, MatplotlibCanvas, Matplotlib canvas for rendering inline histograms.
 
 ### Community 25 - "OpenSeadragon Scalebar"
 Cohesion: 0.44
@@ -241,10 +249,6 @@ Nodes (13): getMouseRelative(), getPointRelativeToAbsolute(), handleMouseMove(),
 ### Community 28 - "DataClean Main Window"
 Cohesion: 0.20
 Nodes (9): Analysis-tier tests for ``StartAnalysis`` that exercise the OpenSlide / DeepZoom, Regression for the IndexError: tuple index out of range.      Original bug: ui_p, When ``lev_sec`` is in range, the produced thumbnail must come from     ``list_l, Regression for the ``Invalid address`` ValueError.      ``tile_gen(state=0)`` re, Regression: a small fixture (``level_count=2``) used to crash hard in     ``tile, test_get_thumb_uses_a_valid_openslide_level(), test_lev_sec_under_level_count_does_not_raise_in_get_thumb(), test_openSvs_clamps_out_of_range_lev_sec_instead_of_IndexError() (+1 more)
-
-### Community 29 - "DataClean Uncertainty Runner"
-Cohesion: 0.25
-Nodes (5): Datacleaning application tabs.  Each tab is a self-contained ``QWidget`` that ta, Testing tab — thin wrapper around :class:`PerformanceTab`.  The confusion-matrix, Tab 5 — wraps :class:`PerformanceTab` with shared-state awareness.      ``Perfor, Enable the right cm button + register the JSON path.          Called by :class:`, TestingTab
 
 ### Community 30 - "Icons Assets"
 Cohesion: 0.70
@@ -281,10 +285,6 @@ Nodes (11): Bug 1 — `ImageDataGenerator` not imported, Bug 2 — Parameter nam
 ### Community 39 - "OpenSeadragon DZI Parser"
 Cohesion: 0.20
 Nodes (6): QImage, We need a real on-disk image for QIcon to load; PyQt5 silently         produces, Prompt the user to select an ``.svs`` file, generate a thumbnail,         and ki, Open the SVS file with :class:`StartAnalysis`, generate the         thumbnail an, Render *image* in the central label, scaling to fit the screen if needed., Load and display a result image.          Parameters         ----------
-
-### Community 41 - "Models Package Init"
-Cohesion: 0.25
-Nodes (3): _get_screen_size(), Return the primary screen dimensions as ``(width, height)``.      Falls back to, Set the Monte Carlo sample count and uncheck the other options.
 
 ### Community 42 - "OpenSeadragon Config"
 Cohesion: 0.33
@@ -327,32 +327,44 @@ Cohesion: 0.25
 Nodes (7): _import_viewer(), GUI tests for ``ui_pyqt5.ImageViewer._make_action`` (the Qt action factory intro, ``_create_actions`` should populate every expected attribute via     ``_make_act, Import ImageViewer lazily so the heavy ui_pyqt5 gate happens at test     call ti, Instantiate ImageViewer with an offscreen QApplication.      The empty-arg const, TestCreateActionsUsesFactory, viewer()
 
 ### Community 77 - "ui_dataclean.py"
-Cohesion: 0.22
-Nodes (4): Training tab — model type selection, hyperparameter entry, training log.  Owns t, Variational inference (KL-divergence) Bayesian CNN for histological-tile classif, Project-wide configuration constants.  Single source of truth for class names, i, Source package — core logic (classification, uncertainty, widgets, config).
+Cohesion: 0.19
+Nodes (6): Bayesian dropout CNN for histological-tile classification (AC / AD / H).  Monte, Bayesian uncertainty models package.  Re-exports the two model classes for conve, Variational inference (KL-divergence) Bayesian CNN for histological-tile classif, Project-wide configuration constants.  Single source of truth for class names, i, Source package — core logic (classification, uncertainty, widgets, config)., Bayesian Datacleaning Application Application for cleaning medical image dataset
 
 ### Community 78 - "MainWindow"
-Cohesion: 0.09
-Nodes (12): Datacleaning application — formerly ``ui_dataclean.py``.  Public API ----------, MainTabWidget, QWidget, Central widget that coordinates all application tabs.      Manages shared state, Connect each tab's worker_started signal to the shared handlers., Connect a worker to the shared handlers and start it.          For a training wo, MainWindow, QMainWindow (+4 more)
+Cohesion: 0.32
+Nodes (4): QAction, MainWindow, QMainWindow, Main application window for Bayesian Datacleaning.
+
+### Community 79 - "TrainingProgressCallback"
+Cohesion: 0.29
+Nodes (3): Callback, Emits per-batch and per-epoch training metrics via Qt signals.      Parameters, TrainingProgressCallback
+
+### Community 82 - "BayesianModel"
+Cohesion: 0.20
+Nodes (7): BayesianModel, History, Shared interface for the Bayesian uncertainty models.  Both ``BayesianDropoutCNN, Construct a model for training and uncertainty estimation.      Parameters (cons, Build, compile and train the model, returning the Keras history., Backward-compatible alias for :meth:`train`., Protocol
+
+### Community 83 - "TrainingProgressCallback"
+Cohesion: 0.29
+Nodes (3): Callback, Emits per-batch and per-epoch training metrics via Qt signals.      Parameters, TrainingProgressCallback
 
 ## Knowledge Gaps
 - **69 isolated node(s):** `wsi-analysis`, `graphify`, `Overview`, `Why Bayesian Networks?`, `Dataset` (+64 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **33 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `StartAnalysis` connect `Base Bayesian Model` to `PyQt5 Image Viewer`, `Multi-Process Analysis`, `OpenSeadragon Wheel Events`, `OpenSeadragon DZI Parser`, `OpenSeadragon XML10 Parser`, `OpenSeadragon Stop Fade`, `DataClean UI Builders`, `DataClean Long-Running Workers`, `Config & Init`, `._update_training_log`, `DataClean Main Window`?**
-  _High betweenness centrality (0.091) - this node is a cross-community bridge._
-- **Why does `ImageViewer` connect `PyQt5 Image Viewer` to `Multi-Process Analysis`, `OpenSeadragon DZI Parser`, `Models Package Init`, `OpenSeadragon Config`, `test_actions_factory.py`, `OpenSeadragon Stop Fade`, `MainWindow`, `Classification Module`, `._start_analysis`, `Base Bayesian Model`, `._tile_dataset`?**
-  _High betweenness centrality (0.080) - this node is a cross-community bridge._
-- **Why does `Classification` connect `Classification Module` to `PyQt5 Image Viewer`, `Multi-Process Analysis`, `ui_dataclean.py`, `DataClean Long-Running Workers`, `._start_analysis`?**
-  _High betweenness centrality (0.052) - this node is a cross-community bridge._
+- **Why does `StartAnalysis` connect `Base Bayesian Model` to `PyQt5 Image Viewer`, `Multi-Process Analysis`, `DataClean Tab Widget`, `OpenSeadragon Wheel Events`, `OpenSeadragon DZI Parser`, `OpenSeadragon XML10 Parser`, `OpenSeadragon Stop Fade`, `ui_dataclean.py`, `MainWindow`, `DataClean Long-Running Workers`, `._tile_dataset`, `DataClean Matplotlib Canvas`, `Config & Init`, `Uncertainty Analysis TH`, `._update_training_log`, `DataClean Main Window`?**
+  _High betweenness centrality (0.089) - this node is a cross-community bridge._
+- **Why does `ImageViewer` connect `PyQt5 Image Viewer` to `Multi-Process Analysis`, `OpenSeadragon DZI Parser`, `Models Package Init`, `OpenSeadragon Config`, `test_actions_factory.py`, `OpenSeadragon Stop Fade`, `Classification Module`, `._start_analysis`, `Base Bayesian Model`, `._tile_dataset`?**
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+- **Why does `MainTabWidget` connect `DataClean Tab Widget` to `Bayesian Dropout CNN`, `Performance Widget`, `KL Bayesian VGG Model`, `MainWindow`, `ui_dataclean.py`, `DataClean UI Builders`, `Classification Module`, `._tile_dataset`, `DataClean Long-Running Workers`, `._draw_histograms`, `Base Bayesian Model`, `._select_dataset_folder`, `._create_clean_dataset`, `DataClean Matplotlib Canvas`, `._update_training_log`, `Uncertainty Analysis TH`, `DataClean Uncertainty Runner`, `DataClean Threshold Mode`?**
+  _High betweenness centrality (0.062) - this node is a cross-community bridge._
+- **Are the 6 inferred relationships involving `MainTabWidget` (e.g. with `BayesianDropoutCNN` and `ModelKl`) actually correct?**
+  _`MainTabWidget` has 6 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 6 inferred relationships involving `ImageViewer` (e.g. with `_import_viewer()` and `TestCreateActionsUsesFactory`) actually correct?**
   _`ImageViewer` has 6 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 7 inferred relationships involving `StartAnalysis` (e.g. with `GetTilesTab` and `TestManageProcessShape`) actually correct?**
-  _`StartAnalysis` has 7 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 5 inferred relationships involving `Classification` (e.g. with `UncertaintyTab` and `ImageViewer`) actually correct?**
-  _`Classification` has 5 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 2 inferred relationships involving `TrainingTab` (e.g. with `BayesianDropoutCNN` and `ModelKl`) actually correct?**
-  _`TrainingTab` has 2 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 13 inferred relationships involving `StartAnalysis` (e.g. with `TestManageProcessShape` and `TestManageProcessValues`) actually correct?**
+  _`StartAnalysis` has 13 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 11 inferred relationships involving `Classification` (e.g. with `HorizontalLine` and `LongRunningWorker`) actually correct?**
+  _`Classification` has 11 INFERRED edges - model-reasoned connections that need verification._

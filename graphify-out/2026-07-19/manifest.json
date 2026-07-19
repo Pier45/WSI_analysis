@@ -85,8 +85,8 @@
     "semantic_hash": ""
   },
   "ui_dataclean.py": {
-    "mtime": 1784469527.2318554,
-    "ast_hash": "5a907ec1e345c1fca6f8632cff98d626",
+    "mtime": 1784232699.5817502,
+    "ast_hash": "220dcf65e40a478a05fde77a14c3c654",
     "semantic_hash": ""
   },
   "ui_pyqt5.py": {
@@ -427,71 +427,6 @@
   ".github/workflows/ci.yml": {
     "mtime": 1784155303.0447001,
     "ast_hash": "363820404b33917fa80e625c8c400e97",
-    "semantic_hash": ""
-  },
-  "gui/__init__.py": {
-    "mtime": 1784466053.4989922,
-    "ast_hash": "156fb68129765df67a348964eac9e625",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/__init__.py": {
-    "mtime": 1784468263.1131508,
-    "ast_hash": "531a9aa0650a499b17c457542ffb7a43",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/components.py": {
-    "mtime": 1784468791.782984,
-    "ast_hash": "3963ef5fd040910f41db5d4ca99af5aa",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/constants.py": {
-    "mtime": 1784466225.3611503,
-    "ast_hash": "e9d2e9e8111484a35a3a0baf516ce3f1",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/main_tab_widget.py": {
-    "mtime": 1784469279.1492767,
-    "ast_hash": "f416494d269b5a44019da3473dae0558",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/main_window.py": {
-    "mtime": 1784468791.7879844,
-    "ast_hash": "7fa2d3b275bdc1b0013afb2effd69fff",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/state.py": {
-    "mtime": 1784468791.7889845,
-    "ast_hash": "c8ccde1102c9a5118b1873ecbea6da34",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/tabs/__init__.py": {
-    "mtime": 1784467830.880177,
-    "ast_hash": "7f4cb95bf85a71cf70dc7bedf0a4da76",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/tabs/tab_cleaning.py": {
-    "mtime": 1784467674.8929884,
-    "ast_hash": "8475d3ab13b5955c20767974366d9d2c",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/tabs/tab_testing.py": {
-    "mtime": 1784468791.7839842,
-    "ast_hash": "a3c6997ecccea74ce78b109ff5775a3e",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/tabs/tab_tiles.py": {
-    "mtime": 1784468936.1590643,
-    "ast_hash": "3aa1389c96182782428fc640fe7b58b5",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/tabs/tab_training.py": {
-    "mtime": 1784467024.171341,
-    "ast_hash": "3f5be4f6024f522233525a0ec05f43f5",
-    "semantic_hash": ""
-  },
-  "gui/dataclean/tabs/tab_uncertainty.py": {
-    "mtime": 1784469004.386975,
-    "ast_hash": "b63582d591d2e8d75f29e3b3ed59f8b6",
     "semantic_hash": ""
   }
 }

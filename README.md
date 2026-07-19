@@ -155,6 +155,22 @@ WSI_analysis/
 │   └── original_requirements.txt      #   2019 TF 1.15 requirements
 ├── data/                             # Real patient WSI datasets (per-patient subfolders)
 ├── docs/                             # BUG_REPORT.md, PROJECT_MAP.md
+├── gui/                             # ✓ GUI package (formerly inside ui_*.py)
+│   ├── __init__.py
+│   └── dataclean/                    #   5-tab Datacleaning application
+│       ├── __init__.py                #   re-exports MainWindow
+│       ├── constants.py               #   DEFAULT_* / APP_* / KNOWN_CLASSES / TUTORIAL_MESSAGE
+│       ├── state.py                   #   DataCleanState dataclass (shared by all tabs)
+│       ├── components.py              #   HorizontalLine / VerticalLine / MatplotlibCanvas
+│       ├── main_window.py             #   MainWindow — menubar, tutorial, stylesheet
+│       ├── main_tab_widget.py         #   MainTabWidget — coordinator of the 5 tabs
+│       └── tabs/                      #   one widget class per tab
+│           ├── __init__.py
+│           ├── tab_tiles.py            #   GetTilesTab
+│           ├── tab_training.py         #   TrainingTab
+│           ├── tab_uncertainty.py      #   UncertaintyTab
+│           ├── tab_cleaning.py         #   CleaningTab
+│           └── tab_testing.py          #   TestingTab (wraps src.performance_widget.PerformanceTab)
 ├── icons/                             # 14 PyQt5 GUI icon assets (.ico + Linux .png variants)
 ├── img/                              # Thesis figures + stray UI assets
 ├── models/                           # ✓ Bayesian model package
@@ -183,7 +199,7 @@ WSI_analysis/
 │   └── unit/                          #   default — runs in CI
 │       ├── test_config.py            #     CLASS_NAMES / N_CLASSES / INPUT_SHAPE guards
 │       └── test_tile_partition.py    #     StartAnalysis.manage_process shape + value regression
-├── ui_dataclean.py                   # Entry point 2 — Data cleaning & training GUI (5 tabs)
+├── ui_dataclean.py                   # Thin launcher (49 lines) → gui.dataclean.MainWindow
 ├── ui_pyqt5.py                       # Entry point 1 — Main WSI analysis GUI (cross-platform: Win + Linux/KDE/Wayland)
 ├── pyproject.toml                    # uv / PEP 621 — deps + [tool.pytest] + [tool.ruff] + [dependency-groups].dev
 ├── uv.lock                           # uv lockfile (cross-platform: Windows + Linux)
@@ -316,6 +332,21 @@ uv run python ui_dataclean.py
 # or without uv:
 python ui_dataclean.py
 ```
+
+`ui_dataclean.py` is now a ~50-line launcher: it applies the Linux/Wayland Qt fixes (xcb platform, in-window menu bar, `.png` icon — same as `ui_pyqt5.py`) and instantiates `gui.dataclean.MainWindow`. All the real logic lives under `gui/dataclean/`, split one tab per file:
+
+| Module | Responsibility |
+|---|---|
+| `gui/dataclean/main_window.py` | `MainWindow` — menubar (File / About), tutorial dialog, external Qt stylesheet |
+| `gui/dataclean/main_tab_widget.py` | `MainTabWidget` — owns `DataCleanState`, instantiates the 5 tabs, wires each tab's `worker_started` signal to the shared result/progress/finished handlers |
+| `gui/dataclean/state.py` | `DataCleanState` dataclass — shared mutable state (paths, training params, JSON results, cleaning object, training log) |
+| `gui/dataclean/constants.py` | `DEFAULT_*`, `APP_ICON_PATH`, `KNOWN_CLASSES`, `TUTORIAL_MESSAGE` |
+| `gui/dataclean/components.py` | `HorizontalLine`, `VerticalLine`, `MatplotlibCanvas` reused across tabs |
+| `gui/dataclean/tabs/tab_tiles.py` | `GetTilesTab` — folder selection + per-dataset tiling workers |
+| `gui/dataclean/tabs/tab_training.py` | `TrainingTab` — model type, epochs, batch size, augmentation, live training log |
+| `gui/dataclean/tabs/tab_uncertainty.py` | `UncertaintyTab` — MC-Dropout classification per dataset |
+| `gui/dataclean/tabs/tab_cleaning.py` | `CleaningTab` — uncertainty histograms + Otsu / New / Manual threshold + clean-dataset export |
+| `gui/dataclean/tabs/tab_testing.py` | `TestingTab` — wraps `src.performance_widget.PerformanceTab` with state-aware cm buttons |
 
 ![Figure5.7](img/Figure5.7.png)
 

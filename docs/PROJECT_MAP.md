@@ -24,12 +24,28 @@
 WSI_analysis/
 ├── .git/                  # version control (LFS enabled, see §7)
 ├── .venv/                 # ⚠ 1.79 GB, in .gitignore but physically sits at root
-├── .vscode/               # ⚠ now UNTRACKED (removed from git in v8.5.0, kept on disk)
+├── .vscode/               # ✅ now UNTRACKED (removed from git in v8.5.0, kept on disk)
 ├── .opencode/             # opencode config + graphify plugin
 ├── archive/               # ⚠ legacy Colab-era code + 14 MB of sample data blobs
 ├── data/                  # patient WSI datasets (e.g. 10002_AC_2/)
 ├── docs/                  # BUG_REPORT.md, PROJECT_MAP.md, sasa.txt
-├── graphify-out/          # knowledge-graph outputs (graph.html, graph.json, …) — refreshed 2026-07-17
+├── graphify-out/          # knowledge-graph outputs — refreshed 2026-07-19 (850 nodes / 1279 edges / 78 communities)
+├── gui/                   # ✓ NEW GUI package (extracted from ui_dataclean.py)
+│   ├── __init__.py
+│   └── dataclean/          #   5-tab dataclean app
+│       ├── __init__.py     #     re-exports MainWindow
+│       ├── constants.py    #     DEFAULT_* / APP_* / KNOWN_CLASSES / TUTORIAL_MESSAGE
+│       ├── state.py        #     DataCleanState dataclass (shared mutable state)
+│       ├── components.py   #     HorizontalLine / VerticalLine / MatplotlibCanvas
+│       ├── main_window.py  #     MainWindow — menubar / tutorial / stylesheet
+│       ├── main_tab_widget.py  # MainTabWidget — coordinator of 5 tabs + worker wiring
+│       └── tabs/           #     one QWidget subclass per tab
+│           ├── __init__.py
+│           ├── tab_tiles.py        #   GetTilesTab
+│           ├── tab_training.py     #   TrainingTab
+│           ├── tab_uncertainty.py  #   UncertaintyTab
+│           ├── tab_cleaning.py     #   CleaningTab
+│           └── tab_testing.py      #   TestingTab (wraps src.performance_widget.PerformanceTab)
 ├── icons/                 # 14 PyQt5 GUI icon assets (.ico + Linux .png variants)
 ├── img/                   # 6 PNG thesis figures + 3 stray UI assets
 ├── models/                # ✓ package — Bayesian model classes (drop_out, kl, base)
@@ -41,13 +57,13 @@ WSI_analysis/
 │   ├── uncertainty_analysis.py
 │   ├── performance_widget.py         # renamed from test_widget.py
 │   ├── progress_bar.py
-│   ├── qt_workers.py                 # ✓ shared WorkerSignals/Worker/WorkerLong (refactored out of the two GUIs)
+│   ├── qt_workers.py                 # ✓ shared WorkerSignals/Worker/WorkerLong (refactored out of both GUIs; ui_dataclean.py now imports from here)
 │   └── deepzoom/          # Flask DeepZoom viewer (cleanest sub-package)
 │       ├── static/        # OpenSeadragon + jQuery (~1 MB)
 │       ├── templates/
 │       └── deepzoom_server.py
 ├── styles/                # ⚠ near-duplicate Qt stylesheets (stile.txt, stileor.css)
-├── tests/                 # ✓ NEW real test suite (pytest — see §4)
+├── tests/                 # ✓ real test suite (pytest — see §4)
 │   ├── conftest.py        #   root fixtures + marker gating
 │   ├── analysis/          #   `pytest -m openslide` — StartAnalysis regressions (IndexError, Invalid address)
 │   │   └── test_start_analysis.py
@@ -68,7 +84,9 @@ WSI_analysis/
 ├── Dockerfile             # multi-stage, python:3.10-slim
 ├── docker-compose.yaml    # 2 services, hardcoded personal WSL path
 ├── .gitignore / .gitattributes
-└── main.py               # ⚠ 4-line `uv init` stub (dead)
+├── ui_pyqt5.py            # entry point 1 — "Bayesian Analyzer" GUI (cross-platform DeepZoom + Linux/KDE fixes)
+├── ui_dataclean.py        # entry point 2 — thin 49-line launcher → gui.dataclean.MainWindow
+└── main.py                # ⚠ 4-line `uv init` stub (dead)
 ```
 
 ### Folder status grid
@@ -76,18 +94,19 @@ WSI_analysis/
 | Folder | Status | Notes |
 |---|---|---|
 | `.venv/` | ⚠ Local smell | 1.79 GB at repo root; pollutes every glob/search unless explicitly excluded. Not tracked. |
-| `.vscode/` | ✅ **NOW UNTRACKED** | Removed from git in v8.5.0 (`git rm -r --cached`); `.gitignore` now excludes it. Folder kept on disk. |
-| `archive/` | ⚠ Misnamed | "Archived experiments" now holds the dead `dataset_creation.py` + 14 MB of sample JSON tile dictionaries moved out of the live tree — useful for reproducibility but pollutes recursive search. |
+| `.vscode/` | ✅ **UNTRACKED** | Removed from git in v8.5.0 (`git rm -r --cached`); `.gitignore` now excludes it. Folder kept on disk. |
+| `archive/` | ⚠ Misnamed | "Archived experiments" holds the dead `dataset_creation.py` + 14 MB of sample JSON tile dictionaries. |
 | `data/` | ✓ Real patient data | WSI datasets (per-patient sub-folders like `10002_AC_2/`). |
+| `gui/` | ✓ NEW | Extracted from `ui_dataclean.py`. One tab class per file. Tests, README, Docker all unchanged. |
 | `models/` | ✓ Package | `__init__.py` re-exports the model classes. Clean. |
-| `src/` | ✓ Package | `__init__.py` re-exports `CLASS_NAMES`, `N_CLASSES`, `INPUT_SHAPE`. Contains the real logic. Now also hosts shared `qt_workers.py`. |
+| `src/` | ✓ Package | `__init__.py` re-exports `CLASS_NAMES`, `N_CLASSES`, `INPUT_SHAPE`. Contains the real logic + shared `qt_workers.py`. |
 | `src/deepzoom/` | ✓ Clean | Self-contained Flask sub-app — no changes needed. |
-| `icons/` | ✓ Fine | 14 PyQt5 GUI icon assets — added `.png` variants of `target.ico` (Wayland can't load `.ico` reliably; `target.png` is used on Linux). |
+| `icons/` | ✓ Fine | 14 PyQt5 GUI icon assets — `.png` variants of `target.ico` for Wayland. |
 | `img/` | ⚠ 3 stray files | `checkbox.png`, `down_arrow.png`, `handle.png` appear unused by the live UI. |
 | `styles/` | ⚠ Duplication | `stile.txt` (11.7 KB) and `stileor.css` (11.6 KB) are near-byte-identical; only `.css` is loaded by the app. |
 | `test/` | ✅ **REMOVED** | Empty `test/` folder deleted; the real test tree now lives under `tests/` (plural). |
-| `tests/` | ✓ NEW | Real pytest test suite — see §4 for marker gating. |
-| `graphify-out/` | ✓ Generated | Knowledge-graph outputs refreshed on 2026-07-17 (809 nodes / 1230 edges / 82 communities). |
+| `tests/` | ✓ Active | Real pytest test suite — see §4 for marker gating. |
+| `graphify-out/` | ✓ Generated | Refreshed 2026-07-19 (850 nodes / 1279 edges / 78 communities). |
 
 ---
 
@@ -167,8 +186,8 @@ A single `TrainingProgressCallback(Callback)` in each model file emits per-batch
 
 | File | Lines | Bytes | Responsibility |
 |---|---:|---:|---|
-| `ui_pyqt5.py` | 1093 | 38,400 | **Entry point 1.** `ImageViewer(QMainWindow)` — open `.svs`, background tiling, Bayesian inference, overlays, launch DeepZoom. Cross-platform DeepZoom launcher (no more Windows-only `cmd /k`). Linux-specific: `APP_ICON` picks `icons/target.png`, `setNativeMenuBar(False)` so the top menu bar renders on GNOME/KDE/Wayland, and `QT_QPA_PLATFORM=xcb` is exported so XWayland honours the system cursor theme. Inline import of `Classification` is now `from src.classification import Classification`. |
-| `ui_dataclean.py` | 982 | 38,500 | **Entry point 2.** `MainWindow`/`MainTabWidget` with 5 tabs. Imports are now package-qualified: `from models.drop_out import BayesianDropoutCNN`, `from models.kl import ModelKl`, `from src.classification import Classification`, `from src.uncertainty_analysis import Th`, `from src.performance_widget import PerformanceTab`, `from src.config import CLASS_NAMES`. Constructor calls to models use the unified signature `(model_save_path, epochs, path_train, path_val, batch_size, augment)`. |
+| `ui_pyqt5.py` | 1093 | 38,400 | **Entry point 1.** `ImageViewer(QMainWindow)` — open `.svs`, background tiling, Bayesian inference, overlays, launch DeepZoom. Cross-platform DeepZoom launcher (no more Windows-only `cmd /k`). Linux-specific: `APP_ICON` picks `icons/target.png`, `setNativeMenuBar(False)` so the top menu bar renders on GNOME/KDE/Wayland, and `QT_QPA_PLATFORM=xcb` is exported so XWayland honours the system cursor theme. |
+| `ui_dataclean.py` | 49 | 1,400 | **Entry point 2 (thin launcher).** Applies the same Linux/Wayland Qt fixes as `ui_pyqt5.py` (xcb platform plugin, in-window menubar, PNG icon), builds `QApplication`, instantiates `gui.dataclean.MainWindow`, runs the event loop. All real logic lives under `gui/dataclean/`. |
 | `main.py` | 4 | 90 | ⚠ Vestigial `print("Hello from wsi-analysis!")` stub — dead `uv init` scaffolding. |
 
 ### Module interaction diagram (post-refactor)
@@ -293,7 +312,7 @@ The 20 smells from the original audit have been re-evaluated against the current
 | 6 | 🔴 | `test/test.py` 211 KB data dump. | ✅ **FIXED** — `test/` directory is now empty; the dump was cleaned out. (Large sample JSON tile dictionaries were moved to `archive/`.) |
 | 7 | 🟠 | All `test/` Python files were scratch experiments. | ✅ **FIXED** — scratch scripts removed. |
 | 8 | 🔴 | Hardcoded absolute paths everywhere. | 🟠 **PARTIAL** — paths inside the active codebase (`src/`, `models/`) are now parameter-passed; remaining hardcoded paths are in `archive/` (correctly quarantined) and `docker-compose.yaml` WSL mount (still non-portable). |
-| 9 | 🟠 | Duplicated `WorkerSignals`/`Worker`/`LongRunningWorker` between the two GUIs. | ⚠ Unchanged. |
+| 9 | 🟠 | Duplicated `WorkerSignals`/`Worker`/`LongRunningWorker` between the two GUIs. | ✅ **FIXED** — `ui_dataclean.py`'s local copies were deleted when its logic moved to `gui/dataclean/`; the tabs now import `LongRunningWorker` from `src/qt_workers.py`. `ui_pyqt5.py` still has its own `Worker`/`LongRunningWorker` inline, but now only one copy exists in the dataclean half of the codebase. |
 | 10 | 🟠 | Duplicated config defaults between GUIs. | 🟠 **PARTIAL** — `CLASS_NAMES`/`N_CLASSES`/`INPUT_SHAPE` now live in `src/config.py` (single source). GUI-specific constants (`APP_ICON`, `DEFAULT_MODEL`, `DEFAULT_TILE_SIZE`, `DEEPZOOM_URL`, `KNOWN_CLASSES`) are still per-GUI. |
 | 11 | 🟡 | Duplicated `styles/stile.txt` and `styles/stileor.css`. | ⚠ Unchanged. |
 | 12 | 🟡 | Duplicate `createTable` / `createTable_sigle` in `performance_widget.py`. | ⚠ Unchanged (file renamed, body not refactored). |
