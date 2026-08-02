@@ -29,16 +29,28 @@ WSI_analysis/
 ├── archive/               # ⚠ legacy Colab-era code + 14 MB of sample data blobs
 ├── data/                  # patient WSI datasets (e.g. 10002_AC_2/)
 ├── docs/                  # BUG_REPORT.md, PROJECT_MAP.md, sasa.txt
-├── graphify-out/          # knowledge-graph outputs — refreshed 2026-07-19 (850 nodes / 1279 edges / 78 communities)
-├── gui/                   # ✓ NEW GUI package (extracted from ui_dataclean.py)
+├── graphify-out/          # knowledge-graph outputs — refreshed 2026-07-19
+├── gui/                   # ✓ GUI package (extracted from ui_*.py)
 │   ├── __init__.py
+│   ├── analyzer/           #   Bayesian Analyzer application
+│   │   ├── __init__.py     #     re-exports ImageViewer
+│   │   ├── constants.py    #     APP_*/DEEPZOOM_*/MONTE_CARLO_*/ZOOM_*/WELCOME_MESSAGE
+│   │   ├── state.py        #     AnalyzerState dataclass (paths, MC, tiling metadata, scale)
+│   │   ├── actions.py      #     make_action + create_actions (test target)
+│   │   ├── menus.py        #     create_menus + populate_toolbar
+│   │   ├── image_display.py #    display / print / zoom helpers
+│   │   ├── tile_worker.py  #     tile-creation background workers
+│   │   ├── analysis_worker.py #  Bayesian classification background worker
+│   │   ├── deepzoom.py     #     DeepZoom Flask launcher + info dialog (dead cmd/k block removed)
+│   │   ├── about_dialogs.py #    About dialog
+│   │   └── main_window.py  #     ImageViewer — thin QMainWindow wiring helpers
 │   └── dataclean/          #   5-tab dataclean app
 │       ├── __init__.py     #     re-exports MainWindow
 │       ├── constants.py    #     DEFAULT_* / APP_* / KNOWN_CLASSES / TUTORIAL_MESSAGE
 │       ├── state.py        #     DataCleanState dataclass (shared mutable state)
 │       ├── components.py   #     HorizontalLine / VerticalLine / MatplotlibCanvas
 │       ├── main_window.py  #     MainWindow — menubar / tutorial / stylesheet
-│       ├── main_tab_widget.py  # MainTabWidget — coordinator of 5 tabs + worker wiring
+│       ├── main_tab_widget.py # MainTabWidget — coordinator of 5 tabs + worker wiring
 │       └── tabs/           #     one QWidget subclass per tab
 │           ├── __init__.py
 │           ├── tab_tiles.py        #   GetTilesTab
@@ -57,7 +69,7 @@ WSI_analysis/
 │   ├── uncertainty_analysis.py
 │   ├── performance_widget.py         # renamed from test_widget.py
 │   ├── progress_bar.py
-│   ├── qt_workers.py                 # ✓ shared WorkerSignals/Worker/WorkerLong (refactored out of both GUIs; ui_dataclean.py now imports from here)
+│   ├── qt_workers.py                 # ✓ shared WorkerSignals/Worker/WorkerLong — BOTH GUIs now import from here (smell #9 closed)
 │   └── deepzoom/          # Flask DeepZoom viewer (cleanest sub-package)
 │       ├── static/        # OpenSeadragon + jQuery (~1 MB)
 │       ├── templates/
@@ -67,15 +79,15 @@ WSI_analysis/
 │   ├── conftest.py        #   root fixtures + marker gating
 │   ├── analysis/          #   `pytest -m openslide` — StartAnalysis regressions (IndexError, Invalid address)
 │   │   └── test_start_analysis.py
-│   ├── gui/               #   `pytest -m gui` — pytest-qt, actions factory contract tests
-│   │   ├── conftest.py
-│   │   └── test_actions_factory.py
+│   ├── gui/               #   `pytest -m gui` — pytest-qt, make_action + create_actions contract tests
+│   │   ├── conftest.py    #     fallback qapp/qtbot when pytest-qt is absent
+│   │   └── test_actions_factory.py  # imports `from gui.analyzer import ImageViewer` (post-Pass-2)
 │   └── unit/              #   runs by default — pure-Python, no heavy deps
 │       ├── test_config.py            # CLASS_NAMES / N_CLASSES / INPUT_SHAPE guards
 │       └── test_tile_partition.py    # StartAnalysis.manage_process shape + value regression
 ├── __pycache__/           # byte-compiled artifacts
 │
-├── README.md              # 14,344 B — thorough documentation
+├── README.md              # thorough documentation
 ├── AGENTS.md              # graphify skill invocation rules
 ├── LICENSE                # MIT, Copyright (c) 2026 Piero Policastro
 ├── pyproject.toml         # uv project — deps + [tool.pytest] + [tool.ruff] + [dependency-groups]
@@ -84,8 +96,8 @@ WSI_analysis/
 ├── Dockerfile             # multi-stage, python:3.10-slim
 ├── docker-compose.yaml    # 2 services, hardcoded personal WSL path
 ├── .gitignore / .gitattributes
-├── ui_pyqt5.py            # entry point 1 — "Bayesian Analyzer" GUI (cross-platform DeepZoom + Linux/KDE fixes)
-├── ui_dataclean.py        # entry point 2 — thin 49-line launcher → gui.dataclean.MainWindow
+├── ui_pyqt5.py            # thin 50-line launcher → gui.analyzer.ImageViewer
+├── ui_dataclean.py        # thin 49-line launcher → gui.dataclean.MainWindow
 └── main.py                # ⚠ 4-line `uv init` stub (dead)
 ```
 
@@ -97,16 +109,18 @@ WSI_analysis/
 | `.vscode/` | ✅ **UNTRACKED** | Removed from git in v8.5.0 (`git rm -r --cached`); `.gitignore` now excludes it. Folder kept on disk. |
 | `archive/` | ⚠ Misnamed | "Archived experiments" holds the dead `dataset_creation.py` + 14 MB of sample JSON tile dictionaries. |
 | `data/` | ✓ Real patient data | WSI datasets (per-patient sub-folders like `10002_AC_2/`). |
-| `gui/` | ✓ NEW | Extracted from `ui_dataclean.py`. One tab class per file. Tests, README, Docker all unchanged. |
+| `gui/` | ✓ NEW | Extracted from both `ui_*.py` files. Two sub-packages — `analyzer/` (helpers split one responsibility per file) and `dataclean/` (one tab per file). Tests, README, Docker all unchanged. |
+| `gui/analyzer/` | ✓ NEW (Pass 2) | Bayesian Analyzer split into `constants` / `state` / `actions` / `menus` / `image_display` / `tile_worker` / `analysis_worker` / `deepzoom` / `about_dialogs` / `main_window`. `_make_action` exposed as module-level `make_action` for direct test import. |
+| `gui/dataclean/` | ✓ NEW (Pass 1) | 5-tab app split into `constants` / `state` / `components` / `main_window` / `main_tab_widget` + one tab class per file under `tabs/`. |
 | `models/` | ✓ Package | `__init__.py` re-exports the model classes. Clean. |
-| `src/` | ✓ Package | `__init__.py` re-exports `CLASS_NAMES`, `N_CLASSES`, `INPUT_SHAPE`. Contains the real logic + shared `qt_workers.py`. |
+| `src/` | ✓ Package | `__init__.py` re-exports `CLASS_NAMES`, `N_CLASSES`, `INPUT_SHAPE`. Contains the real logic + shared `qt_workers.py` (now imported by both GUIs). |
 | `src/deepzoom/` | ✓ Clean | Self-contained Flask sub-app — no changes needed. |
 | `icons/` | ✓ Fine | 14 PyQt5 GUI icon assets — `.png` variants of `target.ico` for Wayland. |
 | `img/` | ⚠ 3 stray files | `checkbox.png`, `down_arrow.png`, `handle.png` appear unused by the live UI. |
 | `styles/` | ⚠ Duplication | `stile.txt` (11.7 KB) and `stileor.css` (11.6 KB) are near-byte-identical; only `.css` is loaded by the app. |
 | `test/` | ✅ **REMOVED** | Empty `test/` folder deleted; the real test tree now lives under `tests/` (plural). |
 | `tests/` | ✓ Active | Real pytest test suite — see §4 for marker gating. |
-| `graphify-out/` | ✓ Generated | Refreshed 2026-07-19 (850 nodes / 1279 edges / 78 communities). |
+| `graphify-out/` | ✓ Generated | Refreshed 2026-07-19. |
 
 ---
 
@@ -186,9 +200,39 @@ A single `TrainingProgressCallback(Callback)` in each model file emits per-batch
 
 | File | Lines | Bytes | Responsibility |
 |---|---:|---:|---|
-| `ui_pyqt5.py` | 1093 | 38,400 | **Entry point 1.** `ImageViewer(QMainWindow)` — open `.svs`, background tiling, Bayesian inference, overlays, launch DeepZoom. Cross-platform DeepZoom launcher (no more Windows-only `cmd /k`). Linux-specific: `APP_ICON` picks `icons/target.png`, `setNativeMenuBar(False)` so the top menu bar renders on GNOME/KDE/Wayland, and `QT_QPA_PLATFORM=xcb` is exported so XWayland honours the system cursor theme. |
-| `ui_dataclean.py` | 49 | 1,400 | **Entry point 2 (thin launcher).** Applies the same Linux/Wayland Qt fixes as `ui_pyqt5.py` (xcb platform plugin, in-window menubar, PNG icon), builds `QApplication`, instantiates `gui.dataclean.MainWindow`, runs the event loop. All real logic lives under `gui/dataclean/`. |
+| `ui_pyqt5.py` | 50 | 1,400 | **Entry point 1 (thin launcher).** Applies the same Linux/Wayland Qt fixes as `ui_dataclean.py` (xcb platform plugin, in-window menubar, PNG icon), builds `QApplication`, instantiates `gui.analyzer.ImageViewer`, runs the event loop. All real logic lives under `gui/analyzer/` (see below). |
+| `ui_dataclean.py` | 49 | 1,400 | **Entry point 2 (thin launcher).** Applies the same Linux/Wayland Qt fixes, builds `QApplication`, instantiates `gui.dataclean.MainWindow`, runs the event loop. All real logic lives under `gui/dataclean/`. |
 | `main.py` | 4 | 90 | ⚠ Vestigial `print("Hello from wsi-analysis!")` stub — dead `uv init` scaffolding. |
+
+### `gui/analyzer/` — Bayesian Analyzer sub-package (pass 2 refactor)
+
+| File | Lines | Responsibility |
+|---|---:|---|
+| `gui/analyzer/main_window.py` | 287 | `ImageViewer(QMainWindow)` — thin owner of `state` (an `AnalyzerState` dataclass), UI skeleton (`_toolbar`, `_image_label`, `_scroll_area`, `_thread_pool`, `_printer`, `_progress_*`). The constructor builds the UI and calls `create_actions(self)` / `create_menus(self)` / `populate_toolbar(…)` from `actions.py`/`menus.py`. Every slot on the class is now a 1-3 line forwarder to one of the helper modules. |
+| `gui/analyzer/state.py` | 56 | `@dataclass AnalyzerState` holding `svs_path`, `work_dir`, `result_dir`, `analysis_type`, `model_name`, `monte_carlo_samples`, tiling metadata (`tile_x_start/stop`, `process_names`, `tile_start/stop_idx`, `tile_rows`, `svs_level`, `svs_deepzoom_level`), `pending_tile_workers`, and `scale_factor`. Mirrors `gui.dataclean.state.DataCleanState`. |
+| `gui/analyzer/constants.py` | 51 | `APP_TITLE`, `APP_ICON` (Linux-picked PNG), `DEEPZOOM_URL/SCRIPT/_browser_host/_browser_port`, `MONTE_CARLO_OPTIONS`, `DEFAULT_MONTE_CARLO`, `ZOOM_IN/OUT/MIN/MAX`, `DEFAULT_MODEL(_FILENAME)`, `WELCOME_MESSAGE`. |
+| `gui/analyzer/actions.py` | 173 | `make_action(parent, text, *, icon=, shortcut=, enabled=, checkable=, checked=, triggered=) -> QAction` (now a **module-level function** so the test imports it without instantiating `QMainWindow`) + `create_actions(parent)` populating the 25 `_*_act` attributes on `parent` (same names as before — `tests/gui/test_actions_factory.py` stays green). Plus `set_monte_carlo(parent, value)` checking the right radio. |
+| `gui/analyzer/menus.py` | 92 | `create_menus(parent)` builds File / Analysis / View / Options / Help; `populate_toolbar(toolbar, parent)` lays out the main toolbar's action/separator sequence. |
+| `gui/analyzer/image_display.py` | 138 | `display_image`, `view_result`, `print_image`, zoom helpers (`zoom_in/out`, `normal_size`, `fit_to_window`, `scale_image`, `update_zoom_actions`), `enable_view_actions`. Each helper takes `(parent, state, …)` and only touches Qt widgets via `parent.<widget>`. |
+| `gui/analyzer/tile_worker.py` | 192 | `create_tiles(state, analysis_type, svs_path, svs_level, work_dir, tile_args, progress_callback)`, `start_tile_threads(parent, state, pool, progress_ui, on_worker_error)`, `on_tile_worker_finished(parent, state)`, `show_worker_error(parent, error_tuple)`. **Imports `WorkerLong` from `src.qt_workers` — the local duplicate copies in `ui_pyqt5.py` were deleted.** |
+| `gui/analyzer/analysis_worker.py` | 103 | `start_analysis(parent, state, pool, progress_ui)`, `on_analysis_complete(parent, state)`, `select_model(parent, state)`. Inline-imports `Classification` so a missing TF wheel surfaces a clear ImportError at call time instead of crashing test collection. Imports `Optional` (was missing on `ui_pyqt5.py:788`, fixed). |
+| `gui/analyzer/deepzoom.py` | 93 | `open_deep_zoom(parent, state, pool)` — Flask subprocess launcher. The original's dead `os.system("cmd /k ...")` block (lines 670-676 on the old file) is **removed**; only the proper `subprocess.Popen([sys.executable, "-m", …])` path ships. Plus `open_browser()` and `about_deep_zoom(parent)`. Imports `Worker` from `src.qt_workers` (no duplicate). |
+| `gui/analyzer/about_dialogs.py` | 18 | `about(parent)` — the only QMessageBox About dialog. |
+
+### `gui/dataclean/` — Data cleaning sub-package (pass 1 refactor)
+
+| File | Lines | Responsibility |
+|---|---:|---|
+| `gui/dataclean/main_window.py` | 60 | `MainWindow(QMainWindow)` — menubar (File / About), tutorial dialog, external Qt stylesheet. Hosts `MainTabWidget` as its central widget. |
+| `gui/dataclean/main_tab_widget.py` | 133 | `MainTabWidget(QWidget)` — owns a single `DataCleanState`, instantiates the 5 tab widgets, wires each tab's `worker_started` signal to the shared `_start_worker` handler. |
+| `gui/dataclean/state.py` | 76 | `@dataclass DataCleanState` — paths, training parameters, JSON results, cleaning object, training log. |
+| `gui/dataclean/constants.py` | 40 | `DEFAULT_*`, `APP_ICON_PATH`, `KNOWN_CLASSES`, `TUTORIAL_MESSAGE`. |
+| `gui/dataclean/components.py` | 44 | `HorizontalLine`, `VerticalLine`, `MatplotlibCanvas` reused across tabs. |
+| `gui/dataclean/tabs/tab_tiles.py` | 217 | `GetTilesTab` — folder selection + per-dataset tiling workers. |
+| `gui/dataclean/tabs/tab_training.py` | 240 | `TrainingTab` — model type, epochs, batch size, augmentation, live training log. |
+| `gui/dataclean/tabs/tab_uncertainty.py` | 145 | `UncertaintyTab` — MC-Dropout classification per dataset. |
+| `gui/dataclean/tabs/tab_cleaning.py` | 370 | `CleaningTab` — uncertainty histograms + Otsu / New / Manual threshold + clean-dataset export. |
+| `gui/dataclean/tabs/tab_testing.py` | 48 | `TestingTab` — wraps `src.performance_widget.PerformanceTab` with state-aware cm buttons. |
 
 ### Module interaction diagram (post-refactor)
 

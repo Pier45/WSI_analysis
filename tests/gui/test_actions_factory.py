@@ -32,10 +32,10 @@ pytest.importorskip("PyQt5")
 
 
 def _import_viewer():
-    """Import ImageViewer lazily so the heavy ui_pyqt5 gate happens at test
-    call time, not at collection time (so ``pytest --collect-only`` works even
-    if a transitive dep is missing)."""
-    from ui_pyqt5 import ImageViewer  # noqa: WPS433  (local import on purpose)
+    """Import ImageViewer lazily so the heavy gui.analyzer import gate happens
+    at test call time, not at collection time (so ``pytest --collect-only``
+    works even if a transitive dep is missing)."""
+    from gui.analyzer import ImageViewer  # noqa: WPS433  (local import on purpose)
     return ImageViewer
 
 
@@ -55,27 +55,32 @@ def viewer(qapp):
 
 
 class TestMakeActionContract:
-    """``_make_action`` must produce a ``QAction`` whose properties equal the
+    """``make_action`` must produce a ``QAction`` whose properties equal the
     keyword args we passed in. This is the entire point of the refactor; a
     regression here breaks every menu/toolbar item."""
 
     def test_text_is_set(self, viewer):
         from PyQt5.QtWidgets import QAction  # local import keeps module import light
-        act = viewer._make_action("&Print…")
+
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "&Print…")
         assert isinstance(act, QAction)
         # QAction.text() returns the mnemonic stripped of '&' markers.
         assert "Print" in act.text()
 
     def test_default_enabled_is_true(self, viewer):
-        act = viewer._make_action("Foo")
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "Foo")
         assert act.isEnabled() is True
 
     def test_enabled_false_propagates(self, viewer):
-        act = viewer._make_action("Foo", enabled=False)
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "Foo", enabled=False)
         assert act.isEnabled() is False
 
     def test_checkable_and_checked(self, viewer):
-        act = viewer._make_action("Foo", checkable=True, checked=True)
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "Foo", checkable=True, checked=True)
         assert act.isCheckable() is True
         assert act.isChecked() is True
 
@@ -83,18 +88,22 @@ class TestMakeActionContract:
         """If ``checkable=False`` but ``checked=True``, Qt silently ignores the
         ``checked`` flag (the action is not togglable). Lock that behaviour
         so a refactor doesn't accidentally raise instead."""
-        act = viewer._make_action("Foo", checkable=False, checked=True)
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "Foo", checkable=False, checked=True)
         assert act.isCheckable() is False
         # isChecked() on a non-checkable action returns False.
         assert act.isChecked() is False
 
     def test_shortcut_is_set(self, viewer):
         from PyQt5.QtGui import QKeySequence
-        act = viewer._make_action("Foo", shortcut="Ctrl+P")
+
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "Foo", shortcut="Ctrl+P")
         assert act.shortcut().toString() == "Ctrl+P"
 
     def test_no_shortcut_when_empty(self, viewer):
-        act = viewer._make_action("Foo", shortcut="")
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "Foo", shortcut="")
         assert act.shortcut().toString() == ""
 
     def test_icon_set_when_path_provided(self, viewer, tmp_path):
@@ -102,17 +111,20 @@ class TestMakeActionContract:
         produces an empty icon if the path is bad, so we write a tiny PNG."""
         from PyQt5.QtGui import QImage
 
+        from gui.analyzer.actions import make_action
+
         img_path = tmp_path / "icon.png"
         # 16x16 magenta PNG.
         qi = QImage(16, 16, QImage.Format_RGB32)
         qi.fill(0xFFFF00FF)
         qi.save(str(img_path))
 
-        act = viewer._make_action("Foo", icon=str(img_path))
+        act = make_action(viewer, "Foo", icon=str(img_path))
         assert not act.icon().isNull()
 
     def test_icon_omitted_is_null_icon(self, viewer):
-        act = viewer._make_action("Foo")
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "Foo")
         assert act.icon().isNull()
 
     def test_triggered_handler_is_connected(self, viewer, qtbot):
@@ -120,8 +132,9 @@ class TestMakeActionContract:
         triggered — otherwise the menu item silently does nothing. This is
         the single most important property of the factory and the part the
         Pylance overload bug actually broke if the connection was dropped."""
+        from gui.analyzer.actions import make_action
         calls = []
-        act = viewer._make_action("Foo", triggered=lambda: calls.append(1))
+        act = make_action(viewer, "Foo", triggered=lambda: calls.append(1))
         with qtbot.waitSignal(act.triggered):
             act.trigger()
         assert calls == [1]
@@ -129,7 +142,8 @@ class TestMakeActionContract:
     def test_triggered_omitted_does_not_raise_on_emit(self, viewer, qtbot):
         """If no ``triggered`` is passed we must NOT have connected anything,
         so emitting the signal must be a no-op, not a TypeError."""
-        act = viewer._make_action("Foo")
+        from gui.analyzer.actions import make_action
+        act = make_action(viewer, "Foo")
         with qtbot.waitSignal(act.triggered):
             act.trigger()
         # Reaching here is the assertion.

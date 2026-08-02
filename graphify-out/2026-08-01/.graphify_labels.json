@@ -49,7 +49,6 @@
   "47": "WSI Analysis Package",
   "48": "OpenSeadragon Overlay",
   "49": "._start_analysis",
-  "50": "start_tile_threads",
   "51": "._select_dataset_folder",
   "52": "Sample Tile Dictionary (Train)",
   "53": "._tile_dataset",
@@ -77,6 +76,5 @@
   "75": "WorkerSignals",
   "76": "test_actions_factory.py",
   "77": "ui_dataclean.py",
-  "78": "MainWindow",
-  "79": "about_dialogs.py"
+  "78": "MainWindow"
 }

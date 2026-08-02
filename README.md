@@ -157,6 +157,18 @@ WSI_analysis/
 ├── docs/                             # BUG_REPORT.md, PROJECT_MAP.md
 ├── gui/                             # ✓ GUI package (formerly inside ui_*.py)
 │   ├── __init__.py
+│   ├── analyzer/                    #   Bayesian Analyzer application
+│   │   ├── __init__.py                #   re-exports ImageViewer
+│   │   ├── constants.py               #   APP_* / DEEPZOOM_* / MONTE_CARLO_* / ZOOM_* / WELCOME_MESSAGE
+│   │   ├── state.py                   #   AnalyzerState dataclass (shared by all helpers)
+│   │   ├── actions.py                 #   make_action + create_actions (test target)
+│   │   ├── menus.py                   #   create_menus + populate_toolbar
+│   │   ├── image_display.py           #   display / print / zoom helpers
+│   │   ├── tile_worker.py             #   tile-creation background workers
+│   │   ├── analysis_worker.py         #   Bayesian classification background worker
+│   │   ├── deepzoom.py                #   DeepZoom Flask launcher + info dialog
+│   │   ├── about_dialogs.py           #   About dialog
+│   │   └── main_window.py             #   ImageViewer — thin QMainWindow wiring the helpers
 │   └── dataclean/                    #   5-tab Datacleaning application
 │       ├── __init__.py                #   re-exports MainWindow
 │       ├── constants.py               #   DEFAULT_* / APP_* / KNOWN_CLASSES / TUTORIAL_MESSAGE
@@ -186,7 +198,7 @@ WSI_analysis/
 │   ├── uncertainty_analysis.py        #   Th — Otsu + New-threshold data cleaning
 │   ├── performance_widget.py          #   PerformanceTab — confusion matrix widget (renamed from test_widget.py)
 │   ├── progress_bar.py                #   Actions — Qt progress helper
-│   ├── qt_workers.py                  #   shared WorkerSignals/Worker/WorkerLong (extracted from the two GUIs)
+│   ├── qt_workers.py                  #   ★ shared WorkerSignals/Worker/WorkerLong (both GUIs now import from here)
 │   └── deepzoom/                      #   Flask DeepZoom sub-app
 │       ├── static/                    #     OpenSeadragon + jQuery
 │       ├── templates/
@@ -195,12 +207,12 @@ WSI_analysis/
 ├── tests/                            # ✓ pytest suite (unit + openslide-m + gui markers)
 │   ├── conftest.py                    #   root fixtures + marker gating
 │   ├── analysis/test_start_analysis.py  # OpenSlide regressions (-m openslide)
-│   ├── gui/test_actions_factory.py      # pytest-qt actions contract (-m gui)
+│   ├── gui/test_actions_factory.py      # pytest-qt — make_action + create_actions contract
 │   └── unit/                          #   default — runs in CI
 │       ├── test_config.py            #     CLASS_NAMES / N_CLASSES / INPUT_SHAPE guards
 │       └── test_tile_partition.py    #     StartAnalysis.manage_process shape + value regression
 ├── ui_dataclean.py                   # Thin launcher (49 lines) → gui.dataclean.MainWindow
-├── ui_pyqt5.py                       # Entry point 1 — Main WSI analysis GUI (cross-platform: Win + Linux/KDE/Wayland)
+├── ui_pyqt5.py                       # Thin launcher (50 lines) → gui.analyzer.ImageViewer
 ├── pyproject.toml                    # uv / PEP 621 — deps + [tool.pytest] + [tool.ruff] + [dependency-groups].dev
 ├── uv.lock                           # uv lockfile (cross-platform: Windows + Linux)
 ├── Dockerfile                        # Multi-stage container (python:3.10-slim)
@@ -283,10 +295,25 @@ uv run python ui_pyqt5.py
 python ui_pyqt5.py
 ```
 
+`ui_pyqt5.py` is now a ~50-line launcher: it applies the Linux/Wayland Qt fixes (xcb platform, in-window menu bar, `.png` icon — same as `ui_dataclean.py`), instantiates `gui.analyzer.ImageViewer`, and runs the event loop. All the real logic lives under `gui/analyzer/`, split one responsibility per file:
+
+| Module | Responsibility |
+|---|---|
+| `gui/analyzer/main_window.py` | `ImageViewer(QMainWindow)` — thin owner of `state`, UI skeleton; slots are 1-3 line forwarders to the helper modules |
+| `gui/analyzer/state.py` | `AnalyzerState` dataclass — shared mutable state (paths, MC samples, model name, tiling metadata, zoom factor) |
+| `gui/analyzer/constants.py` | `APP_TITLE` / `APP_ICON` / `DEEPZOOM_*` / `MONTE_CARLO_*` / `ZOOM_*` / `WELCOME_MESSAGE` |
+| `gui/analyzer/actions.py` | `make_action` (factory) + `create_actions` (populates the 25 `_*_act` attributes) — the test target |
+| `gui/analyzer/menus.py` | `create_menus` (File / Analysis / View / Options / Help) + `populate_toolbar` |
+| `gui/analyzer/image_display.py` | `display_image` / `view_result` / `print_image` / zoom helpers |
+| `gui/analyzer/tile_worker.py` | `create_tiles` + `start_tile_threads` + `on_tile_worker_finished` |
+| `gui/analyzer/analysis_worker.py` | `start_analysis` + `on_analysis_complete` + `select_model` (lazy `Classification` import keeps TF out of test-collection time) |
+| `gui/analyzer/deepzoom.py` | `open_deep_zoom` (Flask subprocess; the dead `cmd /k` predecessor removed) + `open_browser` + `about_deep_zoom` |
+| `gui/analyzer/about_dialogs.py` | `about` |
+
 ![Figure5.1](img/Figure5.1.png)
 
 > **Linux (KDE Plasma / GNOME / Wayland)**: `ui_pyqt5.py` automatically applies three platform fixes on `sys.platform.startswith("linux")`:
-> - `setNativeMenuBar(False)` + `Qt.AA_DontUseNativeMenuBar` so the top bar (File / Analysis / View / Options / Help) renders inside the window instead of being routed to an invisible global menu.
+> - `setNativeMenuBar(False)` so the top bar (File / Analysis / View / Options / Help) renders inside the window instead of being routed to an invisible global menu.
 > - `APP_ICON = "icons/target.png"` (the `.ico` form isn't readable by Qt under Wayland; a `.png` version is shipped).
 > - `QT_QPA_PLATFORM=xcb` exported, so Qt runs under XWayland and picks up the system cursor theme (otherwise a generic cursor is shown).
 

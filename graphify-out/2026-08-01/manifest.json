@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "ui_pyqt5.py": {
-    "mtime": 1785590129.6245599,
-    "ast_hash": "4cd0ea074140eb356ab4018a55323669",
+    "mtime": 1784279465.656886,
+    "ast_hash": "527a73933bfce0ad127bbfa4e032808c",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1784469959.9781327,
-    "ast_hash": "558f80dace83bd3f1af1d5534c662651",
+    "mtime": 1784281307.253953,
+    "ast_hash": "fc2cbcebab3d611a913ce7a62bc9047a",
     "semantic_hash": ""
   },
   "archive/dictionary_5_js.txt": {
@@ -135,8 +135,8 @@
     "semantic_hash": "5bf5f302bb42ad1a0971ec66dc3b9839"
   },
   "docs/PROJECT_MAP.md": {
-    "mtime": 1784470224.5425494,
-    "ast_hash": "75131b8b59c0c0269f24de2b9c0051bc",
+    "mtime": 1784280123.205426,
+    "ast_hash": "e4e400250c3a1f482982a171d5a9a109",
     "semantic_hash": ""
   },
   "docs/sasa.txt": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "tests/gui/test_actions_factory.py": {
-    "mtime": 1785590129.6225598,
-    "ast_hash": "c8835f880f1fa6c8eecbb1e295aef2c7",
+    "mtime": 1784155303.0587285,
+    "ast_hash": "6032aeaa120ad29bf894a0c583e50675",
     "semantic_hash": ""
   },
   "tests/unit/test_config.py": {
@@ -492,61 +492,6 @@
   "gui/dataclean/tabs/tab_uncertainty.py": {
     "mtime": 1784469004.386975,
     "ast_hash": "b63582d591d2e8d75f29e3b3ed59f8b6",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/__init__.py": {
-    "mtime": 1785589071.0826457,
-    "ast_hash": "b01db63c872982ce6782ba4d32d92431",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/about_dialogs.py": {
-    "mtime": 1785589729.50209,
-    "ast_hash": "8ba93560b6b824e08ce19a0932ff1963",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/actions.py": {
-    "mtime": 1785589326.5899394,
-    "ast_hash": "db61655b8779dac048332078d878b274",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/analysis_worker.py": {
-    "mtime": 1785590129.62356,
-    "ast_hash": "a077421c3fe5c36ff446c4a881fce9a9",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/constants.py": {
-    "mtime": 1785589128.259566,
-    "ast_hash": "c4a968e026ac5de71bc5d1f7361ab2a5",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/deepzoom.py": {
-    "mtime": 1785590129.6215599,
-    "ast_hash": "c20abb029e9b7e75e809944d5202e81c",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/image_display.py": {
-    "mtime": 1785590129.6255598,
-    "ast_hash": "a66cc09285a72c30fc5711b18a3d6ce0",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/main_window.py": {
-    "mtime": 1785590129.6255598,
-    "ast_hash": "93272daf43f7b180747348f4f2c9a46b",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/menus.py": {
-    "mtime": 1785589373.3624897,
-    "ast_hash": "c310ec65bc7fd9c3c8c2cb612a00ddbc",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/state.py": {
-    "mtime": 1785589192.6601975,
-    "ast_hash": "f67fb2da3777906a1b31c010c135fd2e",
-    "semantic_hash": ""
-  },
-  "gui/analyzer/tile_worker.py": {
-    "mtime": 1785589497.7157607,
-    "ast_hash": "10f08aeeb0a87b72ebd3f4e48ff69347",
     "semantic_hash": ""
   }
 }
