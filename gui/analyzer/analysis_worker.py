@@ -54,6 +54,11 @@ def start_analysis(
 
         cls = Classification(state.work_dir, ty="analysis")
         parent._show_progress(title="Analysis")
+        # ``_show_progress`` just (re)created ``parent._progress_ui`` — bind
+        # to that fresh instance, NOT the stale ``progress_ui`` parameter
+        # (which is ``None`` on first call, or the previous run's dead
+        # dialog). Same root cause as the tile path bar-empty bug.
+        live_progress_ui = parent._progress_ui
         worker = WorkerLong(
             cls.classify,
             state.analysis_type,
@@ -61,8 +66,8 @@ def start_analysis(
             state.model_name,
         )
         worker.signals.progress.connect(lambda pct: logger.debug("Analysis: %d%%", pct))
-        if progress_ui:
-            worker.signals.progress.connect(progress_ui.onCountChanged)
+        if live_progress_ui:
+            worker.signals.progress.connect(live_progress_ui.onCountChanged)
         worker.signals.finished.connect(lambda: on_analysis_complete(parent, state))
         worker.signals.error.connect(parent._on_worker_error)
         pool.start(worker)

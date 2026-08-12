@@ -545,8 +545,8 @@
     "semantic_hash": ""
   },
   "gui/analyzer/tile_worker.py": {
-    "mtime": 1786489421.0646627,
-    "ast_hash": "6321329c1be130f81cedeac3649cc0fa",
+    "mtime": 1786437480.5539494,
+    "ast_hash": "20d3b27934fe5af44cc051d536007922",
     "semantic_hash": ""
   },
   "tests/unit/test_overlay_alignment.py": {
@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "tests/unit/test_progress_aggregation.py": {
-    "mtime": 1786489524.2999747,
-    "ast_hash": "a0cf0f22ecec1f90f8f0867c10920e94",
+    "mtime": 1786438374.1563706,
+    "ast_hash": "158333cce808d5e73282fc01e742da33",
     "semantic_hash": ""
   }
 }

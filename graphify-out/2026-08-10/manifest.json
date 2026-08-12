@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "src/classification.py": {
-    "mtime": 1786351292.2005925,
-    "ast_hash": "92e6fe106e0b471329b37f5ce60591ac",
+    "mtime": 1784232699.5787501,
+    "ast_hash": "bc5a11fab54b2246d732497669bf4969",
     "semantic_hash": ""
   },
   "src/config.py": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1785595214.8558342,
-    "ast_hash": "24a250620fc3865eb5cef514b3efb688",
+    "mtime": 1784469959.9781327,
+    "ast_hash": "558f80dace83bd3f1af1d5534c662651",
     "semantic_hash": ""
   },
   "archive/dictionary_5_js.txt": {
@@ -135,8 +135,8 @@
     "semantic_hash": "5bf5f302bb42ad1a0971ec66dc3b9839"
   },
   "docs/PROJECT_MAP.md": {
-    "mtime": 1785595463.0440586,
-    "ast_hash": "44bad54a502452786217612ee0fb4193",
+    "mtime": 1784470224.5425494,
+    "ast_hash": "75131b8b59c0c0269f24de2b9c0051bc",
     "semantic_hash": ""
   },
   "docs/sasa.txt": {
@@ -360,8 +360,8 @@
     "semantic_hash": "6847396f2c3d1e55f77ab58df4e4822c"
   },
   "src/multi_processing_analysis.py": {
-    "mtime": 1786390839.2447462,
-    "ast_hash": "5e3f7075caefb3d9b3909d92448db733",
+    "mtime": 1784232699.57975,
+    "ast_hash": "7734c16e145b57c941f39ac6f37f08f7",
     "semantic_hash": ""
   },
   "src/qt_workers.py": {
@@ -545,23 +545,8 @@
     "semantic_hash": ""
   },
   "gui/analyzer/tile_worker.py": {
-    "mtime": 1786489421.0646627,
-    "ast_hash": "6321329c1be130f81cedeac3649cc0fa",
-    "semantic_hash": ""
-  },
-  "tests/unit/test_overlay_alignment.py": {
-    "mtime": 1786306881.7263417,
-    "ast_hash": "56e3a3d46463b604ce767f48fdc6b86e",
-    "semantic_hash": ""
-  },
-  "tests/unit/test_partition_args.py": {
-    "mtime": 1786390937.0753908,
-    "ast_hash": "bc90793808165e993112fe3ad3fd5c19",
-    "semantic_hash": ""
-  },
-  "tests/unit/test_progress_aggregation.py": {
-    "mtime": 1786489524.2999747,
-    "ast_hash": "a0cf0f22ecec1f90f8f0867c10920e94",
+    "mtime": 1785589497.7157607,
+    "ast_hash": "10f08aeeb0a87b72ebd3f4e48ff69347",
     "semantic_hash": ""
   }
 }

@@ -176,8 +176,13 @@ class Classification:
             n_rows = max(v["row"] for v in self.dictionary.values()) + 1
         else:
             n_cols = n_rows = 1
-        step_x = a.shape[1] / n_cols
-        step_y = a.shape[0] / n_rows
+        # Integer per-tile partition of the thumbnail canvas.
+        # ``a.shape[0]`` is rows (y), ``a.shape[1]`` is cols (x). Using
+        # ``floor(k*W/N)`` / ``floor((k+1)*W/N)`` guarantees that adjacent
+        # cells share an exact integer boundary — no rounding drift, no
+        # ~1px gaps, no ~1px overlaps. ``round(step*col)`` (the previous
+        # approach) accumulated float drift across the grid.
+        H, W = a.shape[0], a.shape[1]
         res_path = os.path.join(self.path, 'result')
 
         if not os.path.exists(res_path):
@@ -193,52 +198,56 @@ class Classification:
 
         n1, n2, n3 = 0, 0, 0
 
-        for i, name_t in enumerate(self.dictionary):
+        for _i, name_t in enumerate(self.dictionary):
 
             u_tot = self.dictionary[name_t]["ale"]+self.dictionary[name_t]["epi"]
             column = self.dictionary[name_t]["col"]
             row = self.dictionary[name_t]["row"]
-            # Each tile occupies step_x × step_y on the thumbnail canvas.
-            # Border tiles may be smaller than 64px natively, but their grid
-            # cell is still one step × step box — the overlay grid is uniform.
-            shape_y = max(int(round(step_y)), 1)
-            shape_x = max(int(round(step_x)), 1)
-            c0 = int(round(column * step_x))
-            r0 = int(round(row * step_y))
+            # Compute exact integer cell rect for this tile on the thumbnail.
+            # Rows (y) span [r0, r1), cols (x) span [c0, c1) — boundaries are
+            # ``floor(k*size/N)`` so adjacent cells share an exact integer
+            # edge (no gaps, no overlaps). Note: the row slice must use the
+            # row-axis (H/step_y) size and the col slice the col-axis
+            # (W/step_x) size; the previous code transposed them, which made
+            # each cell non-square and shifted cells by a few px per step.
+            r0 = (row * H) // n_rows
+            r1 = ((row + 1) * H) // n_rows
+            c0 = (column * W) // n_cols
+            c1 = ((column + 1) * W) // n_cols
             if unc == 'Pred_class':
                 clas = self.dictionary[name_t]["pred_class"]
                 if clas == 'AC' and u_tot < 0.2:
                     # red
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 1
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.2
-                    image_base_AC[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 1
-                    image_base_AC[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.2
+                    image_base[r0:r1, c0:c1, 0] += 1
+                    image_base[r0:r1, c0:c1, 2] += 0.2
+                    image_base_AC[r0:r1, c0:c1, 0] += 1
+                    image_base_AC[r0:r1, c0:c1, 2] += 0.2
 
                     n1 += 1
                 elif clas == 'H' and u_tot < 0.2:
                     # green
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.95
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.23
-                    image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.95
-                    image_base_H[r0:r0 + shape_x, c0:c0 + shape_y, 0] += 0.23
+                    image_base[r0:r1, c0:c1, 1] += 0.95
+                    image_base[r0:r1, c0:c1, 0] += 0.23
+                    image_base_H[r0:r1, c0:c1, 1] += 0.95
+                    image_base_H[r0:r1, c0:c1, 0] += 0.23
                     n2 += 1
                 elif clas == 'AD' and u_tot < 0.2:
                     # blue
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.9
-                    image_base[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
-                    image_base_AD[r0:r0 + shape_x, c0:c0 + shape_y, 2] += 0.9
-                    image_base_AD[r0:r0 + shape_x, c0:c0 + shape_y, 1] += 0.5
+                    image_base[r0:r1, c0:c1, 2] += 0.9
+                    image_base[r0:r1, c0:c1, 1] += 0.5
+                    image_base_AD[r0:r1, c0:c1, 2] += 0.9
+                    image_base_AD[r0:r1, c0:c1, 1] += 0.5
                     n3 += 1
 
             elif unc == 'epi':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["epi"])
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] += abs(self.dictionary[name_t]["epi"])
+                image_base[r0:r1, c0:c1, 2] += abs(self.dictionary[name_t]["epi"])
+                image_base[r0:r1, c0:c1, 3] += abs(self.dictionary[name_t]["epi"])
             elif unc == 'ale':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(self.dictionary[name_t]["ale"])
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] += abs(self.dictionary[name_t]["ale"])
+                image_base[r0:r1, c0:c1, 2] += abs(self.dictionary[name_t]["ale"])
+                image_base[r0:r1, c0:c1, 3] += abs(self.dictionary[name_t]["ale"])
             elif unc == 'tot':
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 2] += abs(u_tot)
-                image_base[r0:r0 + shape_x, c0:c0 + shape_y, 3] += abs(u_tot)
+                image_base[r0:r1, c0:c1, 2] += abs(u_tot)
+                image_base[r0:r1, c0:c1, 3] += abs(u_tot)
             else:
                 print(f'Strange command:{unc}')
                 pass

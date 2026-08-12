@@ -76,10 +76,9 @@
   "74": "Prediction Uncertainty Quantification",
   "75": "WorkerSignals",
   "76": "test_actions_factory.py",
-  "77": "getPointerType",
+  "77": "ui_dataclean.py",
   "78": "MainWindow",
   "79": "UncertaintyTab",
   "80": "about_dialogs.py",
-  "81": "actions.py",
-  "82": "handleWheelEvent"
+  "81": "actions.py"
 }

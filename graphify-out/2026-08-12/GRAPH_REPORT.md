@@ -1,11 +1,11 @@
-# Graph Report - WSI_analysis  (2026-08-12)
+# Graph Report - WSI_analysis  (2026-08-11)
 
 ## Corpus Check
-- 58 files · ~1,354,727 words
+- 58 files · ~1,354,408 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 960 nodes · 1525 edges · 83 communities (58 shown, 25 thin omitted)
+- 960 nodes · 1525 edges · 81 communities (56 shown, 25 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 57 edges (avg confidence: 0.66)
 - Token cost: 0 input · 0 output
 
@@ -91,12 +91,10 @@
 - Prediction Uncertainty Quantification
 - WorkerSignals
 - test_actions_factory.py
-- getPointerType
 - MainWindow
 - UncertaintyTab
 - about_dialogs.py
 - actions.py
-- handleWheelEvent
 
 ## God Nodes (most connected - your core abstractions)
 1. `ImageViewer` - 36 edges
@@ -133,7 +131,7 @@
 - **Uncertainty quantification conceptualisation and its concrete output** —  [INFERRED 0.85]
 - **Three-Class Tile Set (AC/AD/H)** — icons_ac, icons_ad, icons_h [EXTRACTED 1.00]
 
-## Communities (83 total, 25 thin omitted)
+## Communities (81 total, 25 thin omitted)
 
 ### Community 0 - "OpenSeadragon Viewer"
 Cohesion: 0.03
@@ -164,8 +162,8 @@ Cohesion: 0.10
 Nodes (16): BayesianDropoutCNN, ConvBlockConfig, Callback, History, ImageDataGenerator, Model, Bayesian dropout CNN for histological-tile classification (AC / AD / H).  Monte, Convolutional neural network with Monte Carlo Dropout for Bayesian     uncertain (+8 more)
 
 ### Community 7 - "OpenSeadragon Mouse Events"
-Cohesion: 0.15
-Nodes (21): capturePointer(), getMouseAbsolute(), getStandardizedButton(), handleMouseEnter(), handleMouseExit(), handleMouseUp(), isParentChild(), onMouseDown() (+13 more)
+Cohesion: 0.14
+Nodes (24): capturePointer(), getMouseAbsolute(), getPointerType(), handleMouseEnter(), handleMouseExit(), handlePointerMove(), handlePointerUp(), isParentChild() (+16 more)
 
 ### Community 8 - "Performance Widget"
 Cohesion: 0.16
@@ -192,8 +190,8 @@ Cohesion: 0.18
 Nodes (6): GetTilesTab, QWidget, Open a folder dialog and populate the QListWidgets with files in         each pe, Launch per-dataset tiling workers (one worker per class sub-folder)., Tab 1 — pick source folders and launch per-dataset tiling workers., QHBoxLayout
 
 ### Community 14 - "OpenSeadragon Touch Events"
-Cohesion: 0.14
-Nodes (20): abortTouchContacts(), getCaptureEventParams(), getCenterPoint(), getMouseRelative(), getPointRelativeToAbsolute(), handlePointerStop(), handleTouchEnd(), handleTouchMove() (+12 more)
+Cohesion: 0.15
+Nodes (17): abortTouchContacts(), getCaptureEventParams(), getCenterPoint(), getStandardizedButton(), handleMouseUp(), handleTouchEnd(), onMouseUp(), onMouseUpCaptured() (+9 more)
 
 ### Community 15 - "Classification Module"
 Cohesion: 0.09
@@ -285,15 +283,15 @@ Nodes (11): Bug 1 — `ImageDataGenerator` not imported, Bug 2 — Parameter nam
 
 ### Community 39 - "OpenSeadragon DZI Parser"
 Cohesion: 0.14
-Nodes (12): _aggregate(), Unit tests for the analysis-path progress aggregation.  Regression motivation: t, Regression for the specific bug: partition 0 alone reaches its         own ``til, All 4 partitions each reporting their full 1136 tiles:         sum = 4544 = glob, If partitions 0, 1, 2 finish (1136 each = 3408) but partition 3         is slow,, Manager queue doesn't guarantee arrival order across workers.         If partiti, A stale event arriving after the partition already finished         (e.g. duplic, Mirror of ``create_tiles._drain_progress``'s aggregation logic.      Takes a lis (+4 more)
+Nodes (12): _aggregate(), Unit tests for the analysis-path progress aggregation.  Regression motivation: t, All 4 partitions each reporting their full 1136 tiles:         sum = 4544 = glob, If partitions 0, 1, 2 finish (1136 each = 3408) but partition 3         is slow,, Manager queue doesn't guarantee arrival order across workers.         If partiti, A stale event arriving after the partition already finished         (e.g. duplic, Mirror of ``create_tiles._drain_progress``'s aggregation logic.      Takes a lis, The bar must climb monotonically 0→100% across parallel partitions,     never re (+4 more)
 
 ### Community 41 - "Models Package Init"
 Cohesion: 0.15
 Nodes (5): QWidget, Instantiate the chosen model and run it inside a WorkerLong., Append epoch rows to the training log label.          The Keras ``TrainingProgre, Tab 2 — pick dropout vs KL, set epochs / batch size, run training., TrainingTab
 
 ### Community 42 - "OpenSeadragon Config"
-Cohesion: 0.67
-Nodes (3): handleMouseMove(), onMouseMove(), onMouseMoveCaptured()
+Cohesion: 0.17
+Nodes (13): getMouseRelative(), getPointRelativeToAbsolute(), handleMouseMove(), handlePointerStop(), handleTouchMove(), handleWheelEvent(), onMouseMove(), onMouseMoveCaptured() (+5 more)
 
 ### Community 43 - "OpenSeadragon XML10 Parser"
 Cohesion: 0.33
@@ -339,10 +337,6 @@ Nodes (9): Config, Path, fixtures_dir(), pytest_configure(), Top-level pytest co
 Cohesion: 0.22
 Nodes (8): about_deep_zoom(), open_browser(), open_deep_zoom(), QMainWindow, QThreadPool, DeepZoom viewer launcher + info / about dialogs for the Bayesian Analyzer.  The, Start the DeepZoom Flask server in a separate process and open the     browser o, Open the DeepZoom URL in the default browser after a short delay.
 
-### Community 77 - "getPointerType"
-Cohesion: 0.38
-Nodes (7): getPointerType(), handlePointerMove(), handlePointerUp(), onPointerMove(), onPointerMoveCaptured(), onPointerUp(), onPointerUpCaptured()
-
 ### Community 78 - "MainWindow"
 Cohesion: 0.11
 Nodes (10): MainTabWidget, QWidget, MainTabWidget — coordinator of the 5 Datacleaning tabs.  Holds the shared :class, Central widget that coordinates all application tabs.      Manages shared state, Connect each tab's worker_started signal to the shared handlers., Connect a worker to the shared handlers and start it.          For a training wo, Main window of the Datacleaning application.  Owns the menu bar (File / About) a, Tab 5 — wraps :class:`PerformanceTab` with shared-state awareness.      ``Perfor (+2 more)
@@ -358,10 +352,6 @@ Nodes (3): about(), QMainWindow, About dialog for the Bayesian Analyzer.
 ### Community 81 - "actions.py"
 Cohesion: 0.40
 Nodes (3): Qt action factory + bulk action construction for the Bayesian Analyzer.  The tes, Check the right MC action; uncheck the rest., set_monte_carlo()
-
-### Community 82 - "handleWheelEvent"
-Cohesion: 0.67
-Nodes (3): handleWheelEvent(), onMouseWheel(), onWheel()
 
 ## Knowledge Gaps
 - **71 isolated node(s):** `wsi-analysis`, `graphify`, `Overview`, `Why Bayesian Networks?`, `Dataset` (+66 more)

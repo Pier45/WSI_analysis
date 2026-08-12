@@ -321,8 +321,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "qaction",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "qaction"
     },
     {
@@ -530,8 +530,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gui_analyzer_deepzoom",
-      "community": 76,
-      "community_name": "test_actions_factory.py",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "deepzoom.py"
     },
     {
@@ -596,8 +596,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gui_analyzer_deepzoom_rationale_1",
-      "community": 76,
-      "community_name": "test_actions_factory.py",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "deepzoom viewer launcher + info / about dialogs for the bayesian analyzer.  the"
     },
     {
@@ -640,8 +640,8 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "gui_analyzer_image_display_display_image",
-      "community": 1,
-      "community_name": "PyQt5 Image Viewer",
+      "community": 39,
+      "community_name": "OpenSeadragon DZI Parser",
       "norm_label": "display_image()"
     },
     {
@@ -662,8 +662,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "qimage",
-      "community": 1,
-      "community_name": "PyQt5 Image Viewer",
+      "community": 39,
+      "community_name": "OpenSeadragon DZI Parser",
       "norm_label": "qimage"
     },
     {
@@ -794,8 +794,8 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "gui_analyzer_image_display_rationale_28",
-      "community": 1,
-      "community_name": "PyQt5 Image Viewer",
+      "community": 39,
+      "community_name": "OpenSeadragon DZI Parser",
       "norm_label": "render *image* in the central label, scaling to fit the screen if needed."
     },
     {
@@ -893,8 +893,8 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "gui_analyzer_main_window_imageviewer_open_file",
-      "community": 1,
-      "community_name": "PyQt5 Image Viewer",
+      "community": 39,
+      "community_name": "OpenSeadragon DZI Parser",
       "norm_label": "._open_file()"
     },
     {
@@ -904,8 +904,8 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "gui_analyzer_main_window_imageviewer_initialise_analysis",
-      "community": 1,
-      "community_name": "PyQt5 Image Viewer",
+      "community": 39,
+      "community_name": "OpenSeadragon DZI Parser",
       "norm_label": "._initialise_analysis()"
     },
     {
@@ -992,8 +992,8 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "gui_analyzer_main_window_imageviewer_enable_view_actions",
-      "community": 1,
-      "community_name": "PyQt5 Image Viewer",
+      "community": 29,
+      "community_name": "DataClean Uncertainty Runner",
       "norm_label": "._enable_view_actions()"
     },
     {
@@ -1025,8 +1025,8 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "gui_analyzer_main_window_imageviewer_on_tile_worker_finished",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "._on_tile_worker_finished()"
     },
     {
@@ -1124,8 +1124,8 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "gui_analyzer_main_window_imageviewer_set_slow_mode",
-      "community": 1,
-      "community_name": "PyQt5 Image Viewer",
+      "community": 39,
+      "community_name": "OpenSeadragon DZI Parser",
       "norm_label": "._set_slow_mode()"
     },
     {
@@ -1179,8 +1179,8 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "gui_analyzer_main_window_rationale_157",
-      "community": 1,
-      "community_name": "PyQt5 Image Viewer",
+      "community": 39,
+      "community_name": "OpenSeadragon DZI Parser",
       "norm_label": "open the svs file, generate the thumbnail, cache tile metadata."
     },
     {
@@ -1333,8 +1333,8 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_folder_exists",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "folder_exists()"
     },
     {
@@ -1344,19 +1344,19 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_create_tiles",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "create_tiles()"
     },
     {
       "label": "start_tile_threads()",
       "file_type": "code",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L227",
+      "source_location": "L197",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_start_tile_threads",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "start_tile_threads()"
     },
     {
@@ -1366,26 +1366,26 @@
       "source_location": "",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_py_qthreadpool",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "qthreadpool"
     },
     {
       "label": "on_tile_worker_finished()",
       "file_type": "code",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L288",
+      "source_location": "L258",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_on_tile_worker_finished",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "on_tile_worker_finished()"
     },
     {
       "label": "show_worker_error()",
       "file_type": "code",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L304",
+      "source_location": "L274",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_show_worker_error",
       "community": 1,
@@ -1396,11 +1396,11 @@
       "label": "_analysis_tile_worker()",
       "file_type": "code",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L320",
+      "source_location": "L290",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_analysis_tile_worker",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "_analysis_tile_worker()"
     },
     {
@@ -1421,8 +1421,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_rationale_43",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "return ``true`` if *name* already exists inside the working directory."
     },
     {
@@ -1432,39 +1432,39 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "gui_analyzer_tile_worker_rationale_56",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "worker function: create png tiles for *every* missing process partition     usin"
     },
     {
       "label": "Launch one :class:`WorkerLong` that drives a :class:`ProcessPoolExecutor`     ov",
       "file_type": "rationale",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L234",
+      "source_location": "L204",
       "_origin": "ast",
-      "id": "gui_analyzer_tile_worker_rationale_234",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "id": "gui_analyzer_tile_worker_rationale_204",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "launch one :class:`workerlong` that drives a :class:`processpoolexecutor`     ov"
     },
     {
       "label": "Slot connected to the host tile worker's ``finished`` signal.      Runs on the m",
       "file_type": "rationale",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L289",
+      "source_location": "L259",
       "_origin": "ast",
-      "id": "gui_analyzer_tile_worker_rationale_289",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "id": "gui_analyzer_tile_worker_rationale_259",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "slot connected to the host tile worker's ``finished`` signal.      runs on the m"
     },
     {
       "label": "Display a critical dialog when a background worker raises an exception.",
       "file_type": "rationale",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L305",
+      "source_location": "L275",
       "_origin": "ast",
-      "id": "gui_analyzer_tile_worker_rationale_305",
+      "id": "gui_analyzer_tile_worker_rationale_275",
       "community": 1,
       "community_name": "PyQt5 Image Viewer",
       "norm_label": "display a critical dialog when a background worker raises an exception."
@@ -1473,11 +1473,11 @@
       "label": "Module-level (picklable) tile-extraction worker for the analysis path.      Mirr",
       "file_type": "rationale",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L321",
+      "source_location": "L291",
       "_origin": "ast",
-      "id": "gui_analyzer_tile_worker_rationale_321",
-      "community": 2,
-      "community_name": "Multi-Process Analysis",
+      "id": "gui_analyzer_tile_worker_rationale_291",
+      "community": 50,
+      "community_name": "start_tile_threads",
       "norm_label": "module-level (picklable) tile-extraction worker for the analysis path.      mirr"
     },
     {
@@ -1487,8 +1487,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gui_dataclean_init",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "__init__.py"
     },
     {
@@ -1498,8 +1498,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gui_dataclean_init_rationale_1",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "datacleaning application \u2014 formerly ``ui_dataclean.py``.  public api ----------"
     },
     {
@@ -1850,8 +1850,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "gui_dataclean_main_window_mainwindow",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "mainwindow"
     },
     {
@@ -1861,8 +1861,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "gui_dataclean_main_window_py_qmainwindow",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "qmainwindow"
     },
     {
@@ -1872,8 +1872,8 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "gui_dataclean_main_window_mainwindow_init",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": ".__init__()"
     },
     {
@@ -1883,8 +1883,8 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "gui_dataclean_main_window_mainwindow_create_actions",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "._create_actions()"
     },
     {
@@ -1894,8 +1894,8 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "gui_dataclean_main_window_mainwindow_create_menus",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "._create_menus()"
     },
     {
@@ -1905,8 +1905,8 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "gui_dataclean_main_window_mainwindow_show_tutorial",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "._show_tutorial()"
     },
     {
@@ -1927,8 +1927,8 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "gui_dataclean_main_window_rationale_25",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "main application window for bayesian datacleaning."
     },
     {
@@ -2334,8 +2334,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gui_dataclean_tabs_tab_tiles",
-      "community": 50,
-      "community_name": "start_tile_threads",
+      "community": 16,
+      "community_name": "DataClean Long-Running Workers",
       "norm_label": "tab_tiles.py"
     },
     {
@@ -2488,8 +2488,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "gui_dataclean_tabs_tab_tiles_rationale_1",
-      "community": 50,
-      "community_name": "start_tile_threads",
+      "community": 16,
+      "community_name": "DataClean Long-Running Workers",
       "norm_label": "get-tiles tab \u2014 dataset folder selection and tile extraction.  the user selects"
     },
     {
@@ -4967,7 +4967,7 @@
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_getpointertype",
       "community": 77,
-      "community_name": "getPointerType",
+      "community_name": "ui_dataclean.py",
       "norm_label": "getpointertype()"
     },
     {
@@ -4988,8 +4988,8 @@
       "source_location": "L4347",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_getmouserelative",
-      "community": 14,
-      "community_name": "OpenSeadragon Touch Events",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "getmouserelative()"
     },
     {
@@ -4999,8 +4999,8 @@
       "source_location": "L4355",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_getpointrelativetoabsolute",
-      "community": 14,
-      "community_name": "OpenSeadragon Touch Events",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "getpointrelativetoabsolute()"
     },
     {
@@ -5098,8 +5098,8 @@
       "source_location": "L4536",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onwheel",
-      "community": 82,
-      "community_name": "handleWheelEvent",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "onwheel()"
     },
     {
@@ -5109,8 +5109,8 @@
       "source_location": "L4547",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onmousewheel",
-      "community": 82,
-      "community_name": "handleWheelEvent",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "onmousewheel()"
     },
     {
@@ -5120,8 +5120,8 @@
       "source_location": "L4582",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_handlewheelevent",
-      "community": 82,
-      "community_name": "handleWheelEvent",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "handlewheelevent()"
     },
     {
@@ -5208,8 +5208,8 @@
       "source_location": "L4726",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_getstandardizedbutton",
-      "community": 7,
-      "community_name": "OpenSeadragon Mouse Events",
+      "community": 14,
+      "community_name": "OpenSeadragon Touch Events",
       "norm_label": "getstandardizedbutton()"
     },
     {
@@ -5230,8 +5230,8 @@
       "source_location": "L4777",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onmouseup",
-      "community": 7,
-      "community_name": "OpenSeadragon Mouse Events",
+      "community": 14,
+      "community_name": "OpenSeadragon Touch Events",
       "norm_label": "onmouseup()"
     },
     {
@@ -5241,8 +5241,8 @@
       "source_location": "L4788",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onmouseupcaptured",
-      "community": 7,
-      "community_name": "OpenSeadragon Mouse Events",
+      "community": 14,
+      "community_name": "OpenSeadragon Touch Events",
       "norm_label": "onmouseupcaptured()"
     },
     {
@@ -5252,8 +5252,8 @@
       "source_location": "L4798",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_handlemouseup",
-      "community": 7,
-      "community_name": "OpenSeadragon Mouse Events",
+      "community": 14,
+      "community_name": "OpenSeadragon Touch Events",
       "norm_label": "handlemouseup()"
     },
     {
@@ -5263,8 +5263,8 @@
       "source_location": "L4821",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onmousemove",
-      "community": 42,
-      "community_name": "OpenSeadragon Config",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "onmousemove()"
     },
     {
@@ -5274,8 +5274,8 @@
       "source_location": "L4833",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onmousemovecaptured",
-      "community": 42,
-      "community_name": "OpenSeadragon Config",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "onmousemovecaptured()"
     },
     {
@@ -5285,8 +5285,8 @@
       "source_location": "L4843",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_handlemousemove",
-      "community": 42,
-      "community_name": "OpenSeadragon Config",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "handlemousemove()"
     },
     {
@@ -5351,8 +5351,8 @@
       "source_location": "L5022",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_ontouchmove",
-      "community": 14,
-      "community_name": "OpenSeadragon Touch Events",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "ontouchmove()"
     },
     {
@@ -5362,8 +5362,8 @@
       "source_location": "L5034",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_ontouchmovecaptured",
-      "community": 14,
-      "community_name": "OpenSeadragon Touch Events",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "ontouchmovecaptured()"
     },
     {
@@ -5373,8 +5373,8 @@
       "source_location": "L5044",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_handletouchmove",
-      "community": 14,
-      "community_name": "OpenSeadragon Touch Events",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "handletouchmove()"
     },
     {
@@ -5451,7 +5451,7 @@
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onpointerup",
       "community": 77,
-      "community_name": "getPointerType",
+      "community_name": "ui_dataclean.py",
       "norm_label": "onpointerup()"
     },
     {
@@ -5462,7 +5462,7 @@
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onpointerupcaptured",
       "community": 77,
-      "community_name": "getPointerType",
+      "community_name": "ui_dataclean.py",
       "norm_label": "onpointerupcaptured()"
     },
     {
@@ -5473,7 +5473,7 @@
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_handlepointerup",
       "community": 77,
-      "community_name": "getPointerType",
+      "community_name": "ui_dataclean.py",
       "norm_label": "handlepointerup()"
     },
     {
@@ -5484,7 +5484,7 @@
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onpointermove",
       "community": 77,
-      "community_name": "getPointerType",
+      "community_name": "ui_dataclean.py",
       "norm_label": "onpointermove()"
     },
     {
@@ -5495,7 +5495,7 @@
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_onpointermovecaptured",
       "community": 77,
-      "community_name": "getPointerType",
+      "community_name": "ui_dataclean.py",
       "norm_label": "onpointermovecaptured()"
     },
     {
@@ -5506,7 +5506,7 @@
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_handlepointermove",
       "community": 77,
-      "community_name": "getPointerType",
+      "community_name": "ui_dataclean.py",
       "norm_label": "handlepointermove()"
     },
     {
@@ -5593,8 +5593,8 @@
       "source_location": "L5939",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_updatepointersmove",
-      "community": 14,
-      "community_name": "OpenSeadragon Touch Events",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "updatepointersmove()"
     },
     {
@@ -5615,8 +5615,8 @@
       "source_location": "L6122",
       "_origin": "ast",
       "id": "src_deepzoom_static_openseadragon_handlepointerstop",
-      "community": 14,
-      "community_name": "OpenSeadragon Touch Events",
+      "community": 7,
+      "community_name": "OpenSeadragon Mouse Events",
       "norm_label": "handlepointerstop()"
     },
     {
@@ -6748,8 +6748,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_multi_processing_analysis",
-      "community": 50,
-      "community_name": "start_tile_threads",
+      "community": 27,
+      "community_name": "OpenSeadragon Pointer Events",
       "norm_label": "multi_processing_analysis.py"
     },
     {
@@ -6913,8 +6913,8 @@
       "source_location": "L353",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_get_cached_generator",
-      "community": 50,
-      "community_name": "start_tile_threads",
+      "community": 27,
+      "community_name": "OpenSeadragon Pointer Events",
       "norm_label": "_get_cached_generator()"
     },
     {
@@ -6924,8 +6924,8 @@
       "source_location": "L375",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_tile_partition_worker",
-      "community": 50,
-      "community_name": "start_tile_threads",
+      "community": 27,
+      "community_name": "OpenSeadragon Pointer Events",
       "norm_label": "_tile_partition_worker()"
     },
     {
@@ -7034,8 +7034,8 @@
       "source_location": "L354",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_rationale_354",
-      "community": 50,
-      "community_name": "start_tile_threads",
+      "community": 27,
+      "community_name": "OpenSeadragon Pointer Events",
       "norm_label": "per-process cached ``deepzoomgenerator`` for *file_path*.      each worker proce"
     },
     {
@@ -7045,8 +7045,8 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "src_multi_processing_analysis_rationale_376",
-      "community": 50,
-      "community_name": "start_tile_threads",
+      "community": 27,
+      "community_name": "OpenSeadragon Pointer Events",
       "norm_label": "module-level worker for ``processpoolexecutor`` \u2014 extracts one x-range     of ti"
     },
     {
@@ -7375,8 +7375,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_qt_workers",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "qt_workers.py"
     },
     {
@@ -7419,8 +7419,8 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_qt_workers_worker",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "worker"
     },
     {
@@ -7430,8 +7430,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "qrunnable",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "qrunnable"
     },
     {
@@ -7463,8 +7463,8 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "src_qt_workers_worker_run",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": ".run()"
     },
     {
@@ -7474,8 +7474,8 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "src_qt_workers_workerlong",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "workerlong"
     },
     {
@@ -7496,8 +7496,8 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "src_qt_workers_workerlong_run",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": ".run()"
     },
     {
@@ -7507,8 +7507,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_qt_workers_rationale_1",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "shared qt thread-pool plumbing for the two gui entry points.  both ``ui_pyqt5.py"
     },
     {
@@ -7540,8 +7540,8 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "src_qt_workers_rationale_84",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "fire-and-forget thread wrapper.      runs *fn* in a thread-pool thread without l"
     },
     {
@@ -7551,8 +7551,8 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "src_qt_workers_rationale_103",
-      "community": 12,
-      "community_name": "Qt Workers",
+      "community": 2,
+      "community_name": "Multi-Process Analysis",
       "norm_label": "thread wrapper with full lifecycle signals.      injects a ``progress_callback``"
     },
     {
@@ -8920,226 +8920,6 @@
       "norm_label": "all partitions share the same ``levi`` (deepzoom level index)         \u2014 the slid"
     },
     {
-      "label": "test_progress_aggregation.py",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "test_progress_aggregation.py"
-    },
-    {
-      "label": "_aggregate()",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L29",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_aggregate",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "_aggregate()"
-    },
-    {
-      "label": "TestProgressAggregation",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L53",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "testprogressaggregation"
-    },
-    {
-      "label": ".test_four_partitions_interleved_climbs_monotonically()",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L57",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_testprogressaggregation_test_four_partitions_interleved_climbs_monotonically",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": ".test_four_partitions_interleved_climbs_monotonically()"
-    },
-    {
-      "label": ".test_drain_with_empty_queue_does_not_raise()",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L86",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_testprogressaggregation_test_drain_with_empty_queue_does_not_raise",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": ".test_drain_with_empty_queue_does_not_raise()"
-    },
-    {
-      "label": ".test_one_partition_only_does_not_jump_to_100()",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L134",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_testprogressaggregation_test_one_partition_only_does_not_jump_to_100",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": ".test_one_partition_only_does_not_jump_to_100()"
-    },
-    {
-      "label": ".test_all_partitions_complete_is_exactly_100()",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L146",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_testprogressaggregation_test_all_partitions_complete_is_exactly_100",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": ".test_all_partitions_complete_is_exactly_100()"
-    },
-    {
-      "label": ".test_slow_last_partition_does_not_undercount()",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L154",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_testprogressaggregation_test_slow_last_partition_does_not_undercount",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": ".test_slow_last_partition_does_not_undercount()"
-    },
-    {
-      "label": ".test_out_of_order_arrival_still_correct()",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L171",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_testprogressaggregation_test_out_of_order_arrival_still_correct",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": ".test_out_of_order_arrival_still_correct()"
-    },
-    {
-      "label": ".test_clamped_to_100_on_overflow()",
-      "file_type": "code",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L186",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_testprogressaggregation_test_clamped_to_100_on_overflow",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": ".test_clamped_to_100_on_overflow()"
-    },
-    {
-      "label": "Unit tests for the analysis-path progress aggregation.  Regression motivation: t",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_1",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "unit tests for the analysis-path progress aggregation.  regression motivation: t"
-    },
-    {
-      "label": "Mirror of ``create_tiles._drain_progress``'s aggregation logic.      Takes a lis",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L30",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_30",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "mirror of ``create_tiles._drain_progress``'s aggregation logic.      takes a lis"
-    },
-    {
-      "label": "The bar must climb monotonically 0\u2192100% across parallel partitions,     never re",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L54",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_54",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "the bar must climb monotonically 0\u2192100% across parallel partitions,     never re"
-    },
-    {
-      "label": "Mirrors the bug-report run: 4 partitions, 4544 global total,         interleaved",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L58",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_58",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "mirrors the bug-report run: 4 partitions, 4544 global total,         interleaved"
-    },
-    {
-      "label": "Regression for the UnboundLocalError that crashed the first real         SVS run",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L87",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_87",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "regression for the unboundlocalerror that crashed the first real         svs run"
-    },
-    {
-      "label": "Regression for the specific bug: partition 0 alone reaches its         own ``til",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L135",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_135",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "regression for the specific bug: partition 0 alone reaches its         own ``til"
-    },
-    {
-      "label": "All 4 partitions each reporting their full 1136 tiles:         sum = 4544 = glob",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L147",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_147",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "all 4 partitions each reporting their full 1136 tiles:         sum = 4544 = glob"
-    },
-    {
-      "label": "If partitions 0, 1, 2 finish (1136 each = 3408) but partition 3         is slow,",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L155",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_155",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "if partitions 0, 1, 2 finish (1136 each = 3408) but partition 3         is slow,"
-    },
-    {
-      "label": "Manager queue doesn't guarantee arrival order across workers.         If partiti",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L172",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_172",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "manager queue doesn't guarantee arrival order across workers.         if partiti"
-    },
-    {
-      "label": "A stale event arriving after the partition already finished         (e.g. duplic",
-      "file_type": "rationale",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L187",
-      "_origin": "ast",
-      "id": "tests_unit_test_progress_aggregation_rationale_187",
-      "community": 39,
-      "community_name": "OpenSeadragon DZI Parser",
-      "norm_label": "a stale event arriving after the partition already finished         (e.g. duplic"
-    },
-    {
       "label": "test_tile_partition.py",
       "file_type": "code",
       "source_file": "tests/unit/test_tile_partition.py",
@@ -9388,8 +9168,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_dataclean",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "ui_dataclean.py"
     },
     {
@@ -9399,8 +9179,8 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "ui_dataclean_main",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "main()"
     },
     {
@@ -9410,8 +9190,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_dataclean_rationale_1",
-      "community": 53,
-      "community_name": "._tile_dataset",
+      "community": 42,
+      "community_name": "OpenSeadragon Config",
       "norm_label": "bayesian datacleaning application \u2014 thin launcher.  the real application lives u"
     },
     {
@@ -13825,7 +13605,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L288",
+      "source_location": "L258",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_on_tile_worker_finished",
@@ -13837,7 +13617,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L227",
+      "source_location": "L197",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_start_tile_threads",
@@ -13848,7 +13628,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L320",
+      "source_location": "L290",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker",
@@ -13881,7 +13661,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L288",
+      "source_location": "L258",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker",
@@ -13892,7 +13672,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L304",
+      "source_location": "L274",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker",
@@ -13903,7 +13683,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L227",
+      "source_location": "L197",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker",
@@ -13927,7 +13707,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L353",
+      "source_location": "L316",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker",
@@ -14006,6 +13786,18 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "gui/analyzer/tile_worker.py",
+      "source_location": "L109",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "gui_analyzer_tile_worker_create_tiles",
+      "target": "gui_analyzer_tile_worker_folder_exists",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
@@ -14021,7 +13813,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L199",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_create_tiles",
@@ -14056,7 +13848,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L260",
+      "source_location": "L230",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_start_tile_threads",
@@ -14067,10 +13859,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L234",
+      "source_location": "L204",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "gui_analyzer_tile_worker_rationale_234",
+      "source": "gui_analyzer_tile_worker_rationale_204",
       "target": "gui_analyzer_tile_worker_start_tile_threads",
       "confidence_score": 1.0
     },
@@ -14079,7 +13871,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L283",
+      "source_location": "L253",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_start_tile_threads",
@@ -14091,7 +13883,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L227",
+      "source_location": "L197",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_start_tile_threads",
@@ -14103,7 +13895,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L227",
+      "source_location": "L197",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_start_tile_threads",
@@ -14115,7 +13907,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L259",
+      "source_location": "L229",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_start_tile_threads",
@@ -14126,10 +13918,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L289",
+      "source_location": "L259",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "gui_analyzer_tile_worker_rationale_289",
+      "source": "gui_analyzer_tile_worker_rationale_259",
       "target": "gui_analyzer_tile_worker_on_tile_worker_finished",
       "confidence_score": 1.0
     },
@@ -14137,10 +13929,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L305",
+      "source_location": "L275",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "gui_analyzer_tile_worker_rationale_305",
+      "source": "gui_analyzer_tile_worker_rationale_275",
       "target": "gui_analyzer_tile_worker_show_worker_error",
       "confidence_score": 1.0
     },
@@ -14149,7 +13941,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L355",
+      "source_location": "L318",
       "weight": 1.0,
       "_origin": "ast",
       "source": "gui_analyzer_tile_worker_analysis_tile_worker",
@@ -14160,10 +13952,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "gui/analyzer/tile_worker.py",
-      "source_location": "L321",
+      "source_location": "L291",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "gui_analyzer_tile_worker_rationale_321",
+      "source": "gui_analyzer_tile_worker_rationale_291",
       "target": "gui_analyzer_tile_worker_analysis_tile_worker",
       "confidence_score": 1.0
     },
@@ -26642,299 +26434,6 @@
       "_origin": "ast",
       "source": "tests_unit_test_partition_args_rationale_138",
       "target": "tests_unit_test_partition_args_testbuildpartitionargs_test_per_partition_levi_inherited_from_caller",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L29",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L53",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_1",
-      "target": "tests_unit_test_progress_aggregation",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L30",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_30",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L151",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation_test_all_partitions_complete_is_exactly_100",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L196",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation_test_clamped_to_100_on_overflow",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L128",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation_test_drain_with_empty_queue_does_not_raise",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L75",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation_test_four_partitions_interleved_climbs_monotonically",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L140",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation_test_one_partition_only_does_not_jump_to_100",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L182",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation_test_out_of_order_arrival_still_correct",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L165",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation_test_slow_last_partition_does_not_undercount",
-      "target": "tests_unit_test_progress_aggregation_aggregate",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L54",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_54",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L146",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_all_partitions_complete_is_exactly_100",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L186",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_clamped_to_100_on_overflow",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L86",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_drain_with_empty_queue_does_not_raise",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L57",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_four_partitions_interleved_climbs_monotonically",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L134",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_one_partition_only_does_not_jump_to_100",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L171",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_out_of_order_arrival_still_correct",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L154",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_testprogressaggregation",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_slow_last_partition_does_not_undercount",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L58",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_58",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_four_partitions_interleved_climbs_monotonically",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L87",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_87",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_drain_with_empty_queue_does_not_raise",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L135",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_135",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_one_partition_only_does_not_jump_to_100",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L147",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_147",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_all_partitions_complete_is_exactly_100",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L155",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_155",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_slow_last_partition_does_not_undercount",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L172",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_172",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_out_of_order_arrival_still_correct",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "tests/unit/test_progress_aggregation.py",
-      "source_location": "L187",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "tests_unit_test_progress_aggregation_rationale_187",
-      "target": "tests_unit_test_progress_aggregation_testprogressaggregation_test_clamped_to_100_on_overflow",
       "confidence_score": 1.0
     },
     {
