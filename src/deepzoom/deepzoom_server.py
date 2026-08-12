@@ -95,7 +95,7 @@ def tile(slug, level, col, row, format):
     buf = PILBytesIO()
     tile.save(buf, format, quality=app.config['DEEPZOOM_TILE_QUALITY'])
     resp = make_response(buf.getvalue())
-    resp.mimetype = 'image/%s' % format
+    resp.mimetype = f'image/{format}'
     return resp
 
 

@@ -18,7 +18,7 @@ import os
 
 import pytest
 
-pytestmark = [pytest.mark.openslide, pytest.mark.slow]
+pytestmark = [pytest.mark.openslide]
 pytest.importorskip("openslide")
 
 

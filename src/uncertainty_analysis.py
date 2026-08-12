@@ -180,7 +180,7 @@ class Th:
             plt.legend(prop={'size': 6})
 
             plt.xlim(0,0.8)
-            plt.show
+            plt.show()
 
 
 if __name__ == '__main__':
